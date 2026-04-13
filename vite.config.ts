@@ -12,6 +12,7 @@ export default defineConfig({
   ],
   esbuild: {
     target: 'es2020',
+    loader: 'ts',
   },
   build: {
     lib: {
@@ -36,17 +37,8 @@ export default defineConfig({
     },
     // Generate source maps for debugging
     sourcemap: true,
-    // Minify for production
-    minify: 'terser',
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-      mangle: {
-        reserved: ['Mepto', '$'],
-      },
-    },
+    // Minify for production (disabled for now, needs terser package)
+    minify: false,
     // Enable chunk splitting for better caching
     chunkSizeWarningLimit: 1000,
   },
