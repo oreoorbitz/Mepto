@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mepto Test - Blank Page</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: system-ui, -apple-system, sans-serif; 
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    #test-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      min-height: 200px;
+    }
+  </style>
+</head>
+<body>
+  <div id="test-container">
+    <!-- Test content will be injected here -->
+  </div>
+
+  <!-- Load Mepto library -->
+  <script src="/dist/meptos.umd.cjs"></script>
+
+  <!-- Bridge for LLM test communication -->
+  <script>
+    window.MeptoTestBridge = {
+      results: [],
+      log: function(type, message) {
+        this.results.push({ type, message, timestamp: new Date().toISOString() });
+      }
+    };
+
+    // Override console methods to capture output
+    const originalLog = console.log;
+    const originalError = console.error;
+    const originalWarn = console.warn;
+    const originalInfo = console.info;
+
+    console.log = function(...args) {
+      window.MeptoTestBridge.log('log', args.map(a => String(a)).join(' '));
+      originalLog.apply(console, args);
+    };
+
+    console.error = function(...args) {
+      window.MeptoTestBridge.log('error', args.map(a => String(a)).join(' '));
+      originalError.apply(console, args);
+    };
+
+    console.warn = function(...args) {
+      window.MeptoTestBridge.log('warn', args.map(a => String(a)).join(' '));
+      originalWarn.apply(console, args);
+    };
+
+    console.info = function(...args) {
+      window.MeptoTestBridge.log('info', args.map(a => String(a)).join(' '));
+      originalInfo.apply(console, args);
+    };
+
+    console.log('Mepto Test Bridge initialized');
+    console.log('Mepto version:', Mepto ? 'loaded' : 'not loaded');
+  </script>
+</body>
+</html>
