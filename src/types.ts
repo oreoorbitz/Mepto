@@ -460,3 +460,7 @@ export interface MeptoStatic {
   uuid: number;
   active: number;
 }
+
+interface Meptos {
+
+}
