@@ -10,6 +10,7 @@
     "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "allowJs": true,
+    "checkJs": false,
     "declaration": true,
     "declarationMap": true,
     "emitDeclarationOnly": true,
@@ -26,7 +27,6 @@
     "strictBindCallApply": false,
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
-    "alwaysStrict": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": false,
@@ -34,7 +34,6 @@
     "noUncheckedIndexedAccess": false,
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,
-    "suppressImplicitAnyIndexErrors": true,
     "paths": {
       "@/*": ["./src/*"]
     }
