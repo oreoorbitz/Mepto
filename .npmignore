@@ -1,7 +1,7 @@
 *
 !README.md
 !MIT-LICENSE
-!dist/zepto.js
-!dist/zepto.min.js
+!dist/mepto.js
+!dist/mepto.min.js
 !src/*.js
 src/amd_layout.js

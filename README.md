@@ -1,24 +1,24 @@
-# Zepto.js – a minimalist JavaScript library
+# mepto.js – a minimalist JavaScript library
 
-Zepto is a minimalist JavaScript library for modern browsers with a
-largely jQuery-compatible API. If you use jQuery, you already know how to use Zepto.
+mepto is a minimalist JavaScript library for modern browsers with a
+largely jQuery-compatible API. If you use jQuery, you already know how to use mepto.
 
-See [zeptojs.com][] for an extended introduction, downloads
+See [meptojs.com][] for an extended introduction, downloads
 and documentation.
 
-Zepto.js is licensed under the terms of the MIT License.
+mepto.js is licensed under the terms of the MIT License.
 
 Want to give us money or a tip? Don't.
 Instead please donate to [charity: water](http://charitywater.org/).
 
 ## Building
 
-[![Build Status](https://secure.travis-ci.org/madrobby/zepto.svg?branch=master)](http://travis-ci.org/madrobby/zepto)
+[![Build Status](https://secure.travis-ci.org/madrobby/mepto.svg?branch=master)](http://travis-ci.org/madrobby/mepto)
 
-The official site offers a download of the default distribution of Zepto. This
+The official site offers a download of the default distribution of mepto. This
 is good for starting out. However, at some point you might want to add some
 optional modules and remove some of the default ones you don't need, to keep the
-size at a minimum. That's when you need to check out Zepto's source code and use
+size at a minimum. That's when you need to check out mepto's source code and use
 the build commands.
 
 You will need Node.js installed on your system.
@@ -28,17 +28,17 @@ $ npm install
 $ npm run-script dist
 
 # do a custom build
-$ MODULES="zepto event data" npm run-script dist
+$ MODULES="mepto event data" npm run-script dist
 
 # on Windows
-c:\zepto> SET MODULES=zepto event data
-c:\zepto> npm run-script dist
+c:\mepto> SET MODULES=mepto event data
+c:\mepto> npm run-script dist
 ~~~
 
 The resulting files are:
 
-1. `dist/zepto.js`
-2. `dist/zepto.min.js`
+1. `dist/mepto.js`
+2. `dist/mepto.min.js`
 
 If you install CoffeeScript globally, you can run `make` directly:
 
@@ -47,16 +47,16 @@ If you install CoffeeScript globally, you can run `make` directly:
 $ npm install coffee-script --global
 
 $ coffee make dist
-$ MODULES="zepto event data ..." ./make dist
+$ MODULES="mepto event data ..." ./make dist
 
 # on Windows
-c:\zepto> SET MODULES=zepto event data
-c:\zepto> coffee make dist
+c:\mepto> SET MODULES=mepto event data
+c:\mepto> coffee make dist
 ~~~
 
-## Zepto modules
+## mepto modules
 
-Zepto modules are individual files in the "src/" directory.
+mepto modules are individual files in the "src/" directory.
 
 <table>
 <thead><tr>
@@ -64,7 +64,7 @@ Zepto modules are individual files in the "src/" directory.
 </tr></thead>
 <tbody>
   <tr>
-    <th><a href="src/zepto.js#files">zepto</a></th>
+    <th><a href="src/mepto.js#files">mepto</a></th>
     <td>✔</td>
     <td>Core module; contains most methods</td>
   </tr>
@@ -177,21 +177,21 @@ Zepto modules are individual files in the "src/" directory.
 
 ## Contributing
 
-Please read our [contribution guidelines](https://github.com/madrobby/zepto/blob/master/CONTRIBUTING.md)
+Please read our [contribution guidelines](https://github.com/madrobby/mepto/blob/master/CONTRIBUTING.md)
 for information on how to contribute.
 
 Get in touch:
 
-* @[zeptojs](http://twitter.com/zeptojs)
+* @[meptojs](http://twitter.com/meptojs)
 
 ### Write documentation
 
-Zepto docs are written in Markdown and live in the ["gh-pages" branch][docs].
-They are published on [zeptojs.com][zeptojs.com].
+mepto docs are written in Markdown and live in the ["gh-pages" branch][docs].
+They are published on [meptojs.com][meptojs.com].
 
 You can use GitHub's web interface to make quick changes to documentation for
-specific Zepto features
-([example: ajaxSettings](https://github.com/madrobby/zepto/blob/gh-pages/ajax/_posts/1900-01-01-Z-ajaxSettings.md)).
+specific mepto features
+([example: ajaxSettings](https://github.com/madrobby/mepto/blob/gh-pages/ajax/_posts/1900-01-01-Z-ajaxSettings.md)).
 This will submit a pull request to us that we can review.
 
 ### Report a bug
@@ -226,9 +226,9 @@ instructions. For your convenience test failures and exceptions will be
 reported to the the console you started the test server in (as well as
 the browser console if available).
 
-  [zeptojs.com]: http://zeptojs.com
-  [issues]: https://github.com/madrobby/zepto/issues
-  [docs]: https://github.com/madrobby/zepto/tree/gh-pages#readme
+  [meptojs.com]: http://meptojs.com
+  [issues]: https://github.com/madrobby/mepto/issues
+  [docs]: https://github.com/madrobby/mepto/tree/gh-pages#readme
   [mkd]: https://help.github.com/articles/creating-and-highlighting-code-blocks/
   [evidence.js]: https://github.com/tobie/Evidence
   [phantomjs]: http://phantomjs.org/download.html

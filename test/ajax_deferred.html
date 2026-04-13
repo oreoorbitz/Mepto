@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Ajax deferred</title>
+  <title>mepto Ajax deferred</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,12 +16,12 @@
         })
       }
 
-      load('zepto event ajax ie callbacks deferred')
+      load('mepto event ajax ie callbacks deferred')
     })()
   </script>
 </head>
 <body>
-  <h1>Zepto Ajax deferred</h1>
+  <h1>mepto Ajax deferred</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -81,7 +81,7 @@
       onreadystatechange: function() {}
     }
 
-    Evidence('ZeptoAjaxDeferred', {
+    Evidence('meptoAjaxDeferred', {
       setUp: function() {
         $.ajaxSettings.xhr = function(){ return new MockXHR }
       },
@@ -92,7 +92,7 @@
         $.active = 0
 
         for (var key in window)
-          if (/^Zepto\d+$/.test(key) && window[key] === undefined)
+          if (/^mepto\d+$/.test(key) && window[key] === undefined)
             delete window[key]
       },
 

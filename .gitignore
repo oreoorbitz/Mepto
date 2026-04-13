@@ -43,5 +43,5 @@ logs/
 *.temp
 .cache/
 
-# Old build artifacts (from original zepto)
+# Old build artifacts (from original mepto)
 *.gz

@@ -1,6 +1,6 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
 ;(function($){
   var _zid = 1, undefined,
@@ -274,4 +274,4 @@
     return compatible(event)
   }
 
-})(Zepto)
+})(mepto)

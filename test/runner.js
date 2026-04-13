@@ -9,7 +9,7 @@
   if (args.length > 0) {
     suites = args
   } else {
-    var modules = 'zepto ajax callbacks data deferred ajax_deferred detect touch event form fx selector stack'.split(/\s+/)
+    var modules = 'mepto ajax callbacks data deferred ajax_deferred detect touch event form fx selector stack'.split(/\s+/)
     suites = modules.map(function(name) {
       return "test/" + name + ".html"
     })

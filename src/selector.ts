@@ -1,9 +1,9 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
 ;(function($){
-  var zepto = $.zepto, oldQsa = zepto.qsa, oldMatches = zepto.matches
+  var mepto = $.mepto, oldQsa = mepto.qsa, oldMatches = mepto.matches
 
   function visible(elem){
     elem = $(elem)
@@ -31,12 +31,12 @@
     last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
     eq:       function(idx, _, value){ if (idx === value) return this },
     contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
-    has:      function(idx, _, sel){ if (zepto.qsa(this, sel).length) return this }
+    has:      function(idx, _, sel){ if (mepto.qsa(this, sel).length) return this }
   }
 
   var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
       childRe  = /^\s*>/,
-      classTag = 'Zepto' + (+new Date())
+      classTag = 'mepto' + (+new Date())
 
   function process(sel, fn) {
     // quote the hash in `a[href^=#]` expression
@@ -54,7 +54,7 @@
     return fn(sel, filter, arg)
   }
 
-  zepto.qsa = function(node, selector) {
+  mepto.qsa = function(node, selector) {
     return process(selector, function(sel, filter, arg){
       try {
         var taggedParent
@@ -72,14 +72,14 @@
         if (taggedParent) taggedParent.removeClass(classTag)
       }
       return !filter ? nodes :
-        zepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+        mepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
     })
   }
 
-  zepto.matches = function(node, selector){
+  mepto.matches = function(node, selector){
     return process(selector, function(sel, filter, arg){
       return (!sel || oldMatches(node, sel)) &&
         (!filter || filter.call(node, null, arg) === node)
     })
   }
-})(Zepto)
+})(mepto)

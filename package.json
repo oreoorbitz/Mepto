@@ -1,7 +1,7 @@
 {
   "name": "meptos",
   "version": "2.0.0",
-  "description": "Modern TypeScript fork of Zepto.js - jQuery-compatible library with migration tools",
+  "description": "Modern TypeScript fork of mepto.js - jQuery-compatible library with migration tools",
   "main": "./dist/meptos.umd.cjs",
   "module": "./dist/meptos.js",
   "types": "./dist/meptos.d.ts",
@@ -43,7 +43,7 @@
   },
   "keywords": [
     "jquery",
-    "zepto",
+    "mepto",
     "dom",
     "ajax",
     "events",

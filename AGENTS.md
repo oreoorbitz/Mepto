@@ -130,7 +130,7 @@ The harness automatically blocks:
 ```
 mepto/
 ├── src/                      # Source TypeScript files
-│   ├── zepto.ts             # Core module
+│   ├── mepto.ts             # Core module
 │   ├── event.ts             # Event handling
 │   ├── ajax.ts              # AJAX functionality
 │   ├── form.ts              # Form utilities
@@ -217,8 +217,8 @@ This enables progressive enhancement - add types as needed without breaking exis
 ## Migration Notes
 
 - All source files converted from `.js` to `.ts`
-- Original Zepto IIFE pattern preserved in `zepto.ts`
-- Modules use `;(function($){...})(Zepto)` pattern
+- Original mepto IIFE pattern preserved in `mepto.ts`
+- Modules use `;(function($){...})(mepto)` pattern
 - Entry point is `src/meptos.ts` which imports all modules
 
 ---

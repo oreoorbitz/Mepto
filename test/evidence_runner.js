@@ -24,7 +24,7 @@
   }
 
   var TestRunner = inherit(ConsoleTestRunner, function(_super) {
-    AutoRunner.RUNNERS.zepto = this
+    AutoRunner.RUNNERS.mepto = this
     return {
       _makeResult: function() { return new TestResult(this.logger) }
     }
@@ -85,7 +85,7 @@
     var _super = AutoRunner.prototype.retrieveOptions
     AutoRunner.prototype.retrieveOptions = function() {
       var options = _super.call(this)
-      if (!options.runner) options.runner = 'zepto'
+      if (!options.runner) options.runner = 'mepto'
       return options
     }
   })()
@@ -108,7 +108,7 @@
     }
   }
 
-  var globals = [], expected = ['Zepto', '$', 'Evidence', '_zid', 'jsonpDummy']
+  var globals = [], expected = ['mepto', '$', 'Evidence', '_zid', 'jsonpDummy']
   for (var key in window) globals.push(key)
 
   function checkLeakedGlobals() {

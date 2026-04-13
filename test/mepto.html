@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Core unit tests</title>
+  <title>mepto Core unit tests</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,7 +16,7 @@
         })
       }
 
-      load('zepto event ie')
+      load('mepto event ie')
     })()
   </script>
   <style>
@@ -27,7 +27,7 @@
   </style>
 </head>
 <body>
-  <h1>Zepto Core unit tests</h1>
+  <h1>mepto Core unit tests</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -354,10 +354,10 @@
         'Expected length %d, got %d.', expected, actual)
     }
 
-    Evidence.Assertions.assertZeptoCollection = function(expectedLength, object, message) {
-      if (!$.zepto.isZ(object))
+    Evidence.Assertions.assertmeptoCollection = function(expectedLength, object, message) {
+      if (!$.mepto.isZ(object))
         this._assertExpression(false, message || 'Failed assertion.',
-          'Expected %o to be a Zepto collection.', object)
+          'Expected %o to be a mepto collection.', object)
       else
         this.assertLength(expectedLength, object, message)
     }
@@ -375,7 +375,7 @@
         'Expected %o, got %o.', expected, actual)
     }
 
-    Evidence('ZeptoTest', {
+    Evidence('meptoTest', {
 
       testIsFunction: function(t) {
         t.assertTrue($.isFunction(function(){}))
@@ -542,14 +542,14 @@
       },
 
       testExtensionAPI: function(t) {
-        t.assert('init' in $.zepto)
-        t.assert('fragment' in $.zepto)
-        t.assert('Z' in $.zepto)
-        t.assert('isZ' in $.zepto)
+        t.assert('init' in $.mepto)
+        t.assert('fragment' in $.mepto)
+        t.assert('Z' in $.mepto)
+        t.assert('isZ' in $.mepto)
 
         // redefine Z and log some debug information
-        var oldZ = $.zepto.Z, calls = []
-        $.zepto.Z = function Z(dom, selector) {
+        var oldZ = $.mepto.Z, calls = []
+        $.mepto.Z = function Z(dom, selector) {
           var value = oldZ(dom, selector)
           calls.push(dom)
           return value
@@ -566,13 +566,13 @@
         t.assertLength(2, calls)
 
         // restore old Z
-        $.zepto.Z = oldZ
+        $.mepto.Z = oldZ
         var Z3 = $('')
         t.assertLength(2, calls)
 
-        t.assertFalse($.zepto.isZ())
-        t.assertFalse($.zepto.isZ([]))
-        t.assertTrue($.zepto.isZ($('body')))
+        t.assertFalse($.mepto.isZ())
+        t.assertFalse($.mepto.isZ([]))
+        t.assertTrue($.mepto.isZ($('body')))
       },
 
       testDollar: function(t){
@@ -592,25 +592,25 @@
       },
 
       testDollarWithNil: function(t){
-        t.assertZeptoCollection(0, $(null))
-        t.assertZeptoCollection(0, $(undefined))
-        t.assertZeptoCollection(0, $(false))
-        t.assertZeptoCollection(0, $(''))
-        t.assertZeptoCollection(0, $('#'))
+        t.assertmeptoCollection(0, $(null))
+        t.assertmeptoCollection(0, $(undefined))
+        t.assertmeptoCollection(0, $(false))
+        t.assertmeptoCollection(0, $(''))
+        t.assertmeptoCollection(0, $('#'))
 
         var Z1 = $(null), Z2 = $(null)
         t.assert(Z1 !== Z2)
       },
 
       testDollarWithNonDOM: function(t){
-        var zepto = $(['a', 'b', 'c'])
-        t.assertZeptoCollection(3, zepto)
-        t.assertEqualCollection(['a', 'b', 'c'], zepto)
+        var mepto = $(['a', 'b', 'c'])
+        t.assertmeptoCollection(3, mepto)
+        t.assertEqualCollection(['a', 'b', 'c'], mepto)
 
         t.assert($({}))
         t.assertTrue($({ a: true })[0].a)
 
-        // Plain objects wrapped by a Zepto collection
+        // Plain objects wrapped by a mepto collection
         // should still refer to the original object
         // This is required for events on plain objects
         var plainObject = { a: 1 }
@@ -620,18 +620,18 @@
       },
 
       testGetWithoutIndex: function(t){
-        var zepto = $('#find1 .findme')
-        var array = zepto.get()
-        t.assertFalse(zepto === array)
+        var mepto = $('#find1 .findme')
+        var array = mepto.get()
+        t.assertFalse(mepto === array)
         t.assertTrue($.isArray(array))
         t.assertTrue(array.pop === ([]).pop)
       },
 
       testGetWithIndex: function(t){
-        var zepto = $('#find1 .findme')
-        t.assertEqual(zepto[0], zepto.get(0))
-        t.assertEqual(zepto[zepto.length - 1], zepto.get(-1))
-        t.assertUndefined(zepto.get(zepto.length))
+        var mepto = $('#find1 .findme')
+        t.assertEqual(mepto[0], mepto.get(0))
+        t.assertEqual(mepto[mepto.length - 1], mepto.get(-1))
+        t.assertUndefined(mepto.get(mepto.length))
       },
 
       testSize: function(t){
@@ -664,9 +664,9 @@
       },
 
       testDollarWithContext: function(t){
-        // Zepto object
-        var zepto = $('p#find1, #find2')
-        t.assertLength(11, $('span', zepto))
+        // mepto object
+        var mepto = $('p#find1, #find2')
+        t.assertLength(11, $('span', mepto))
 
         // DOM Element
         var domElement = document.getElementById('find1')
@@ -762,10 +762,10 @@
       },
 
       testDollarNonemptyFragmentAndProperties: function(t){
-        var zepto = $('<a>Goodbye</a>', { text: "Hello", href: "http://zeptojs.com" })
-        t.assertLength(1, zepto)
-        t.assertEqual('Hello', zepto.text())
-        t.assertEqual('http://zeptojs.com', zepto.attr("href"))
+        var mepto = $('<a>Goodbye</a>', { text: "Hello", href: "http://meptojs.com" })
+        t.assertLength(1, mepto)
+        t.assertEqual('Hello', mepto.text())
+        t.assertEqual('http://meptojs.com', mepto.attr("href"))
       },
 
       testDollarWithTextNode: function(t){
@@ -781,7 +781,7 @@
       },
 
       testDollarWithDoctypeInFragment: function(t){
-        t.assertZeptoCollection(0, $('<!DOCTYPE html>'))
+        t.assertmeptoCollection(0, $('<!DOCTYPE html>'))
       },
 
       testNodeCreationViaDollar: function (t) {
@@ -1002,24 +1002,24 @@
 
       testEq: function(t){
         var $els = $('#eq_test div')
-        t.assertZeptoCollection(1, $els.eq(0))
-        t.assertZeptoCollection(1, $els.eq(-1))
+        t.assertmeptoCollection(1, $els.eq(0))
+        t.assertmeptoCollection(1, $els.eq(-1))
         t.assertEqual($els.eq(-1)[0].className, 'eq2')
         t.assertUndefined($els.eq(-1).tagName)
 
-        t.assertZeptoCollection(0, $('nonexistent').eq(0))
+        t.assertmeptoCollection(0, $('nonexistent').eq(0))
       },
 
       testFirst: function(t){
-        var zepto = $('h1,p')
-        t.assertLength(5, zepto)
+        var mepto = $('h1,p')
+        t.assertLength(5, mepto)
 
-        var zepto2 = zepto.first()
-        t.refuteIdentical(zepto, zepto2)
-        t.assertLength(5, zepto)
+        var mepto2 = mepto.first()
+        t.refuteIdentical(mepto, mepto2)
+        t.assertLength(5, mepto)
 
-        t.assertLength(1, zepto2)
-        t.assertEqual('H1', zepto2.get(0).tagName)
+        t.assertLength(1, mepto2)
+        t.assertEqual('H1', mepto2.get(0).tagName)
 
         t.assertLength(0, $('nonexistent').first())
       },
@@ -1029,15 +1029,15 @@
       },
 
       testLast: function(t){
-        var zepto = $('h1,p')
-        t.assertLength(5, zepto)
+        var mepto = $('h1,p')
+        t.assertLength(5, mepto)
 
-        var zepto2 = zepto.last()
-        t.refuteIdentical(zepto, zepto2)
-        t.assertLength(5, zepto)
+        var mepto2 = mepto.last()
+        t.refuteIdentical(mepto, mepto2)
+        t.assertLength(5, mepto)
 
-        t.assertLength(1, zepto2)
-        t.assertEqual('P', zepto2.get(0).tagName)
+        t.assertLength(1, mepto2)
+        t.assertEqual('P', mepto2.get(0).tagName)
 
         t.assertLength(0, $('nonexistent').last())
       },
@@ -1519,10 +1519,10 @@
 
       testFindWithFalsyValue: function(t){
         var element = '<div><a>1</a></div>'
-        t.assertZeptoCollection(0, $(element).find(undefined))
-        t.assertZeptoCollection(0, $(element).find(false))
-        t.assertZeptoCollection(0, $(element).find(0))
-        t.assertZeptoCollection(0, $(element).find(''))
+        t.assertmeptoCollection(0, $(element).find(undefined))
+        t.assertmeptoCollection(0, $(element).find(false))
+        t.assertmeptoCollection(0, $(element).find(0))
+        t.assertmeptoCollection(0, $(element).find(''))
       },
 
       testFilter: function(t){
@@ -1668,7 +1668,7 @@
         t.assertEqual('rgb(0, 255, 0)', arrDashedCss['color'])
         t.assertUndefined(arrDashedCss['padding-left'])
 
-        // make sure reads from empty Zepto collections just return undefined
+        // make sure reads from empty mepto collections just return undefined
         t.assertUndefined($().css(['border-left-width']))
 
         var div = $('#get_style_element')
@@ -1762,7 +1762,7 @@
       },
 
       testText: function(t){
-        // test basics with Zepto-created DOM elements
+        // test basics with mepto-created DOM elements
         t.assertEqual('',         $('<h1/>').text())
         t.assertEqual('',         $('<h1/>').text('').text())
         t.assertEqual('',         $('<h1/>').text(undefined).text())
@@ -2126,7 +2126,7 @@
         $('#some_element').plugin()
         t.assertEqual('plugin!', el.innerHTML)
 
-        // test if existing Zepto objects receive new plugins
+        // test if existing mepto objects receive new plugins
         if ('__proto__' in {}) {
           var $some_element = $('#some_element')
           $.fn.anotherplugin = function(){
@@ -2137,7 +2137,7 @@
           t.assertEqual('anotherplugin!', el.innerHTML)
         } else
           window.console && console.warn &&
-          console.warn("Browser doesn't support __proto__, skipping test of live extension of existing Zepto objects with plugins")
+          console.warn("Browser doesn't support __proto__, skipping test of live extension of existing mepto objects with plugins")
       },
 
       testAppendPrependBeforeAfter: function(t){
@@ -2181,7 +2181,7 @@
           $('#beforeafter_container').html()
         )
 
-        //testing with Zepto object as parameter
+        //testing with mepto object as parameter
         $('#beforeafter_container').html('<div id="beforeafter"></div>')
 
         $('#beforeafter').append($(div('append')))
@@ -2195,7 +2195,7 @@
           $('#beforeafter_container').html()
         )
 
-        //testing with a zepto object of more than one element as parameter
+        //testing with a mepto object of more than one element as parameter
         $(document.body).append('<div class="append">append1</div><div class="append">append2</div>')
         $(document.body).append('<div class="prepend">prepend1</div><div class="prepend">prepend2</div>')
         $(document.body).append('<div class="before">before1</div><div class="before">before2</div>')
@@ -2271,7 +2271,7 @@
       },
 
       testAppendToPrependTo: function(t){
-        // testing with Zepto object
+        // testing with mepto object
         function div(contents){
           var el = document.createElement('div')
           el.innerHTML = contents
@@ -2294,7 +2294,7 @@
           $('#appendtoprependto_container').html()
         )
 
-        // zepto object with more than one element
+        // mepto object with more than one element
         $(document.body).append('<div class="appendto">appendto1</div><div class="appendto">appendto2</div>')
         $(document.body).append('<div class="prependto">prependto1</div><div class="prependto">prependto2</div>')
 
@@ -2330,7 +2330,7 @@
       },
 
       testInsertBeforeInsertAfter: function(t){
-        // testing with Zepto object
+        // testing with mepto object
         function div(contents){
           var el = document.createElement('div')
           el.innerHTML = contents
@@ -2351,7 +2351,7 @@
           $('#insertbeforeinsertafter_container').html()
         )
 
-        // testing with a zepto object of more than one element as parameter
+        // testing with a mepto object of more than one element as parameter
         $(document.body).append('<div class="insertbefore">insertbefore1</div><div class="insertbefore">insertbefore2</div>')
         $(document.body).append('<div class="insertafter">insertafter1</div><div class="insertafter">insertafter2</div>')
 
@@ -2659,7 +2659,7 @@
       },
 
       testDocumentReady: function (t) {
-        // Check that ready() callback fired and get Zepto as an argument
+        // Check that ready() callback fired and get mepto as an argument
         var arg1, arg2, arg3, arg4
 
         t.pause()
@@ -2672,10 +2672,10 @@
               $(document).on('foo ready bar', function (Z4) {
                 arg4 = Z4
                 t.resume(function(){
-                  t.assertIdentical(Zepto, arg1)
-                  t.assertIdentical(Zepto, arg2)
-                  t.assertIdentical(Zepto, arg3)
-                  t.assertIdentical(Zepto, arg4)
+                  t.assertIdentical(mepto, arg1)
+                  t.assertIdentical(mepto, arg2)
+                  t.assertIdentical(mepto, arg3)
+                  t.assertIdentical(mepto, arg4)
                 })
               })
             })

@@ -1,12 +1,12 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
 // The following code is heavily inspired by jQuery's $.fn.data()
 
 ;(function($){
   var data = {}, dataAttr = $.fn.data, camelize = $.camelCase,
-    exp = $.expando = 'Zepto' + (+new Date()), emptyArray = []
+    exp = $.expando = 'mepto' + (+new Date()), emptyArray = []
 
   // Get value from node:
   // 1. first try key as given,
@@ -39,7 +39,7 @@
     $.each(node.attributes || emptyArray, function(i, attr){
       if (attr.name.indexOf('data-') == 0)
         store[camelize(attr.name.replace('data-', ''))] =
-          $.zepto.deserializeValue(attr.value)
+          $.mepto.deserializeValue(attr.value)
     })
     return store
   }
@@ -86,4 +86,4 @@
       return origFn.call(this)
     }
   })
-})(Zepto)
+})(mepto)

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Deferred unit tests</title>
+  <title>mepto Deferred unit tests</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,12 +16,12 @@
         })
       }
 
-      load('zepto callbacks deferred')
+      load('mepto callbacks deferred')
     })()
   </script>
 </head>
 <body>
-  <h1>Zepto Deferred unit tests</h1>
+  <h1>mepto Deferred unit tests</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -36,7 +36,7 @@
         return withNew ? new $.Deferred(fn) : $.Deferred(fn)
       }
 
-      Evidence('ZeptoDeferredTest' + withNew, {
+      Evidence('meptoDeferredTest' + withNew, {
 
         testSuccessOnResolve: function(t) {
           var called = 0

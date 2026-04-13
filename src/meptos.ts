@@ -1,5 +1,5 @@
 /**
- * Mepto - Modern TypeScript fork of Zepto.js
+ * Mepto - Modern TypeScript fork of mepto.js
  * A minimalist jQuery-compatible library for modern browsers
  *
  * @version 2.0.0
@@ -23,7 +23,7 @@ export type {
 } from './types';
 
 // Import core modules - using require for JS compatibility
-import './zepto';
+import './mepto';
 import './event';
 import './ajax';
 import './form';
@@ -36,8 +36,8 @@ import './stack';
 import './touch';
 import './gesture';
 
-// Get the global Zepto object created by zepto.ts
-const Mepto = (window as unknown as Record<string, unknown>).Zepto;
+// Get the global mepto object created by mepto.ts
+const Mepto = (window as unknown as Record<string, unknown>).mepto;
 
 // Export the main Mepto object as default and named export
 export default Mepto;

@@ -1,8 +1,8 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2017 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
-let Zepto = (function() {
+let mepto = (function() {
   let undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
     document = window.document,
     elementDisplay = {}, classCache = {},
@@ -28,7 +28,7 @@ let Zepto = (function() {
     simpleSelectorRE = /^[\w-]*$/,
     class2type = {},
     toString = class2type.toString,
-    zepto = {},
+    mepto = {},
     camelize, uniq,
     tempParent = document.createElement('div'),
     propMap = {
@@ -48,7 +48,7 @@ let Zepto = (function() {
     isArray = Array.isArray ||
       function(object){ return object instanceof Array }
 
-  zepto.matches = function(element, selector) {
+  mepto.matches = function(element, selector) {
     if (!selector || !element || element.nodeType !== 1) return false
     let matchesSelector = element.matches || element.webkitMatchesSelector ||
                           element.mozMatchesSelector || element.oMatchesSelector ||
@@ -57,7 +57,7 @@ let Zepto = (function() {
     // fall back to performing a selector:
     let match, parent = element.parentNode, temp = !parent
     if (temp) (parent = tempParent).appendChild(element)
-    match = ~zepto.qsa(parent, selector).indexOf(element)
+    match = ~mepto.qsa(parent, selector).indexOf(element)
     temp && tempParent.removeChild(element)
     return match
   }
@@ -132,12 +132,12 @@ let Zepto = (function() {
     this.selector = selector || ''
   }
 
-  // `$.zepto.fragment` takes a html string and an optional tag name
+  // `$.mepto.fragment` takes a html string and an optional tag name
   // to generate DOM nodes from the given html string.
   // The generated DOM nodes are returned as an array.
   // This function can be overridden in plugins for example to make
   // it compatible with browsers that don't support the DOM fully.
-  zepto.fragment = function(html, name, properties) {
+  mepto.fragment = function(html, name, properties) {
     let dom, nodes, container
 
     // A special case optimization for a single tag
@@ -166,27 +166,27 @@ let Zepto = (function() {
     return dom
   }
 
-  // `$.zepto.Z` swaps out the prototype of the given `dom` array
-  // of nodes with `$.fn` and thus supplying all the Zepto functions
+  // `$.mepto.Z` swaps out the prototype of the given `dom` array
+  // of nodes with `$.fn` and thus supplying all the mepto functions
   // to the array. This method can be overridden in plugins.
-  zepto.Z = function(dom, selector) {
+  mepto.Z = function(dom, selector) {
     return new Z(dom, selector)
   }
 
-  // `$.zepto.isZ` should return `true` if the given object is a Zepto
+  // `$.mepto.isZ` should return `true` if the given object is a mepto
   // collection. This method can be overridden in plugins.
-  zepto.isZ = function(object) {
-    return object instanceof zepto.Z
+  mepto.isZ = function(object) {
+    return object instanceof mepto.Z
   }
 
-  // `$.zepto.init` is Zepto's counterpart to jQuery's `$.fn.init` and
+  // `$.mepto.init` is mepto's counterpart to jQuery's `$.fn.init` and
   // takes a CSS selector and an optional context (and handles various
   // special cases).
   // This method can be overridden in plugins.
-  zepto.init = function(selector, context) {
+  mepto.init = function(selector, context) {
     let dom
-    // If nothing given, return an empty Zepto collection
-    if (!selector) return zepto.Z()
+    // If nothing given, return an empty mepto collection
+    if (!selector) return mepto.Z()
     // Optimize for string selectors
     else if (typeof selector == 'string') {
       selector = selector.trim()
@@ -194,17 +194,17 @@ let Zepto = (function() {
       // Note: In both Chrome 21 and Firefox 15, DOM error 12
       // is thrown if the fragment doesn't begin with <
       if (selector[0] == '<' && fragmentRE.test(selector))
-        dom = zepto.fragment(selector, RegExp.$1, context), selector = null
+        dom = mepto.fragment(selector, RegExp.$1, context), selector = null
       // If there's a context, create a collection on that context first, and select
       // nodes from there
       else if (context !== undefined) return $(context).find(selector)
       // If it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector)
+      else dom = mepto.qsa(document, selector)
     }
     // If a function is given, call it when the DOM is ready
     else if (isFunction(selector)) return $(document).ready(selector)
-    // If a Zepto collection is given, just return it
-    else if (zepto.isZ(selector)) return selector
+    // If a mepto collection is given, just return it
+    else if (mepto.isZ(selector)) return selector
     else {
       // normalize array if an array of nodes is given
       if (isArray(selector)) dom = compact(selector)
@@ -213,23 +213,23 @@ let Zepto = (function() {
         dom = [selector], selector = null
       // If it's a html fragment, create nodes from it
       else if (fragmentRE.test(selector))
-        dom = zepto.fragment(selector.trim(), RegExp.$1, context), selector = null
+        dom = mepto.fragment(selector.trim(), RegExp.$1, context), selector = null
       // If there's a context, create a collection on that context first, and select
       // nodes from there
       else if (context !== undefined) return $(context).find(selector)
       // And last but no least, if it's a CSS selector, use it to select nodes.
-      else dom = zepto.qsa(document, selector)
+      else dom = mepto.qsa(document, selector)
     }
-    // create a new Zepto collection from the nodes found
-    return zepto.Z(dom, selector)
+    // create a new mepto collection from the nodes found
+    return mepto.Z(dom, selector)
   }
 
-  // `$` will be the base `Zepto` object. When calling this
-  // function just call `$.zepto.init, which makes the implementation
-  // details of selecting nodes and creating Zepto collections
+  // `$` will be the base `mepto` object. When calling this
+  // function just call `$.mepto.init, which makes the implementation
+  // details of selecting nodes and creating mepto collections
   // patchable in plugins.
   $ = function(selector, context){
-    return zepto.init(selector, context)
+    return mepto.init(selector, context)
   }
 
   function extend(target, source, deep) {
@@ -256,10 +256,10 @@ let Zepto = (function() {
     return target
   }
 
-  // `$.zepto.qsa` is Zepto's CSS selector implementation which
+  // `$.mepto.qsa` is mepto's CSS selector implementation which
   // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
   // This method can be overridden in plugins.
-  zepto.qsa = function(element, selector){
+  mepto.qsa = function(element, selector){
     let found,
         maybeID = selector[0] == '#',
         maybeClass = !maybeID && selector[0] == '.',
@@ -404,9 +404,9 @@ let Zepto = (function() {
   })
 
   // Define methods that will be available on all
-  // Zepto collections
+  // mepto collections
   $.fn = {
-    letructor: zepto.Z,
+    letructor: mepto.Z,
     length: 0,
 
     // Because a collection acts like an array
@@ -421,9 +421,9 @@ let Zepto = (function() {
       let i, value, args = []
       for (i = 0; i < arguments.length; i++) {
         value = arguments[i]
-        args[i] = zepto.isZ(value) ? value.toArray() : value
+        args[i] = mepto.isZ(value) ? value.toArray() : value
       }
-      return concat.apply(zepto.isZ(this) ? this.toArray() : this, args)
+      return concat.apply(mepto.isZ(this) ? this.toArray() : this, args)
     },
 
     // `map` and `slice` in the jQuery API work differently
@@ -473,14 +473,14 @@ let Zepto = (function() {
     filter: function(selector){
       if (isFunction(selector)) return this.not(this.not(selector))
       return $(filter.call(this, function(element){
-        return zepto.matches(element, selector)
+        return mepto.matches(element, selector)
       }))
     },
     add: function(selector,context){
       return $(uniq(this.concat($(selector,context))))
     },
     is: function(selector){
-      return typeof selector == 'string' ? this.length > 0 && zepto.matches(this[0], selector) : 
+      return typeof selector == 'string' ? this.length > 0 && mepto.matches(this[0], selector) : 
           selector && this.selector == selector.selector
     },
     not: function(selector){
@@ -526,14 +526,14 @@ let Zepto = (function() {
             return $.contains(parent, node)
           })
         })
-      else if (this.length == 1) result = $(zepto.qsa(this[0], selector))
-      else result = this.map(function(){ return zepto.qsa(this, selector) })
+      else if (this.length == 1) result = $(mepto.qsa(this[0], selector))
+      else result = this.map(function(){ return mepto.qsa(this, selector) })
       return result
     },
     closest: function(selector, context){
       let nodes = [], collection = typeof selector == 'object' && $(selector)
       this.each(function(_, node){
-        while (node && !(collection ? collection.indexOf(node) >= 0 : zepto.matches(node, selector)))
+        while (node && !(collection ? collection.indexOf(node) >= 0 : mepto.matches(node, selector)))
           node = node !== context && !isDocument(node) && node.parentNode
         if (node && nodes.indexOf(node) < 0) nodes.push(node)
       })
@@ -884,20 +884,20 @@ let Zepto = (function() {
     let inside = operatorIndex % 2 //=> prepend, append
 
     $.fn[operator] = function(){
-      // arguments can be nodes, arrays of nodes, Zepto objects and HTML strings
+      // arguments can be nodes, arrays of nodes, mepto objects and HTML strings
       let argType, nodes = $.map(arguments, function(arg) {
             let arr = []
             argType = type(arg)
             if (argType == "array") {
               arg.forEach(function(el) {
                 if (el.nodeType !== undefined) return arr.push(el)
-                else if ($.zepto.isZ(el)) return arr = arr.concat(el.get())
-                arr = arr.concat(zepto.fragment(el))
+                else if ($.mepto.isZ(el)) return arr = arr.concat(el.get())
+                arr = arr.concat(mepto.fragment(el))
               })
               return arr
             }
             return argType == "object" || arg == null ?
-              arg : zepto.fragment(arg)
+              arg : mepto.fragment(arg)
           }),
           parent, copyByClone = this.length > 1
       if (nodes.length < 1) return this
@@ -939,16 +939,16 @@ let Zepto = (function() {
     }
   })
 
-  zepto.Z.prototype = Z.prototype = $.fn
+  mepto.Z.prototype = Z.prototype = $.fn
 
-  // Export internal API functions in the `$.zepto` namespace
-  zepto.uniq = uniq
-  zepto.deserializeValue = deserializeValue
-  $.zepto = zepto
+  // Export internal API functions in the `$.mepto` namespace
+  mepto.uniq = uniq
+  mepto.deserializeValue = deserializeValue
+  $.mepto = mepto
 
   return $
 })()
 
-// If `$` is not yet defined, point it to `Zepto`
-window.Zepto = Zepto
-window.$ === undefined && (window.$ = Zepto)
+// If `$` is not yet defined, point it to `mepto`
+window.mepto = mepto
+window.$ === undefined && (window.$ = mepto)

@@ -1,12 +1,12 @@
 /**
  * Core Mepto module - the main library implementation
- * This is the modernized TypeScript version of Zepto's core
+ * This is the modernized TypeScript version of mepto's core
  */
 
 import type { MeptoStatic, MeptoCollection, MeptoElement, PlainObject } from './types';
 
-// Create the core zepto object with querySelector functionality
-const zepto: Record<string, unknown> = {};
+// Create the core mepto object with querySelector functionality
+const mepto: Record<string, unknown> = {};
 
 // Cache for computed styles and element display values
 const elementDisplay: Record<string, string> = {};
@@ -183,7 +183,7 @@ function fragment(html: string, name?: string, properties?: Record<string, unkno
 }
 
 // Check if element matches selector
-zepto.matches = function (
+mepto.matches = function (
   element: Element,
   selector: string
 ): boolean {
@@ -208,7 +208,7 @@ zepto.matches = function (
     parent.appendChild(element);
   }
 
-  const match = Array.from(zepto.qsa(parent as ParentNode, selector)).indexOf(element) > -1;
+  const match = Array.from(mepto.qsa(parent as ParentNode, selector)).indexOf(element) > -1;
 
   if (temp) {
     tempParent.removeChild(element);
@@ -218,7 +218,7 @@ zepto.matches = function (
 };
 
 // Query selector all
-zepto.qsa = function (
+mepto.qsa = function (
   element: ParentNode,
   selector: string
 ): Element[] {
@@ -263,7 +263,7 @@ function init(selector: unknown, context?: Document | Element): MeptoCollection<
       context = undefined;
     } else {
       // CSS selector
-      dom = zepto.qsa(
+      dom = mepto.qsa(
         (context || document) as ParentNode,
         selector
       ) as MeptoElement[];
@@ -273,7 +273,7 @@ function init(selector: unknown, context?: Document | Element): MeptoCollection<
     return (document as unknown as { readyState: string }).readyState === 'complete'
       ? selector.call(document, $) as MeptoCollection<MeptoElement>
       : ($ as MeptoStatic).ready(selector as () => void);
-  } else if (zepto.isZ(selector)) {
+  } else if (mepto.isZ(selector)) {
     // Already a Mepto collection
     return selector as MeptoCollection<MeptoElement>;
   } else {
@@ -283,7 +283,7 @@ function init(selector: unknown, context?: Document | Element): MeptoCollection<
       dom = [selector as unknown as MeptoElement];
       context = undefined;
     } else {
-      dom = zepto.qsa(document, selector as string) as MeptoElement[];
+      dom = mepto.qsa(document, selector as string) as MeptoElement[];
     }
   }
 
@@ -291,7 +291,7 @@ function init(selector: unknown, context?: Document | Element): MeptoCollection<
 }
 
 // Check if object is a Mepto collection
-zepto.isZ = function (object: unknown): boolean {
+mepto.isZ = function (object: unknown): boolean {
   return object instanceof MeptoCollectionImpl;
 };
 
@@ -314,11 +314,11 @@ class MeptoCollectionImpl {
 export function initMepto(): MeptoStatic {
   const $ = init as unknown as MeptoStatic;
 
-  // Expose zepto utilities
-  $.zepto = zepto;
+  // Expose mepto utilities
+  $.mepto = mepto;
 
   // Expose isZ check
-  $.isZ = zepto.isZ;
+  $.isZ = mepto.isZ;
 
   // UUID generator
   let uuidCounter = 0;
@@ -481,7 +481,7 @@ export function initMepto(): MeptoStatic {
   ): number {
     if (element) {
       const el = typeof element === 'string'
-        ? (zepto.qsa(document, element)[0] as MeptoElement)
+        ? (mepto.qsa(document, element)[0] as MeptoElement)
         : element;
       return Array.from(this as unknown as MeptoElement[]).indexOf(el);
     }
@@ -501,4 +501,4 @@ export function initMepto(): MeptoStatic {
 }
 
 // Export helper types and functions
-export { zepto, isFunction, isArray, isPlainObject, camelize, dasherize, compact, flatten };
+export { mepto, isFunction, isArray, isPlainObject, camelize, dasherize, compact, flatten };

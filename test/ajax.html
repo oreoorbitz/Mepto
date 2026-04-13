@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Ajax unit tests</title>
+  <title>mepto Ajax unit tests</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,12 +16,12 @@
         })
       }
 
-      load('zepto event ajax ie')
+      load('mepto event ajax ie')
     })()
   </script>
 </head>
 <body>
-  <h1>Zepto Ajax unit tests</h1>
+  <h1>mepto Ajax unit tests</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -150,7 +150,7 @@
       }
     })
 
-    Evidence('ZeptoAjaxTest', {
+    Evidence('meptoAjaxTest', {
 
       setUp: function() {
         var reg = new CallbackRegistry(this),
@@ -164,7 +164,7 @@
       tearDown: function() {
         $(document).off()
         for (var key in window)
-          if (/^(Zepto\d+|blah)$/.test(key) && window[key] === undefined)
+          if (/^(mepto\d+|blah)$/.test(key) && window[key] === undefined)
             delete window[key]
       },
 
@@ -692,7 +692,7 @@
         })
 
         var scriptSrc = $('head script:last-child').attr('src')
-        t.assert(/^jsonp\?callback=Zepto\d+&_=[\d]{13}$/.test(scriptSrc), scriptSrc)
+        t.assert(/^jsonp\?callback=mepto\d+&_=[\d]{13}$/.test(scriptSrc), scriptSrc)
         t.pause()
       },
 
@@ -704,7 +704,7 @@
         })
 
         var scriptSrc = $('head script:last-child').attr('src')
-        t.assert(/^jsonp\?callback=Zepto\d+$/.test(scriptSrc), scriptSrc)
+        t.assert(/^jsonp\?callback=mepto\d+$/.test(scriptSrc), scriptSrc)
         t.pause()
       },
 
@@ -834,8 +834,8 @@
         t.pause()
         resumeOnAjaxError(t)
         $.ajax({
-          url: 'auth?realm=zepto',
-          username: 'zepto',
+          url: 'auth?realm=mepto',
+          username: 'mepto',
           password: 'doge',
           success: t.reg.resumeHandler('success')
         })
@@ -888,7 +888,7 @@
       }
     }
 
-    Evidence('ZeptoAjaxTest2', {
+    Evidence('meptoAjaxTest2', {
       setUp: function() {
         $.ajaxSettings.xhr = function(){ return new MockXHR }
       },
@@ -1464,7 +1464,7 @@
       }
     })
 
-    Evidence('ZeptoAjaxHelperMethodsTest', {
+    Evidence('meptoAjaxHelperMethodsTest', {
 
       testParamMethod: function(t) {
         var result = $.param({ libs: ['jQuery', 'script.aculo.us', 'Prototype', 'Dojo'] })

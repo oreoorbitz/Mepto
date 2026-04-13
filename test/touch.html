@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Touch unit tests</title>
+  <title>mepto Touch unit tests</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,12 +16,12 @@
         })
       }
 
-      load('zepto event ie touch')
+      load('mepto event ie touch')
     })()
   </script>
 </head>
 <body>
-  <h1>Zepto Touch unit tests</h1>
+  <h1>mepto Touch unit tests</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -46,7 +46,7 @@
     // can test touch events in browsers that don't
     // actually support touch input (like desktop Safari).
     //
-    // Zepto's touch module only uses the `pageX/Y` and `target`
+    // mepto's touch module only uses the `pageX/Y` and `target`
     // properties of the first touch in the `touches` TouchList
     function emitTouchEvent(type, element, x, y) {
       var event = document.createEvent('Event'),

@@ -193,7 +193,7 @@ const result = await runTest({
 ```typescript
 const ALLOWED_METHODS = [
   // Mepto/jQuery methods
-  '$', 'zepto', 'Mepto',
+  '$', 'mepto', 'Mepto',
   'addClass', 'removeClass', 'toggleClass', 'hasClass',
   'attr', 'prop', 'data', 'html', 'text', 'val',
   'css', 'width', 'height', 'offset',

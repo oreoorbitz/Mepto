@@ -64,7 +64,7 @@ export const ALLOWED_MEPTO_METHODS = new Set([
   // Core
   '$',
   'Mepto',
-  'zepto',
+  'mepto',
   'fn',
   // DOM manipulation - class
   'addClass',

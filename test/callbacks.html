@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
   <link rel="stylesheet" href="test.css">
-  <title>Zepto Callbacks unit tests</title>
+  <title>mepto Callbacks unit tests</title>
   <script src="../vendor/evidence.js"></script>
   <script src="evidence_runner.js"></script>
   <script>
@@ -16,12 +16,12 @@
         })
       }
 
-      load('zepto callbacks')
+      load('mepto callbacks')
     })()
   </script>
 </head>
 <body>
-  <h1>Zepto Callbacks unit tests</h1>
+  <h1>mepto Callbacks unit tests</h1>
   <p id="results">
     Running… see browser console for results
   </p>
@@ -34,7 +34,7 @@
     function c() { output += "C" }
     function str(str) { output += str }
 
-    Evidence('ZeptoCallbacksTest', {
+    Evidence('meptoCallbacksTest', {
 
       testOptionsAreCopied: function(t) {
         var options = {"unique": true},
@@ -161,7 +161,7 @@
     $.each(configs, function(name, config) {
       var results = ordering[name].split(/\s+/)
 
-      Evidence("ZeptoCallbacksTest#" + name, {
+      Evidence("meptoCallbacksTest#" + name, {
 
         testBindAndFire: function(t) {
           output = "X", cb = $.Callbacks(config).add(str).fire("A")

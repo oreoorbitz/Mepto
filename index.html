@@ -121,7 +121,7 @@
 <body>
   <div class="container">
     <h1>⚚ Mepto</h1>
-    <p class="subtitle">Modern TypeScript fork of Zepto.js - jQuery-compatible library</p>
+    <p class="subtitle">Modern TypeScript fork of mepto.js - jQuery-compatible library</p>
 
     <div class="section">
       <h2>🚀 Quick Test</h2>
@@ -209,7 +209,7 @@ $.get('/api/data', function(data) {
     import Mepto from './src/meptos.ts';
     window.Mepto = Mepto;
     window.$ = Mepto;
-    window.Zepto = Mepto;
+    window.mepto = Mepto;
     
     // Update UI
     document.getElementById('loaded').textContent = typeof Mepto !== 'undefined' ? 'Yes ✓' : 'No ✗';

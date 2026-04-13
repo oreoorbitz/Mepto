@@ -1,6 +1,6 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
 ;(function($){
   $.fn.serializeArray = function() {
@@ -37,4 +37,4 @@
     return this
   }
 
-})(Zepto)
+})(mepto)

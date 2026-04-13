@@ -1,6 +1,6 @@
-//     Zepto.js
+//     mepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     Zepto.js may be freely distributed under the MIT license.
+//     mepto.js may be freely distributed under the MIT license.
 
 ;(function($){
   var jsonpID = +new Date(),
@@ -85,7 +85,7 @@
 
     var _callbackName = options.jsonpCallback,
       callbackName = ($.isFunction(_callbackName) ?
-        _callbackName() : _callbackName) || ('Zepto' + (jsonpID++)),
+        _callbackName() : _callbackName) || ('mepto' + (jsonpID++)),
       script = document.createElement('script'),
       originalCallback = window[callbackName],
       responseData,
@@ -206,7 +206,7 @@
     if (!settings.crossDomain) {
       urlAnchor = document.createElement('a')
       urlAnchor.href = settings.url
-      // cleans up URL for .href (IE only), see https://github.com/madrobby/zepto/pull/1049
+      // cleans up URL for .href (IE only), see https://github.com/madrobby/mepto/pull/1049
       urlAnchor.href = urlAnchor.href
       settings.crossDomain = (originAnchor.protocol + '//' + originAnchor.host) !== (urlAnchor.protocol + '//' + urlAnchor.host)
     }
@@ -380,4 +380,4 @@
     serialize(params, obj, traditional)
     return params.join('&').replace(/%20/g, '+')
   }
-})(Zepto)
+})(mepto)

@@ -5,5 +5,5 @@
     factory(global)
 }(window, function(window) {
   YIELD
-  return Zepto
+  return mepto
 }))

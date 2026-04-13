@@ -2,15 +2,15 @@
 require 'shelljs/make'
 fs = require 'fs'
 
-zepto_js  = 'dist/zepto.js'
-zepto_min = 'dist/zepto.min.js'
-zepto_gz  = 'dist/zepto.min.gz'
+mepto_js  = 'dist/mepto.js'
+mepto_min = 'dist/mepto.min.js'
+mepto_gz  = 'dist/mepto.min.gz'
 
 port = 3999
 root = __dirname + '/'
 
 target.all = ->
-  target[zepto_js]()
+  target[mepto_js]()
   target.test()
 
 ## TASKS ##
@@ -21,14 +21,14 @@ target.test = ->
   exec "phantomjs --disk-cache=true test/runner.js 'http://localhost:#{port}/'", (code) ->
     server.close -> exit(code)
 
-target[zepto_js] = ->
-  target.build() unless test('-e', zepto_js)
+target[mepto_js] = ->
+  target.build() unless test('-e', mepto_js)
 
-target[zepto_min] = ->
-  target.minify() if stale(zepto_min, zepto_js)
+target[mepto_min] = ->
+  target.minify() if stale(mepto_min, mepto_js)
 
-target[zepto_gz] = ->
-  target.compress() if stale(zepto_gz, zepto_min)
+target[mepto_gz] = ->
+  target.compress() if stale(mepto_gz, mepto_min)
 
 target.dist = ->
   target.build()
@@ -38,35 +38,35 @@ target.dist = ->
 target.build = ->
   cd __dirname
   mkdir '-p', 'dist'
-  modules = (env['MODULES'] || 'zepto event ajax form ie').split(' ')
+  modules = (env['MODULES'] || 'mepto event ajax form ie').split(' ')
   module_files = ( "src/#{module}.js" for module in modules )
-  intro = "/* Zepto #{describe_version()} - #{modules.join(' ')} - zeptojs.com/license */\n"
+  intro = "/* mepto #{describe_version()} - #{modules.join(' ')} - meptojs.com/license */\n"
   dist = cat(module_files).replace(/^\/[\/*].*$/mg, '').replace(/\n{3,}/g, "\n\n")
   dist = cat('src/amd_layout.js').replace(/YIELD/, -> dist.trim()) unless env['NOAMD']
-  (intro + dist).to(zepto_js)
-  report_size(zepto_js)
+  (intro + dist).to(mepto_js)
+  report_size(mepto_js)
 
 target.minify = ->
-  target.build() unless test('-e', zepto_js)
-  zepto_code = cat(zepto_js)
-  intro = zepto_code.slice(0, zepto_code.indexOf("\n") + 1)
-  (intro + minify(zepto_code)).to(zepto_min)
-  report_size(zepto_min)
+  target.build() unless test('-e', mepto_js)
+  mepto_code = cat(mepto_js)
+  intro = mepto_code.slice(0, mepto_code.indexOf("\n") + 1)
+  (intro + minify(mepto_code)).to(mepto_min)
+  report_size(mepto_min)
 
 target.compress = ->
   gzip = require('zlib').createGzip()
-  inp = fs.createReadStream(zepto_min)
-  out = fs.createWriteStream(zepto_gz)
+  inp = fs.createReadStream(mepto_min)
+  out = fs.createWriteStream(mepto_gz)
   inp.pipe(gzip).pipe(out)
   out.on 'close', ->
-    report_size(zepto_gz)
-    factor = fsize(zepto_js) / fsize(zepto_gz)
+    report_size(mepto_gz)
+    factor = fsize(mepto_js) / fsize(mepto_gz)
     echo "compression factor: #{format_number(factor)}"
 
 target.publish = ->
   tag = 'v' + package_version()
   if git_version() == tag
-    rm '-f', zepto_js
+    rm '-f', mepto_js
     env['MODULES'] = env['NOAMD'] = ''
     target.dist()
     res = exec 'npm publish'
