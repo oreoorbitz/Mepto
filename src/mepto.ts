@@ -2,7 +2,7 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type Mepto } from './types';
+import { type Mepto, type PlainObject } from './types';
 
 let mepto: Mepto = (function () {
   let undefined;
@@ -73,55 +73,118 @@ let mepto: Mepto = (function () {
       return object instanceof Array;
     };
 
-  mepto.matches = function (element, selector) {
+  /**
+   * Checks if `element` matches the given CSS `selector`.
+   * Uses the standard `Element.matches` API with vendor-prefix fallbacks,
+   * and falls back to a `qsa`-based query for unsupported browsers.
+   */
+  mepto.matches = function (element: Element, selector: string): boolean {
     if (!selector || !element || element.nodeType !== 1) return false;
-    let matchesSelector =
+
+    // Standard + vendor-prefixed matches implementations
+    const matchesSelector =
       element.matches ||
-      element.webkitMatchesSelector ||
-      element.mozMatchesSelector ||
-      element.oMatchesSelector ||
-      element.matchesSelector;
-    if (matchesSelector) return matchesSelector.call(element, selector);
-    // fall back to performing a selector:
-    let match,
-      parent = element.parentNode,
-      temp = !parent;
-    if (temp) (parent = tempParent).appendChild(element);
-    match = ~mepto.qsa(parent, selector).indexOf(element);
-    temp && tempParent.removeChild(element);
+      (element as any).webkitMatchesSelector ||
+      (element as any).mozMatchesSelector ||
+      (element as any).oMatchesSelector ||
+      (element as any).msMatchesSelector;
+
+    if (matchesSelector) {
+      return matchesSelector.call(element, selector);
+    }
+
+    // Fallback: query the parent node for elements matching the selector
+    let parent = element.parentNode;
+    const isOrphan = !parent;
+
+    if (isOrphan) {
+      parent = tempParent;
+      parent.appendChild(element);
+    }
+
+    const match = mepto.qsa(parent, selector).indexOf(element) > -1;
+
+    if (isOrphan) {
+      tempParent.removeChild(element);
+    }
+
     return match;
   };
 
-  function type(obj) {
+  /**
+   * Returns the internal JavaScript [[Class]] name of `obj` as a lowercase string
+   * (e.g. `"array"`, `"function"`, `"date"`, `"regexp"`, `"object"`).
+   * Returns `"null"` or `"undefined"` for those respective values.
+   */
+  function type(obj: unknown): string {
     return obj == null ? String(obj) : class2type[toString.call(obj)] || 'object';
   }
 
-  function isFunction(value) {
-    return type(value) == 'function';
-  }
-  function isWindow(obj) {
-    return obj != null && obj == obj.window;
-  }
-  function isDocument(obj) {
-    return obj != null && obj.nodeType == obj.DOCUMENT_NODE;
-  }
-  function isObject(obj) {
-    return type(obj) == 'object';
-  }
-  function isPlainObject(obj) {
-    return isObject(obj) && !isWindow(obj) && Object.getPrototypeOf(obj) == Object.prototype;
+  /** Checks whether `value` is a callable function (including async/generator). */
+  function isFunction(value: unknown): value is (...args: unknown[]) => unknown {
+    return typeof value === 'function'
   }
 
-  function likeArray(obj) {
-    let length = !!obj && 'length' in obj && obj.length,
-      type = $.type(obj);
+  /** Checks whether `obj` is the `Window` global object. */
+  function isWindow(obj: unknown): obj is Window {
+    return obj instanceof Window
+  }
+
+  /** Checks whether `obj` is a `Document` node. */
+  function isDocument(obj: unknown): obj is Document {
+    return obj instanceof Document
+  }
+
+  /**
+   * Checks whether `obj` is a non-null object that is not an array.
+   * Returns `true` for plain objects, class instances, `Window`, `Document`, etc.
+   */
+  function isObject(obj: unknown): obj is Record<string, unknown> {
+    return typeof obj === 'object' && obj !== null && !Array.isArray(obj)
+  }
+  /**
+   * Checks if `obj` is a "plain" object — an object created by `{}` or
+   * `Object.create(null)` whose direct prototype is `Object.prototype`.
+   * Returns `false` for arrays, `Window`, `Document`, and class instances.
+   */
+  function isPlainObject(obj: unknown): obj is PlainObject {
+    if (!isObject(obj) || isWindow(obj)) return false;
+    const proto = Object.getPrototypeOf(obj);
+    return proto === null || proto === Object.prototype;
+  }
+
+  /**
+   * Checks whether `obj` is an "array-like" collection — i.e., something that
+   * can be iterated with a numeric index from `0` to `length - 1`.
+   *
+   * Returns `true` for arrays, empty array-likes, and objects with a numeric
+   * `length` where index `length - 1` exists.
+   * Returns `false` for `null`, `undefined`, functions, Window, strings,
+   * numbers, booleans, and other non-array-like values.
+   */
+  function likeArray(obj: unknown): boolean {
+    // Falsy values (null, undefined, "", 0, false, NaN) are never array-like
+    if (!obj) return false;
+
+    // Functions and the Window object are never array-like
+    const objType = type(obj);
+    if (objType === 'function' || isWindow(obj)) return false;
+
+    // Actual arrays are always array-like
+    if (objType === 'array') return true;
+
+    // Only objects can safely use the `in` operator for property checks.
+    // Primitives (number, boolean, string) are not array-like.
+    if (typeof obj !== 'object') return false;
+
+    // Check for a valid `length` property indicating array-like behavior
+    const length = (obj as any).length;
+    if (length === 0) return true;
 
     return (
-      'function' != type &&
-      !isWindow(obj) &&
-      ('array' == type ||
-        length === 0 ||
-        (typeof length == 'number' && length > 0 && length - 1 in obj))
+      typeof length === 'number' &&
+      length > 0 &&
+      (length - 1) in (obj as any)
     );
   }
 
@@ -317,25 +380,55 @@ let mepto: Mepto = (function () {
   // `$.mepto.qsa` is mepto's CSS selector implementation which
   // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
   // This method can be overridden in plugins.
-  mepto.qsa = function (element, selector) {
-    let found,
-      maybeID = selector[0] == '#',
-      maybeClass = !maybeID && selector[0] == '.',
-      nameOnly = maybeID || maybeClass ? selector.slice(1) : selector, // Ensure that a 1 char tag name still gets checked
-      isSimple = simpleSelectorRE.test(nameOnly);
-    return element.getElementById && isSimple && maybeID // Safari DocumentFragment doesn't have getElementById
-      ? (found = element.getElementById(nameOnly))
-        ? [found]
-        : []
-      : element.nodeType !== 1 && element.nodeType !== 9 && element.nodeType !== 11
-        ? []
-        : slice.call(
-            isSimple && !maybeID && element.getElementsByClassName // DocumentFragment doesn't have getElementsByClassName/TagName
-              ? maybeClass
-                ? element.getElementsByClassName(nameOnly) // If it's simple, it could be a class
-                : element.getElementsByTagName(selector) // Or a tag
-              : element.querySelectorAll(selector) // Or it's not simple, and we need to query all
-          );
+  mepto.qsa = function (element: ParentNode, selector: string): Element[] {
+    const maybeID = selector[0] === '#';
+    const maybeClass = !maybeID && selector[0] === '.';
+    // For ID/class selectors, strip the prefix; otherwise use the full selector
+    const nameOnly = (maybeID || maybeClass) ? selector.slice(1) : selector;
+    const isSimple = simpleSelectorRE.test(nameOnly);
+
+    // Fast path: simple ID lookup via getElementById
+    // (Safari DocumentFragment doesn't have getElementById)
+    if (maybeID && isSimple && 'getElementById' in element) {
+      const found = (element as Document).getElementById(nameOnly);
+      return found ? [found] : [];
+    }
+
+    // Only Element (1), Document (9), and DocumentFragment (11) support query methods
+    const nodeType = (element as Node).nodeType;
+    if (nodeType !== 1 && nodeType !== 9 && nodeType !== 11) {
+      return [];
+    }
+
+    // Fast path: simple class or tag lookup via getElementsByClassName/TagName
+    // (DocumentFragment doesn't have getElementsByClassName/TagName)
+    if (isSimple && !maybeID && 'getElementsByClassName' in element) {
+      const results = maybeClass
+        ? (element as Document).getElementsByClassName(nameOnly)
+        : (element as Document).getElementsByTagName(selector);
+      return slice.call(results);
+    }
+
+    // General path: use querySelectorAll for complex selectors
+    return slice.call(element.querySelectorAll(selector));
+  };
+
+  /**
+   * Selects elements by class name, returning a chainable Mepto collection.
+   * Provides a jQuery-compatible API that maps directly to the native
+   * `getElementsByClassName` for straightforward jQuery-to-vanilla migration.
+   *
+   * @example
+   * // jQuery: $('.my-class').addClass('active')
+   * // Mepto:  mepto.getElementsByClassName('my-class').addClass('active')
+   *
+   * // jQuery: $('.my-class', contextElement).hide()
+   * // Mepto:  mepto.getElementsByClassName('my-class', contextElement).hide()
+   */
+  mepto.getElementsByClassName = function (className: string, context?: ParentNode): any {
+    const root = context || document;
+    const elements = (root as Element).getElementsByClassName(className);
+    return $(slice.call(elements));
   };
 
   function filtered(nodes, selector) {
