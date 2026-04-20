@@ -2,51 +2,62 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-let mepto = (function() {
-  let undefined, key, $, classList, emptyArray = [], concat = emptyArray.concat, filter = emptyArray.filter, slice = emptyArray.slice,
-    document = window.document,
-    elementDisplay = {}, classCache = {},
-    cssNumber = { 'column-count': 1, 'columns': 1, 'font-weight': 1, 'line-height': 1,'opacity': 1, 'z-index': 1, 'zoom': 1 },
-    fragmentRE = /^\s*<(\w+|!)[^>]*>/,
-    singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/,
-    tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig,
-    rootNodeRE = /^(?:body|html)$/i,
-    capitalRE = /([A-Z])/g,
+import { type Mepto } from './types';
 
-    // special attributes that should be get/set via method calls
-    methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'],
+let mepto: Mepto = (function() {
+  let undefined
+  let key
+  let $
+  let classList
+  let emptyArray: any[] = []
+  let concat = emptyArray.concat
+  let filter = emptyArray.filter
+  let slice = emptyArray.slice
+  let document = window.document
+  let elementDisplay: Record<string, any> = {}
+  let classCache: Record<string, any> = {}
+  let cssNumber: Record<string, number> = { 'column-count': 1, 'columns': 1, 'font-weight': 1, 'line-height': 1,'opacity': 1, 'z-index': 1, 'zoom': 1 }
+  let fragmentRE = /^\s*<(\w+|!)[^>]*>/
+  let singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/
+  let tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/ig
+  let rootNodeRE = /^(?:body|html)$/i
+  let capitalRE = /([A-Z])/g
 
-    adjacencyOperators = [ 'after', 'prepend', 'before', 'append' ],
-    table = document.createElement('table'),
-    tableRow = document.createElement('tr'),
-    containers = {
-      'tr': document.createElement('tbody'),
-      'tbody': table, 'thead': table, 'tfoot': table,
-      'td': tableRow, 'th': tableRow,
-      '*': document.createElement('div')
-    },
-    simpleSelectorRE = /^[\w-]*$/,
-    class2type = {},
-    toString = class2type.toString,
-    mepto = {},
-    camelize, uniq,
-    tempParent = document.createElement('div'),
-    propMap = {
-      'tabindex': 'tabIndex',
-      'readonly': 'readOnly',
-      'for': 'htmlFor',
-      'class': 'className',
-      'maxlength': 'maxLength',
-      'cellspacing': 'cellSpacing',
-      'cellpadding': 'cellPadding',
-      'rowspan': 'rowSpan',
-      'colspan': 'colSpan',
-      'usemap': 'useMap',
-      'frameborder': 'frameBorder',
-      'contenteditable': 'contentEditable'
-    },
-    isArray = Array.isArray ||
-      function(object){ return object instanceof Array }
+  // special attributes that should be get/set via method calls
+  let methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset']
+
+  let adjacencyOperators = ['after', 'prepend', 'before', 'append']
+  let table = document.createElement('table')
+  let tableRow = document.createElement('tr')
+  let containers = {
+    'tr': document.createElement('tbody'),
+    'tbody': table, 'thead': table, 'tfoot': table,
+    'td': tableRow, 'th': tableRow,
+    '*': document.createElement('div')
+  }
+  let simpleSelectorRE = /^[\w-]*$/
+  let class2type: Record<string, any> = {}
+  let toString = class2type.toString
+  let mepto: any = {}
+  let camelize: any
+  let uniq: any
+  let tempParent = document.createElement('div')
+  let propMap: Record<string, string> = {
+    'tabindex': 'tabIndex',
+    'readonly': 'readOnly',
+    'for': 'htmlFor',
+    'class': 'className',
+    'maxlength': 'maxLength',
+    'cellspacing': 'cellSpacing',
+    'cellpadding': 'cellPadding',
+    'rowspan': 'rowSpan',
+    'colspan': 'colSpan',
+    'usemap': 'useMap',
+    'frameborder': 'frameBorder',
+    'contenteditable': 'contentEditable'
+  }
+  let isArray = Array.isArray ||
+    function(object: any){ return object instanceof Array }
 
   mepto.matches = function(element, selector) {
     if (!selector || !element || element.nodeType !== 1) return false
