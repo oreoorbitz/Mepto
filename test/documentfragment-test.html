@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>DocumentFragment API Test</title>
+  <style>
+    body { font-family: monospace; white-space: pre; padding: 20px; }
+    .pass { color: green; }
+    .fail { color: red; }
+  </style>
+</head>
+<body><script>
+  function log(msg, pass) {
+    const el = document.createElement('div');
+    el.className = pass ? 'pass' : 'fail';
+    el.textContent = (pass ? '✅ ' : '❌ ') + msg;
+    document.body.appendChild(el);
+  }
+
+  const frag = document.createDocumentFragment();
+
+  // Populate the fragment with some test elements
+  const div = document.createElement('div');
+  div.id = 'test-id';
+  div.className = 'test-class';
+  const span = document.createElement('span');
+  span.className = 'test-class';
+  const p = document.createElement('p');
+  frag.appendChild(div);
+  frag.appendChild(span);
+  frag.appendChild(p);
+
+  log('DocumentFragment.getElementById exists: ' + (typeof frag.getElementById), typeof frag.getElementById === 'function');
+  log('DocumentFragment.getElementsByClassName exists: ' + (typeof frag.getElementsByClassName), typeof frag.getElementsByClassName === 'function');
+  log('DocumentFragment.getElementsByTagName exists: ' + (typeof frag.getElementsByTagName), typeof frag.getElementsByTagName === 'function');
+  log('DocumentFragment.querySelectorAll exists: ' + (typeof frag.querySelectorAll), typeof frag.querySelectorAll === 'function');
+  log('DocumentFragment.querySelector exists: ' + (typeof frag.querySelector), typeof frag.querySelector === 'function');
+
+  log('---', true);
+
+  // Test getElementById
+  if (typeof frag.getElementById === 'function') {
+    const byId = frag.getElementById('test-id');
+    log('getElementById("test-id") found element: ' + !!byId, !!byId);
+  } else {
+    log('getElementById not available on DocumentFragment', false);
+  }
+
+  // Test getElementsByClassName
+  if (typeof frag.getElementsByClassName === 'function') {
+    const byClass = frag.getElementsByClassName('test-class');
+    log('getElementsByClassName("test-class").length = ' + byClass.length, byClass.length === 2);
+  } else {
+    log('getElementsByClassName not available on DocumentFragment', false);
+  }
+
+  // Test getElementsByTagName
+  if (typeof frag.getElementsByTagName === 'function') {
+    const byTag = frag.getElementsByTagName('span');
+    log('getElementsByTagName("span").length = ' + byTag.length, byTag.length === 1);
+  } else {
+    log('getElementsByTagName not available on DocumentFragment', false);
+  }
+
+  // Test querySelectorAll
+  if (typeof frag.querySelectorAll === 'function') {
+    const qsa = frag.querySelectorAll('.test-class');
+    log('querySelectorAll(".test-class").length = ' + qsa.length, qsa.length === 2);
+  } else {
+    log('querySelectorAll not available on DocumentFragment', false);
+  }
+
+  log('---', true);
+  log('UserAgent: ' + navigator.userAgent, true);
+</script></body>
+</html>

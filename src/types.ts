@@ -344,7 +344,7 @@ export interface MeptoStatic {
   isWindow(obj: unknown): boolean;
   isDocument(obj: unknown): boolean;
   isObject(obj: unknown): boolean;
-  isPlainObject(obj: unknown): boolean;
+  isPlainObject(obj: unknown): obj is PlainObject;
   isEmptyObject(obj: Record<string, unknown>): boolean;
   isNumeric(obj: unknown): boolean;
   isString(obj: unknown): obj is string;
@@ -461,6 +461,6 @@ export interface MeptoStatic {
   active: number;
 }
 
-interface Meptos {
-
+export interface Mepto {
+ matches: Function
 }

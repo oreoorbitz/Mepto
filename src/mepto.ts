@@ -188,16 +188,31 @@ let mepto: Mepto = (function () {
     );
   }
 
-  function compact(array) {
-    return filter.call(array, function (item) {
+  /**
+   * Filters out `null` and `undefined` values from an array-like object.
+   * Uses a type guard to narrow the return type to non-nullable values.
+   */
+  function compact<T>(array: ArrayLike<T | null | undefined>): T[] {
+    return filter.call(array, function (item: T | null | undefined): item is T {
       return item != null;
     });
   }
-  function flatten(array) {
-    return array.length > 0 ? $.fn.concat.apply([], array) : array;
+
+  /**
+   * Flattens a single level of nested arrays.
+   * Returns an empty array for empty or falsy input to ensure a consistent return type.
+   */
+  function flatten<T>(array: (T | T[])[]): T[] {
+    if (!array || array.length === 0) return [] as T[];
+    return $.fn.concat.apply([], array) as T[];
   }
-  camelize = function (str) {
-    return str.replace(/-+(.)?/g, function (match, chr) {
+
+  /**
+   * Converts a dash-separated string to camelCase.
+   * Handles leading, trailing, and consecutive dashes gracefully.
+   */
+  camelize = function (str: string): string {
+    return str.replace(/-+(.)?/g, function (match: string, chr: string | undefined): string {
       return chr ? chr.toUpperCase() : '';
     });
   };
@@ -388,7 +403,7 @@ let mepto: Mepto = (function () {
     const isSimple = simpleSelectorRE.test(nameOnly);
 
     // Fast path: simple ID lookup via getElementById
-    // (Safari DocumentFragment doesn't have getElementById)
+    // Supported on Document and DocumentFragment (Safari 26.2+); not on Element
     if (maybeID && isSimple && 'getElementById' in element) {
       const found = (element as Document).getElementById(nameOnly);
       return found ? [found] : [];
@@ -431,22 +446,54 @@ let mepto: Mepto = (function () {
     return $(slice.call(elements));
   };
 
+  /**
+   * Selects elements by tag name, returning a chainable Mepto collection.
+   * Provides a jQuery-compatible API that maps directly to the native
+   * `getElementsByTagName` for straightforward jQuery-to-vanilla migration.
+   *
+   * @example
+   * // jQuery: $('div').addClass('highlight')
+   * // Mepto:  mepto.getElementsByTagName('div').addClass('highlight')
+   *
+   * // jQuery: $('li', listElement).remove()
+   * // Mepto:  mepto.getElementsByTagName('li', listElement).remove()
+   */
+  mepto.getElementsByTagName = function (tagName: string, context?: ParentNode): any {
+    const root = context || document;
+    const elements = (root as Element).getElementsByTagName(tagName);
+    return $(slice.call(elements));
+  };
+
+  /**
+   * Selects a single element by its ID, returning a chainable Mepto collection.
+   * Mirrors the `getElementById` fast path used inside `mepto.qsa`, but as a
+   * standalone method for straightforward jQuery-to-vanilla migration.
+   *
+   * Supported on `Document` and `DocumentFragment` (Safari 26.2+).
+   * Not available on `Element` — the `'getElementById' in root` guard
+   * handles this gracefully.
+   *
+   * @example
+   * // jQuery: $('#my-element').addClass('active')
+   * // Mepto:  mepto.getElementById('my-element').addClass('active')
+   *
+   * // With explicit document context:
+   * mepto.getElementById('my-element', iframe.contentDocument).hide()
+   */
+  mepto.getElementById = function (id: string, context?: ParentNode): any {
+    const root = context || document;
+    if (!('getElementById' in root)) return $();
+    const found = (root as Document).getElementById(id);
+    return found ? $([found]) : $();
+  };
+
   function filtered(nodes, selector) {
     return selector == null ? $(nodes) : $(nodes).filter(selector);
   }
 
-  $.contains = document.documentElement.contains
-    ? function (parent, node) {
-        return parent !== node && parent.contains(node);
-      }
-    : function (parent, node) {
-        while (node && (node = node.parentNode)) if (node === parent) return true;
-        return false;
-      };
-
-  function funcArg(context, arg, idx, payload) {
-    return isFunction(arg) ? arg.call(context, idx, payload) : arg;
-  }
+  $.contains = function (parent: Node, node: Node): boolean {
+    return parent !== node && parent.contains(node);
+  };
 
   function setAttribute(node, name, value) {
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
@@ -466,26 +513,35 @@ let mepto: Mepto = (function () {
   // "null"  => null
   // "42"    => 42
   // "42.5"  => 42.5
-  // "08"    => "08"
-  // JSON    => parse if valid
+  // "08"    => "08"   (preserved — not a valid decimal literal)
+  // JSON    => parse if valid, otherwise return as-is
   // String  => self
-  function deserializeValue(value) {
-    try {
-      return value
-        ? value == 'true' ||
-            (value == 'false'
-              ? false
-              : value == 'null'
-                ? null
-                : +value + '' == value
-                  ? +value
-                  : /^[\[\{]/.test(value)
-                    ? $.parseJSON(value)
-                    : value)
-        : value;
-    } catch (e) {
-      return value;
+  function deserializeValue(value: string): any {
+    // Falsy values (empty string, null, undefined) — return as-is
+    if (!value) return value;
+
+    // Boolean literals
+    if (value === 'true') return true;
+    if (value === 'false') return false;
+
+    // Null literal
+    if (value === 'null') return null;
+
+    // Numeric strings — round-trip check preserves non-decimal strings like "08"
+    const num = +value;
+    if ('' + num === value) return num;
+
+    // JSON arrays/objects — charAt is cheaper than regex for first-char check
+    if (value.charAt(0) === '[' || value.charAt(0) === '{') {
+      try {
+        return $.parseJSON(value);
+      } catch {
+        return value;
+      }
     }
+
+    // Everything else — return as-is
+    return value;
   }
 
   $.type = type;
@@ -601,33 +657,30 @@ let mepto: Mepto = (function () {
     // `map` and `slice` in the jQuery API work differently
     // from their array counterparts
     map: function (fn) {
-      return $(
-        $.map(this, function (el, i) {
-          return fn.call(el, i, el);
-        })
-      );
+      let values = [];
+      for (let i = 0, len = this.length; i < len; i++) {
+        let value = fn.call(this[i], i, this[i]);
+        if (value != null) values.push(value);
+      }
+      return $(flatten(values));
     },
-    slice: function () {
-      return $(slice.apply(this, arguments));
+    slice: function (start?, end?) {
+      return $(slice.call(this, start, end));
     },
 
     ready: function (callback) {
-      // don't use "interactive" on IE <= 10 (it can fired premature)
-      if (
-        document.readyState === 'complete' ||
-        (document.readyState !== 'loading' && !document.documentElement.doScroll)
-      )
+      if (document.readyState !== 'loading') {
         setTimeout(function () {
           callback($);
         }, 0);
-      else {
-        let handler = function () {
-          document.removeEventListener('DOMContentLoaded', handler, false);
-          window.removeEventListener('load', handler, false);
-          callback($);
-        };
-        document.addEventListener('DOMContentLoaded', handler, false);
-        window.addEventListener('load', handler, false);
+      } else {
+        document.addEventListener(
+          'DOMContentLoaded',
+          function () {
+            callback($);
+          },
+          { once: true }
+        );
       }
       return this;
     },
@@ -646,16 +699,31 @@ let mepto: Mepto = (function () {
       });
     },
     each: function (callback) {
-      emptyArray.every.call(this, function (el, idx) {
-        return callback.call(el, idx, el) !== false;
-      });
+      for (let i = 0, len = this.length; i < len; i++) {
+        if (callback.call(this[i], i, this[i]) === false) break;
+      }
       return this;
     },
-    filter: function (selector) {
-      if (isFunction(selector)) return this.not(this.not(selector));
+    filter: function (selector: string | ((index: number, element: Element) => boolean)) {
+      if (isFunction(selector)) {
+        // Filter directly with the callback — O(n) instead of the previous
+        // double-negation pattern this.not(this.not(selector)) which was
+        // O(n*m) and created two intermediate collections.
+        return $(
+          filter.call(this, function (element: Element, index: number) {
+            return selector.call(element, index, element);
+          })
+        );
+      }
+
+      // Short-circuit on nullish selector — avoids iterating when no element
+      // can possibly match. mepto.matches already guards against this, but we
+      // skip the loop entirely.
+      if (selector == null) return $();
+
       return $(
-        filter.call(this, function (element) {
-          return mepto.matches(element, selector);
+        filter.call(this, function (element: Element) {
+          return mepto.matches(element, selector as string);
         })
       );
     },
@@ -686,9 +754,9 @@ let mepto: Mepto = (function () {
       }
       return $(nodes);
     },
-    has: function (selector) {
-      return this.filter(function () {
-        return isObject(selector) ? $.contains(this, selector) : $(this).find(selector).size();
+    has: function (selector: string | Node) {
+      return this.filter(function (this: HTMLElement) {
+        return isObject(selector) ? $.contains(this, selector as Node) : $(this).find(selector as string).length > 0;
       });
     },
     eq: function (idx) {
@@ -703,34 +771,52 @@ let mepto: Mepto = (function () {
       return el && !isObject(el) ? el : $(el);
     },
     find: function (selector) {
-      let result,
-        $this = this;
-      if (!selector) result = $();
-      else if (typeof selector == 'object')
-        result = $(selector).filter(function () {
-          let node = this;
-          return emptyArray.some.call($this, function (parent) {
-            return $.contains(parent, node);
-          });
-        });
-      else if (this.length == 1) result = $(mepto.qsa(this[0], selector));
-      else
-        result = this.map(function () {
-          return mepto.qsa(this, selector);
-        });
-      return result;
+      if (!selector) return $();
+
+      if (typeof selector == 'object') {
+        const nodes = $(selector);
+        const result = [];
+        for (let i = 0, nlen = nodes.length; i < nlen; i++) {
+          for (let j = 0, plen = this.length; j < plen; j++) {
+            if ($.contains(this[j], nodes[i])) {
+              result.push(nodes[i]);
+              break;
+            }
+          }
+        }
+        return $(result);
+      }
+
+      if (this.length == 1) return $(mepto.qsa(this[0], selector));
+
+      return this.map(function () {
+        return mepto.qsa(this, selector);
+      });
     },
     closest: function (selector, context) {
       let nodes = [],
-        collection = typeof selector == 'object' && $(selector);
-      this.each(function (_, node) {
-        while (
-          node &&
-          !(collection ? collection.indexOf(node) >= 0 : mepto.matches(node, selector))
-        )
-          node = node !== context && !isDocument(node) && node.parentNode;
-        if (node && nodes.indexOf(node) < 0) nodes.push(node);
-      });
+        collection = typeof selector == 'object' && $(selector),
+        matchers = collection ? new Set() : null,
+        seen = new Set();
+
+      if (matchers)
+        for (let i = 0, len = collection.length; i < len; i++) matchers.add(collection[i]);
+
+      for (let i = 0, len = this.length; i < len; i++) {
+        let node = this[i];
+        while (node) {
+          if (matchers ? matchers.has(node) : mepto.matches(node, selector)) {
+            if (!seen.has(node)) {
+              seen.add(node);
+              nodes.push(node);
+            }
+            break;
+          }
+          if (node === context || isDocument(node)) break;
+          node = node.parentNode;
+        }
+      }
+
       return $(nodes);
     },
     parents: function (selector) {
@@ -746,7 +832,16 @@ let mepto: Mepto = (function () {
       return filtered(ancestors, selector);
     },
     parent: function (selector) {
-      return filtered(uniq(this.pluck('parentNode')), selector);
+      let parents = [];
+      let seen = new Set();
+      for (let i = 0, len = this.length; i < len; i++) {
+        let parent = this[i].parentNode;
+        if (parent && !seen.has(parent)) {
+          seen.add(parent);
+          parents.push(parent);
+        }
+      }
+      return filtered(parents, selector);
     },
     children: function (selector) {
       return filtered(
@@ -855,7 +950,7 @@ let mepto: Mepto = (function () {
             let originHtml = this.innerHTML;
             $(this)
               .empty()
-              .append(funcArg(this, html, idx, originHtml));
+              .append(isFunction(html) ? html.call(this, idx, originHtml) : html);
           })
         : 0 in this
           ? this[0].innerHTML
@@ -864,7 +959,7 @@ let mepto: Mepto = (function () {
     text: function (text) {
       return 0 in arguments
         ? this.each(function (idx) {
-            let newText = funcArg(this, text, idx, this.textContent);
+            let newText = isFunction(text) ? text.call(this, idx, this.textContent) : text;
             this.textContent = newText == null ? '' : '' + newText;
           })
         : 0 in this
@@ -872,16 +967,26 @@ let mepto: Mepto = (function () {
           : null;
     },
     attr: function (name, value) {
-      let result;
-      return typeof name == 'string' && !(1 in arguments)
-        ? 0 in this && this[0].nodeType == 1 && (result = this[0].getAttribute(name)) != null
-          ? result
-          : undefined
-        : this.each(function (idx) {
-            if (this.nodeType !== 1) return;
-            if (isObject(name)) for (key in name) setAttribute(this, key, name[key]);
-            else setAttribute(this, name, funcArg(this, value, idx, this.getAttribute(name)));
-          });
+      // Getter
+      if (typeof name == 'string' && arguments.length < 2) {
+        if (this.length > 0 && this[0].nodeType === 1) {
+          let result = this[0].getAttribute(name);
+          return result != null ? result : undefined;
+        }
+        return undefined;
+      }
+
+      // Setter
+      for (let i = 0, len = this.length; i < len; i++) {
+        let el = this[i];
+        if (el.nodeType !== 1) continue;
+        if (isObject(name)) {
+          for (let key in name) setAttribute(el, key, name[key]);
+        } else {
+          setAttribute(el, name, isFunction(value) ? value.call(el, i, el.getAttribute(name)) : value);
+        }
+      }
+      return this;
     },
     removeAttr: function (name) {
       return this.each(function () {
@@ -897,7 +1002,7 @@ let mepto: Mepto = (function () {
         ? this[0] && this[0][name]
         : this.each(function (idx) {
             if (isObject(name)) for (key in name) this[propMap[key] || key] = name[key];
-            else this[name] = funcArg(this, value, idx, this[name]);
+            else this[name] = isFunction(value) ? value.call(this, idx, this[name]) : value;
           });
     },
     removeProp: function (name) {
@@ -909,35 +1014,43 @@ let mepto: Mepto = (function () {
     data: function (name, value) {
       let attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
 
-      let data = 1 in arguments ? this.attr(attrName, value) : this.attr(attrName);
+      if (arguments.length > 1) {
+        return this.attr(attrName, value);
+      }
 
+      let data = this.attr(attrName);
       return data !== null ? deserializeValue(data) : undefined;
     },
     val: function (value) {
-      if (0 in arguments) {
-        if (value == null) value = '';
-        return this.each(function (idx) {
-          this.value = funcArg(this, value, idx, this.value);
-        });
-      } else {
-        return (
-          this[0] &&
-          (this[0].multiple
-            ? $(this[0])
-                .find('option')
-                .filter(function () {
-                  return this.selected;
-                })
-                .pluck('value')
-            : this[0].value)
-        );
+      // Setter
+      if (arguments.length > 0) {
+        let v = value == null ? '' : value;
+        for (let i = 0, len = this.length; i < len; i++) {
+          let el = this[i];
+          el.value = isFunction(v) ? v.call(el, i, el.value) : v;
+        }
+        return this;
       }
+
+      // Getter
+      let el = this[0];
+      if (!el) return undefined;
+
+      if (el.multiple) {
+        let result = [];
+        for (let i = 0, len = el.selectedOptions.length; i < len; i++) {
+          result.push(el.selectedOptions[i].value);
+        }
+        return result;
+      }
+
+      return el.value;
     },
     offset: function (coordinates) {
       if (coordinates)
         return this.each(function (index) {
           let $this = $(this),
-            coords = funcArg(this, coordinates, index, $this.offset()),
+            coords = isFunction(coordinates) ? coordinates.call(this, index, $this.offset()) : coordinates,
             parentOffset = $this.offsetParent().offset(),
             props = {
               top: coords.top - parentOffset.top,
@@ -1017,7 +1130,7 @@ let mepto: Mepto = (function () {
         if (!('className' in this)) return;
         classList = [];
         let cls = className(this),
-          newName = funcArg(this, name, idx, cls);
+          newName = isFunction(name) ? name.call(this, idx, cls) : name;
         newName.split(/\s+/g).forEach(function (klass) {
           if (!$(this).hasClass(klass)) classList.push(klass);
         }, this);
@@ -1029,7 +1142,7 @@ let mepto: Mepto = (function () {
         if (!('className' in this)) return;
         if (name === undefined) return className(this, '');
         classList = className(this);
-        funcArg(this, name, idx, classList)
+        (isFunction(name) ? name.call(this, idx, classList) : name)
           .split(/\s+/g)
           .forEach(function (klass) {
             classList = classList.replace(classRE(klass), ' ');
@@ -1041,7 +1154,7 @@ let mepto: Mepto = (function () {
       if (!name) return this;
       return this.each(function (idx) {
         let $this = $(this),
-          names = funcArg(this, name, idx, className(this));
+          names = isFunction(name) ? name.call(this, idx, className(this)) : name;
         names.split(/\s+/g).forEach(function (klass) {
           (when === undefined ? !$this.hasClass(klass) : when)
             ? $this.addClass(klass)
@@ -1136,15 +1249,18 @@ let mepto: Mepto = (function () {
       else
         return this.each(function (idx) {
           el = $(this);
-          el.css(dimension, funcArg(this, value, idx, el[dimension]()));
+          el.css(dimension, isFunction(value) ? value.call(this, idx, el[dimension]()) : value);
         });
     };
   });
 
-  function traverseNode(node, fun) {
-    fun(node);
-    for (let i = 0, len = node.childNodes.length; i < len; i++)
-      traverseNode(node.childNodes[i], fun);
+  function traverseNode(node: Node, callback: (node: any) => void): void {
+    if (!node) return;
+    callback(node);
+    const children = node.childNodes;
+    for (let i = 0, len = children.length; i < len; i++) {
+      traverseNode(children[i], callback);
+    }
   }
 
   // Generate the `after`, `prepend`, `before`, `append`,

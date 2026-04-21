@@ -3,8 +3,11 @@
  * Manages browser instances and executes code in isolated contexts
  */
 
-import puppeteer, { Browser, Page, ConsoleMessage } from 'puppeteer';
+import puppeteer, { Browser, Page, ConsoleMessage, PuppeteerLaunchOptions } from 'puppeteer';
 import { sanitize, wrapInContext, SanitizationResult } from './security/sanitizer';
+import * as fs from 'fs';
+import * as os from 'os';
+import * as path from 'path';
 
 export interface TestOptions {
   code: string;
@@ -15,6 +18,8 @@ export interface TestOptions {
   width?: number;
   height?: number;
   collectConsole?: boolean;
+  /** Port the Vite dev server is listening on (used to build script URLs) */
+  port?: number;
 }
 
 export interface TestResult {
@@ -52,9 +57,39 @@ export class TestRunner {
   /**
    * Initialize the browser
    */
-  async init(headless = true): Promise<void> {
-    this.browser = await puppeteer.launch({
-      headless,
+  private findChrome(): string | undefined {
+    const platform = os.platform();
+    const candidates: string[] = [];
+
+    if (platform === 'darwin') {
+      candidates.push('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome');
+      candidates.push('/Applications/Google Chrome Canary.app/Contents/MacOS/Google Chrome Canary');
+      candidates.push('/Applications/Chromium.app/Contents/MacOS/Chromium');
+      candidates.push(path.join(os.homedir(), 'Applications/Google Chrome.app/Contents/MacOS/Google Chrome'));
+    } else if (platform === 'linux') {
+      candidates.push('/usr/bin/google-chrome');
+      candidates.push('/usr/bin/google-chrome-stable');
+      candidates.push('/usr/bin/chromium');
+      candidates.push('/usr/bin/chromium-browser');
+    } else if (platform === 'win32') {
+      candidates.push('C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe');
+      candidates.push('C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe');
+    }
+
+    for (const c of candidates) {
+      try {
+        fs.accessSync(c, fs.constants.X_OK);
+        return c;
+      } catch {
+        // not found or not executable
+      }
+    }
+    return undefined;
+  }
+
+  async init(headless: boolean | 'new' = true): Promise<void> {
+    const launchOptions: PuppeteerLaunchOptions = {
+      headless: headless === true ? 'new' : headless,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -64,7 +99,14 @@ export class TestRunner {
         '--disable-web-security', // For local testing only
         '--disable-features=IsolateOrigins,site-per-process',
       ],
-    });
+    };
+
+    const chromePath = this.findChrome();
+    if (chromePath) {
+      launchOptions.executablePath = chromePath;
+    }
+
+    this.browser = await puppeteer.launch(launchOptions);
   }
 
   /**
@@ -116,32 +158,34 @@ export class TestRunner {
 
   /**
    * Load HTML content into the page
+   * @param html  HTML fixture string
+   * @param port  Port the Vite dev server is actually listening on
    */
-  async loadHTML(html: string): Promise<void> {
+  async loadHTML(html: string, port = 3000): Promise<void> {
     if (!this.page) {
       throw new Error('Page not created. Call createPage() first.');
     }
 
-    const wrappedHtml = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <meta charset="UTF-8">
-          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <style>
-            /* Reset styles */
-            * { margin: 0; padding: 0; box-sizing: border-box; }
-            body { font-family: system-ui, sans-serif; padding: 20px; }
-          </style>
-        </head>
-        <body>
-          ${html}
-          <script src="http://localhost:3000/dist/meptos.umd.cjs"></script>
-        </body>
-      </html>
-    `;
+    // Navigate to the actual Vite-hosted blank page so Mepto loads from
+    // the same origin and we avoid the document.write / cross-origin
+    // parser-blocking issues that plague page.setContent().
+    const blankUrl = `http://localhost:${port}/test/blank.html`;
+    await this.page.goto(blankUrl, { waitUntil: 'networkidle0' });
 
-    await this.page.setContent(wrappedHtml, { waitUntil: 'networkidle0' });
+    // Inject the fixture HTML into the test container
+    if (html && html.trim()) {
+      await this.page.evaluate((fixtureHtml) => {
+        const container = document.getElementById('test-container');
+        if (container) {
+          container.innerHTML = fixtureHtml;
+        } else {
+          // Fallback if blank.html template ever changes
+          const div = document.createElement('div');
+          div.innerHTML = fixtureHtml;
+          document.body.appendChild(div);
+        }
+      }, html);
+    }
   }
 
   /**
@@ -160,13 +204,11 @@ export class TestRunner {
    */
   async execute(
     code: string,
-    timeout = DEFAULT_TIMEOUT
+    _timeout = DEFAULT_TIMEOUT
   ): Promise<{ result?: unknown; error?: string; stack?: string }> {
     if (!this.page) {
       throw new Error('Page not created. Call createPage() first.');
     }
-
-    const wrappedCode = wrapInContext(code);
 
     try {
       const result = await this.page.evaluate(
@@ -181,7 +223,7 @@ export class TestRunner {
             };
           }
         },
-        wrappedCode
+        code
       );
 
       return result;
@@ -231,28 +273,30 @@ export class TestRunner {
       await this.createPage(options.width, options.height);
 
       // Load content
+      const port = options.port || 3000;
       if (options.html) {
-        await this.loadHTML(options.html);
+        await this.loadHTML(options.html, port);
       } else if (options.url) {
         await this.navigate(options.url);
       } else {
         // Default empty page with Mepto loaded
-        await this.loadHTML('');
+        await this.loadHTML('', port);
       }
 
       // Execute with timeout
+      type ExecutionResult = { result?: unknown; error?: string; stack?: string };
       const executionPromise = this.execute(sanitization.code!, options.timeout);
-      const timeoutPromise = new Promise<{ error: string }>((_, reject) => {
+      const timeoutPromise = new Promise<ExecutionResult>((_, reject) => {
         setTimeout(() => reject(new Error('Execution timeout')), options.timeout || DEFAULT_TIMEOUT);
       });
 
-      const execution = await Promise.race([executionPromise, timeoutPromise]).catch((e) => ({
+      const execution: ExecutionResult = await Promise.race([executionPromise, timeoutPromise]).catch((e) => ({
         error: (e as Error).message,
       }));
 
       const endTime = Date.now();
 
-      if ('error' in execution && execution.error) {
+      if (execution.error) {
         return {
           success: false,
           error: execution.error,

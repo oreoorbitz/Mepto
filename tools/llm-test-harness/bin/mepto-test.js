@@ -107,6 +107,9 @@ async function main() {
       headless: options.headless,
       width: parseInt(options.width),
       height: parseInt(options.height),
+      // --no-server sets options.server to false; --no-wait-for-server
+      // sets options.waitForServer to false. Both are respected.
+      startServer: options.server,
       waitForServer: options.waitForServer,
       serverTimeout: 30000,
     });
