@@ -16,7 +16,7 @@
         })
       }
 
-      load('mepto detect ie')
+      load('mepto detect')
     })()
   </script>
 </head>
@@ -233,7 +233,6 @@
           t.assertTrue(os.phone)
           t.assertTrue(browser.safari)
           t.assertFalse(!!os.android)
-          t.assertFalse(!!browser.ie)
           t.assertFalse(!!browser.firefox)
           t.assertFalse(!!browser.silk)
           t.assertFalse(!!browser.chrome)
@@ -471,51 +470,6 @@
         })
       },
 
-      testIE: function(t) {
-        detect(UA.Windows_IE_11, function(os, browser){
-          t.assertFalse(os.phone)
-          t.assertFalse(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("11", browser.version)
-        })
-
-        detect(UA.Windows_IE_10, function(os, browser){
-          t.assertFalse(os.phone)
-          t.assertFalse(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("10.0", browser.version)
-        })
-
-        detect(UA.Windows_RT_Surface, function(os, browser){
-          t.assertFalse(os.phone)
-          t.assertTrue(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("10.0", browser.version)
-        })
-
-        detect(UA.Windows_Phone_8, function(os, browser){
-          t.assertTrue(os.wp)
-          t.assertTrue(os.phone)
-          t.assertFalse(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("10.0", browser.version)
-        })
-
-        detect(UA.Windows_IE_9, function(os, browser){
-          t.assertFalse(os.phone)
-          t.assertFalse(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("9.0", browser.version)
-        })
-
-        detect(UA.Windows_IE_9_Compat, function(os, browser){
-          t.assertFalse(os.phone)
-          t.assertFalse(os.tablet)
-          t.assertTrue(browser.ie)
-          t.assertEqual("7.0", browser.version)
-        })
-
-      }
     })
   })()
   </script>

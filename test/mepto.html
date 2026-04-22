@@ -16,7 +16,7 @@
         })
       }
 
-      load('mepto event ie')
+      load('mepto event')
     })()
   </script>
   <style>
@@ -1923,8 +1923,6 @@
       testAttrOnTextInputField: function(t) {
         var inputs, values
 
-        // HTML is set here because IE does not reset
-        // values of input fields on page reload
         document.getElementById('attr_with_text_input').innerHTML =
           '<input value="Default input">'+
           '<input type="text" value="Text input">'+
@@ -2047,9 +2045,6 @@
       testVal: function(t) {
         var input = $('#attr_val')
 
-        // some browsers like IE don't reset input values on reload
-        // which messes up repeated test runs, so set the start value
-        // directly via the DOM API
         document.getElementById('attr_val').value = 'Hello World'
 
         t.assertEqual('Hello World', input.val())
@@ -2300,10 +2295,6 @@
 
         // selector
 
-        // Note that on IE resetting the parent element to be empty will
-        // cause inserted elements to be emptied out, so we have to re-create
-        // them. This is the same behavior as on jQuery.
-        // (Other browsers don't exhibit this problem.)
         ap = $(div('appendto'))
         pr = $(div('prependto'))
 

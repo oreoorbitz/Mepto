@@ -115,7 +115,6 @@
       if (delta > 0 && delta <= 250) touch.isDoubleTap = true
       touch.last = now
       longTapTimeout = setTimeout(longTap, longTapDelay)
-      // adds the current touch contact for IE gesture recognition
       if (gesture && _isPointerType) gesture.addPointer(e.pointerId)
     }
 
