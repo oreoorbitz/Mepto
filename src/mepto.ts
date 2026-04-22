@@ -309,29 +309,36 @@ let mepto: Mepto = (function () {
   // The generated DOM nodes are returned as an array.
   // This function can be overridden in plugins for example to make
   // it compatible with browsers that don't support the DOM fully.
-  mepto.fragment = function (html, name, properties) {
-    let dom, nodes, container;
+  mepto.fragment = function (html: string, name: string | undefined, properties: PlainObject | null | undefined): ArrayLike<Element> {
+    let dom: ArrayLike<Element>;
 
-    // A special case optimization for a single tag
-    if (singleTagRE.test(html)) dom = $(document.createElement(RegExp.$1));
+    // Fast path: a single empty or self-closing tag like <div>, <br/>
+    const singleMatch = singleTagRE.exec(html);
+    if (singleMatch) {
+      dom = $(document.createElement(singleMatch[1]));
+    } else {
+      // Expand implicit self-closing non-void tags: <foo bar/> → <foo bar></foo>
+      html = html.replace(tagExpanderRE, '<$1></$2>');
 
-    if (!dom) {
-      if (html.replace) html = html.replace(tagExpanderRE, '<$1></$2>');
-      if (name === undefined) name = fragmentRE.test(html) && RegExp.$1;
-      if (!(name in containers)) name = '*';
-
-      container = containers[name];
-      container.innerHTML = '' + html;
-      dom = $.each(slice.call(container.childNodes), function () {
+      // Determine the right container so the browser parses the HTML correctly.
+      // e.g. <tr> must live inside <tbody>, not a bare <div>.
+      if (name === undefined) {
+        const fragMatch = fragmentRE.exec(html);
+        name = fragMatch ? fragMatch[1] : undefined;
+      }
+      const containerKey = (name !== undefined && name in containers) ? name : '*';
+      const container = containers[containerKey];
+      container.innerHTML = html;
+      dom = $.each(slice.call(container.childNodes), function (this: ChildNode) {
         container.removeChild(this);
       });
     }
 
     if (isPlainObject(properties)) {
-      nodes = $(dom);
-      $.each(properties, function (key, value) {
-        if (methodAttributes.indexOf(key) > -1) nodes[key](value);
-        else nodes.attr(key, value);
+      const nodes = $(dom);
+      $.each(properties, function (key: string, value: unknown) {
+        if (methodAttributes.indexOf(key) > -1) (nodes as any)[key](value);
+        else nodes.attr(key, value as string);
       });
     }
 
@@ -662,34 +669,38 @@ let mepto: Mepto = (function () {
   $.expr = {};
   $.noop = function () {};
 
-  $.map = function (elements, callback) {
-    let value,
-      values = [],
-      i,
-      key;
-    if (likeArray(elements))
-      for (i = 0; i < elements.length; i++) {
-        value = callback(elements[i], i);
+  $.map = function <T, U>(
+    elements: ArrayLike<T> | Record<string, T>,
+    callback: (item: T, index: number | string) => U | null | undefined
+  ): U[] {
+    const values: U[] = [];
+    if (likeArray(elements)) {
+      const arr = elements as ArrayLike<T>;
+      for (let i = 0; i < arr.length; i++) {
+        const value = callback(arr[i], i);
         if (value != null) values.push(value);
       }
-    else
-      for (key in elements) {
-        value = callback(elements[key], key);
+    } else {
+      for (const key in elements as Record<string, T>) {
+        const value = callback((elements as Record<string, T>)[key], key);
         if (value != null) values.push(value);
       }
+    }
     return flatten(values);
   };
 
-  $.each = function (elements, callback) {
-    let i, key;
+  $.each = function <T>(
+    elements: ArrayLike<T> | Record<string, T>,
+    callback: (this: T, index: number | string, item: T) => boolean | void
+  ): typeof elements {
     if (likeArray(elements)) {
-      for (i = 0; i < elements.length; i++)
-        if (callback.call(elements[i], i, elements[i]) === false) return elements;
+      const arr = elements as ArrayLike<T>;
+      for (let i = 0; i < arr.length; i++)
+        if (callback.call(arr[i], i, arr[i]) === false) return elements;
     } else {
-      for (key in elements)
-        if (callback.call(elements[key], key, elements[key]) === false) return elements;
+      for (const key in elements as Record<string, T>)
+        if (callback.call((elements as Record<string, T>)[key], key, (elements as Record<string, T>)[key]) === false) return elements;
     }
-
     return elements;
   };
 
