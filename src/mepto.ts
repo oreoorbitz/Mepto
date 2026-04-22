@@ -6,9 +6,7 @@ import { type Mepto, type PlainObject } from './types';
 
 let mepto: Mepto = (function () {
   let undefined;
-  let key;
   let $;
-  let classList;
   let emptyArray: any[] = [];
   let concat = emptyArray.concat;
   let filter = emptyArray.filter;
@@ -276,24 +274,23 @@ let mepto: Mepto = (function () {
     return typeof value === 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value;
   }
 
-  function defaultDisplay(nodeName) {
-    let element, display;
+  function defaultDisplay(nodeName: string): string {
     if (!elementDisplay[nodeName]) {
-      element = document.createElement(nodeName);
+      const element = document.createElement(nodeName);
       document.body.appendChild(element);
-      display = getComputedStyle(element, '').getPropertyValue('display');
-      element.parentNode.removeChild(element);
-      display == 'none' && (display = 'block');
+      let display = getComputedStyle(element, '').getPropertyValue('display');
+      element.parentNode!.removeChild(element);
+      if (display === 'none') display = 'block';
       elementDisplay[nodeName] = display;
     }
     return elementDisplay[nodeName];
   }
 
-  function children(element) {
+  function children(element: Node): Element[] {
     return 'children' in element
-      ? slice.call(element.children)
-      : $.map(element.childNodes, function (node) {
-          if (node.nodeType == 1) return node;
+      ? slice.call((element as Element).children)
+      : $.map(element.childNodes, function (node: Node) {
+          if (node.nodeType === 1) return node as Element;
         });
   }
 
@@ -348,13 +345,13 @@ let mepto: Mepto = (function () {
   // `$.mepto.Z` swaps out the prototype of the given `dom` array
   // of nodes with `$.fn` and thus supplying all the mepto functions
   // to the array. This method can be overridden in plugins.
-  mepto.Z = function (dom, selector) {
+  mepto.Z = function (dom: ArrayLike<Element> | null | undefined, selector: string) {
     return new Z(dom, selector);
   };
 
   // `$.mepto.isZ` should return `true` if the given object is a mepto
   // collection. This method can be overridden in plugins.
-  mepto.isZ = function (object) {
+  mepto.isZ = function (object: unknown): boolean {
     return object instanceof mepto.Z;
   };
 
@@ -362,51 +359,58 @@ let mepto: Mepto = (function () {
   // takes a CSS selector and an optional context (and handles various
   // special cases).
   // This method can be overridden in plugins.
-  mepto.init = function (selector, context) {
-    let dom;
-    // If nothing given, return an empty mepto collection
-    if (!selector) return mepto.Z();
-    // Optimize for string selectors
-    else if (typeof selector == 'string') {
-      selector = selector.trim();
-      // If it's a html fragment, create nodes from it
+  mepto.init = function (selector: any, context?: any): any {
+    let dom: ArrayLike<Element> | null | undefined;
+    let finalSelector: any = selector;
+
+    if (!selector) {
+      return mepto.Z();
+    } else if (typeof selector === 'string') {
+      const str = selector.trim();
+      finalSelector = str;
+      // HTML fragment: create nodes from it
       // Note: In both Chrome 21 and Firefox 15, DOM error 12
       // is thrown if the fragment doesn't begin with <
-      if (selector[0] == '<' && fragmentRE.test(selector))
-        ((dom = mepto.fragment(selector, RegExp.$1, context)), (selector = null));
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector);
-      // If it's a CSS selector, use it to select nodes.
-      else dom = mepto.qsa(document, selector);
+      const fragMatch = str[0] === '<' ? fragmentRE.exec(str) : null;
+      if (fragMatch) {
+        dom = mepto.fragment(str, fragMatch[1], context);
+        finalSelector = null;
+      } else if (context !== undefined) {
+        return $(context).find(str);
+      } else {
+        dom = mepto.qsa(document, str);
+      }
+    } else if (isFunction(selector)) {
+      return $(document).ready(selector);
+    } else if (mepto.isZ(selector)) {
+      return selector;
+    } else {
+      if (isArray(selector)) {
+        dom = compact(selector);
+      } else if (isObject(selector)) {
+        dom = [selector];
+        finalSelector = null;
+      } else {
+        const fragMatch = fragmentRE.exec(selector);
+        if (fragMatch) {
+          dom = mepto.fragment(selector.trim(), fragMatch[1], context);
+          finalSelector = null;
+        } else if (context !== undefined) {
+          return $(context).find(selector);
+        } else {
+          dom = mepto.qsa(document, selector);
+        }
+      }
     }
-    // If a function is given, call it when the DOM is ready
-    else if (isFunction(selector)) return $(document).ready(selector);
-    // If a mepto collection is given, just return it
-    else if (mepto.isZ(selector)) return selector;
-    else {
-      // normalize array if an array of nodes is given
-      if (isArray(selector)) dom = compact(selector);
-      // Wrap DOM nodes.
-      else if (isObject(selector)) ((dom = [selector]), (selector = null));
-      // If it's a html fragment, create nodes from it
-      else if (fragmentRE.test(selector))
-        ((dom = mepto.fragment(selector.trim(), RegExp.$1, context)), (selector = null));
-      // If there's a context, create a collection on that context first, and select
-      // nodes from there
-      else if (context !== undefined) return $(context).find(selector);
-      // And last but no least, if it's a CSS selector, use it to select nodes.
-      else dom = mepto.qsa(document, selector);
-    }
-    // create a new mepto collection from the nodes found
-    return mepto.Z(dom, selector);
+
+    return mepto.Z(dom, finalSelector);
   };
 
   // `$` will be the base `mepto` object. When calling this
   // function just call `$.mepto.init, which makes the implementation
   // details of selecting nodes and creating mepto collections
   // patchable in plugins.
-  $ = function (selector, context) {
+  $ = function (selector: any, context?: any) {
     return mepto.init(selector, context);
   };
 
@@ -580,14 +584,14 @@ let mepto: Mepto = (function () {
     return parent !== node && parent.contains(node);
   };
 
-  function setAttribute(node, name, value) {
+  function setAttribute(node: Element, name: string, value: string | null | undefined): void {
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
   }
 
   // access className property while respecting SVGAnimatedString
-  function className(node, value) {
-    let klass = node.className || '',
-      svg = klass && klass.baseVal !== undefined;
+  function className(node: Element & { className: any }, value?: string): string | void {
+    const klass = node.className || '';
+    const svg = klass && klass.baseVal !== undefined;
 
     if (value === undefined) return svg ? klass.baseVal : klass;
     svg ? (klass.baseVal = value) : (node.className = value);
@@ -635,31 +639,30 @@ let mepto: Mepto = (function () {
   $.isArray = isArray;
   $.isPlainObject = isPlainObject;
 
-  $.isEmptyObject = function (obj) {
-    let name;
-    for (name in obj) return false;
+  $.isEmptyObject = function (obj: Record<string, unknown>): boolean {
+    for (const _name in obj) return false;
     return true;
   };
 
-  $.isNumeric = function (val) {
-    let num = Number(val),
-      type = typeof val;
+  $.isNumeric = function (val: unknown): boolean {
+    const num = Number(val);
+    const type = typeof val;
     return (
       (val != null &&
         type != 'boolean' &&
-        (type != 'string' || val.length) &&
+        (type != 'string' || (val as string).length) &&
         !isNaN(num) &&
         isFinite(num)) ||
       false
     );
   };
 
-  $.inArray = function (elem, array, i) {
+  $.inArray = function <T>(elem: T, array: ArrayLike<T>, i?: number): number {
     return emptyArray.indexOf.call(array, elem, i);
   };
 
   $.camelCase = camelize;
-  $.trim = function (str) {
+  $.trim = function (str: string | null | undefined): string {
     return str == null ? '' : String.prototype.trim.call(str);
   };
 
@@ -667,7 +670,7 @@ let mepto: Mepto = (function () {
   $.uuid = 0;
   $.support = {};
   $.expr = {};
-  $.noop = function () {};
+  $.noop = function (): void {};
 
   $.map = function <T, U>(
     elements: ArrayLike<T> | Record<string, T>,
@@ -745,10 +748,10 @@ let mepto: Mepto = (function () {
 
     // `map` and `slice` in the jQuery API work differently
     // from their array counterparts
-    map: function (fn) {
-      let values = [];
+    map: function <U>(fn: (this: Element, index: number, element: Element) => U | null | undefined) {
+      const values: U[] = [];
       for (let i = 0, len = this.length; i < len; i++) {
-        let value = fn.call(this[i], i, this[i]);
+        const value = fn.call(this[i], i, this[i]);
         if (value != null) values.push(value);
       }
       return $(flatten(values));
@@ -757,23 +760,15 @@ let mepto: Mepto = (function () {
       return $(slice.call(this, start, end));
     },
 
-    ready: function (callback) {
+    ready: function (callback: (mepto: any) => void) {
       if (document.readyState !== 'loading') {
-        setTimeout(function () {
-          callback($);
-        }, 0);
+        setTimeout(() => callback($), 0);
       } else {
-        document.addEventListener(
-          'DOMContentLoaded',
-          function () {
-            callback($);
-          },
-          { once: true }
-        );
+        document.addEventListener('DOMContentLoaded', () => callback($), { once: true });
       }
       return this;
     },
-    get: function (idx) {
+    get: function (idx?: number) {
       return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length];
     },
     toArray: function () {
@@ -787,7 +782,7 @@ let mepto: Mepto = (function () {
         if (this.parentNode != null) this.parentNode.removeChild(this);
       });
     },
-    each: function (callback) {
+    each: function (callback: (this: Element, index: number, element: Element) => boolean | void) {
       for (let i = 0, len = this.length; i < len; i++) {
         if (callback.call(this[i], i, this[i]) === false) break;
       }
@@ -816,28 +811,28 @@ let mepto: Mepto = (function () {
         })
       );
     },
-    add: function (selector, context) {
+    add: function (selector: any, context?: any) {
       return $(uniq(this.concat($(selector, context))));
     },
-    is: function (selector) {
+    is: function (selector: string | { selector: string }): boolean {
       return typeof selector == 'string'
         ? this.length > 0 && mepto.matches(this[0], selector)
-        : selector && this.selector == selector.selector;
+        : !!(selector && this.selector == (selector as { selector: string }).selector);
     },
-    not: function (selector) {
-      let nodes = [];
-      if (isFunction(selector) && selector.call !== undefined)
+    not: function (selector: string | Element | ArrayLike<Element> | ((this: Element, index: number) => boolean)) {
+      const nodes: Element[] = [];
+      if (isFunction(selector))
         this.each(function (idx) {
-          if (!selector.call(this, idx)) nodes.push(this);
+          if (!(selector as Function).call(this, idx)) nodes.push(this as Element);
         });
       else {
-        let excludes =
+        const excludes =
           typeof selector == 'string'
             ? this.filter(selector)
-            : likeArray(selector) && isFunction(selector.item)
+            : likeArray(selector) && isFunction((selector as any).item)
               ? slice.call(selector)
               : $(selector);
-        this.forEach(function (el) {
+        this.forEach(function (el: Element) {
           if (excludes.indexOf(el) < 0) nodes.push(el);
         });
       }
@@ -848,26 +843,27 @@ let mepto: Mepto = (function () {
         return isObject(selector) ? $.contains(this, selector as Node) : $(this).find(selector as string).length > 0;
       });
     },
-    eq: function (idx) {
+    eq: function (idx: number) {
       return idx === -1 ? this.slice(idx) : this.slice(idx, +idx + 1);
     },
     first: function () {
-      let el = this[0];
+      const el = this[0];
       return el && !isObject(el) ? el : $(el);
     },
     last: function () {
-      let el = this[this.length - 1];
+      const el = this[this.length - 1];
       return el && !isObject(el) ? el : $(el);
     },
-    find: function (selector) {
+    find: function (selector: string | Element | ArrayLike<Element>) {
       if (!selector) return $();
 
       if (typeof selector == 'object') {
         const nodes = $(selector);
-        const result = [];
+        const result: Element[] = [];
+        const parents = this;
         for (let i = 0, nlen = nodes.length; i < nlen; i++) {
-          for (let j = 0, plen = this.length; j < plen; j++) {
-            if ($.contains(this[j], nodes[i])) {
+          for (let j = 0, plen = parents.length; j < plen; j++) {
+            if ($.contains(parents[j], nodes[i])) {
               result.push(nodes[i]);
               break;
             }
@@ -878,26 +874,26 @@ let mepto: Mepto = (function () {
 
       if (this.length == 1) return $(mepto.qsa(this[0], selector));
 
-      return this.map(function () {
-        return mepto.qsa(this, selector);
-      });
+      return $(uniq(flatten($.map(this, function (el: Element) {
+        return mepto.qsa(el, selector as string);
+      }))));
     },
-    closest: function (selector, context) {
-      let nodes = [],
-        collection = typeof selector == 'object' && $(selector),
-        matchers = collection ? new Set() : null,
-        seen = new Set();
+    closest: function (selector: string | Element | ArrayLike<Element>, context?: Element | Document) {
+      const nodes: Element[] = [];
+      const collection = typeof selector == 'object' && $(selector);
+      const matchers: Set<Element> | null = collection ? new Set() : null;
+      const seen = new Set<Element>();
 
-      if (matchers)
+      if (matchers && collection)
         for (let i = 0, len = collection.length; i < len; i++) matchers.add(collection[i]);
 
       for (let i = 0, len = this.length; i < len; i++) {
-        let node = this[i];
+        let node: Node | null = this[i];
         while (node) {
-          if (matchers ? matchers.has(node) : mepto.matches(node, selector)) {
-            if (!seen.has(node)) {
-              seen.add(node);
-              nodes.push(node);
+          if (matchers ? matchers.has(node as Element) : mepto.matches(node as Element, selector as string)) {
+            if (!seen.has(node as Element)) {
+              seen.add(node as Element);
+              nodes.push(node as Element);
             }
             break;
           }
@@ -908,31 +904,32 @@ let mepto: Mepto = (function () {
 
       return $(nodes);
     },
-    parents: function (selector) {
-      let ancestors = [],
-        nodes = this;
+    parents: function (selector?: string) {
+      const ancestors: Element[] = [];
+      let nodes: ArrayLike<Element> = this;
       while (nodes.length > 0)
-        nodes = $.map(nodes, function (node) {
-          if ((node = node.parentNode) && !isDocument(node) && ancestors.indexOf(node) < 0) {
+        nodes = $.map(nodes, function (node: any) {
+          node = node.parentNode;
+          if (node && !isDocument(node) && ancestors.indexOf(node) < 0) {
             ancestors.push(node);
             return node;
           }
         });
       return filtered(ancestors, selector);
     },
-    parent: function (selector) {
-      let parents = [];
-      let seen = new Set();
+    parent: function (selector?: string) {
+      const parents: Element[] = [];
+      const seen = new Set<Node>();
       for (let i = 0, len = this.length; i < len; i++) {
-        let parent = this[i].parentNode;
+        const parent = this[i].parentNode;
         if (parent && !seen.has(parent)) {
           seen.add(parent);
-          parents.push(parent);
+          parents.push(parent as Element);
         }
       }
       return filtered(parents, selector);
     },
-    children: function (selector) {
+    children: function (selector?: string) {
       return filtered(
         this.map(function () {
           return children(this);
@@ -945,10 +942,10 @@ let mepto: Mepto = (function () {
         return this.contentDocument || slice.call(this.childNodes);
       });
     },
-    siblings: function (selector) {
+    siblings: function (selector?: string) {
       return filtered(
-        this.map(function (i, el) {
-          return filter.call(children(el.parentNode), function (child) {
+        this.map(function (i: number, el: Element) {
+          return filter.call(children(el.parentNode!), function (child: Element) {
             return child !== el;
           });
         }),
@@ -961,8 +958,8 @@ let mepto: Mepto = (function () {
       });
     },
     // `pluck` is borrowed from Prototype.js
-    pluck: function (property) {
-      return $.map(this, function (el) {
+    pluck: function (property: string) {
+      return $.map(this, function (el: any) {
         return el[property];
       });
     },
@@ -973,47 +970,45 @@ let mepto: Mepto = (function () {
           this.style.display = defaultDisplay(this.nodeName);
       });
     },
-    replaceWith: function (newContent) {
+    replaceWith: function (newContent: any) {
       return this.before(newContent).remove();
     },
-    wrap: function (structure) {
+    wrap: function (structure: string | Element | ((index: number) => string | Element)) {
       const isCallable = isFunction(structure);
       let wrapperElement: Element | undefined;
       let shouldClone = false;
 
       if (this[0] && !isCallable) {
         wrapperElement = $(structure).get(0);
-        shouldClone =
-          !!wrapperElement && (!!wrapperElement.parentNode || this.length > 1);
+        shouldClone = !!wrapperElement && (!!wrapperElement.parentNode || this.length > 1);
       }
 
       return this.each(function (index) {
         const wrapper = isCallable
-          ? structure.call(this, index)
+          ? (structure as Function).call(this, index)
           : shouldClone
             ? wrapperElement!.cloneNode(true)
             : wrapperElement;
         $(this).wrapAll(wrapper);
       });
     },
-    wrapAll: function (structure) {
+    wrapAll: function (structure: string | Element | ArrayLike<Element>) {
       if (!this[0]) return this;
 
       const wrapper = $(structure);
       $(this[0]).before(wrapper);
 
-      // Drill down to the innermost element
       let innermost = wrapper;
-      let children = innermost.children();
-      while (children.length) {
-        innermost = children.first();
-        children = innermost.children();
+      let kids = innermost.children();
+      while (kids.length) {
+        innermost = kids.first();
+        kids = innermost.children();
       }
 
       $(innermost).append(this);
       return this;
     },
-    wrapInner: function (structure) {
+    wrapInner: function (structure: string | Element | ((index: number) => string | Element) | null) {
       if (structure == null) return this;
 
       const isCallable = isFunction(structure);
@@ -1021,7 +1016,7 @@ let mepto: Mepto = (function () {
         const self = $(this);
         const contents = self.contents();
         const wrappingContent = isCallable
-          ? structure.call(this, index)
+          ? (structure as Function).call(this, index)
           : structure;
 
         if (contents.length) {
@@ -1045,45 +1040,45 @@ let mepto: Mepto = (function () {
     hide: function () {
       return this.css('display', 'none');
     },
-    toggle: function (setting) {
+    toggle: function (setting?: boolean) {
       return this.each(function () {
-        let el = $(this);
+        const el = $(this);
         (setting === undefined ? el.css('display') == 'none' : setting) ? el.show() : el.hide();
       });
     },
-    prev: function (selector) {
+    prev: function (selector?: string) {
       return $(this.pluck('previousElementSibling')).filter(selector || '*');
     },
-    next: function (selector) {
+    next: function (selector?: string) {
       return $(this.pluck('nextElementSibling')).filter(selector || '*');
     },
-    html: function (html) {
+    html: function (html?: string | ((idx: number, currentHtml: string) => string)) {
       return 0 in arguments
         ? this.each(function (idx) {
-            let originHtml = this.innerHTML;
+            const originHtml = this.innerHTML;
             $(this)
               .empty()
-              .append(isFunction(html) ? html.call(this, idx, originHtml) : html);
+              .append(isFunction(html) ? (html as Function).call(this, idx, originHtml) : html);
           })
         : 0 in this
           ? this[0].innerHTML
           : null;
     },
-    text: function (text) {
+    text: function (text?: string | number | null | ((idx: number, current: string | null) => string | null)) {
       return 0 in arguments
         ? this.each(function (idx) {
-            let newText = isFunction(text) ? text.call(this, idx, this.textContent) : text;
+            const newText = isFunction(text) ? (text as Function).call(this, idx, this.textContent) : text;
             this.textContent = newText == null ? '' : '' + newText;
           })
         : 0 in this
           ? this.pluck('textContent').join('')
           : null;
     },
-    attr: function (name, value) {
+    attr: function (name: string | Record<string, string | null | undefined>, value?: string | null | ((i: number, old: string | null) => string | null)) {
       // Getter
       if (typeof name == 'string' && arguments.length < 2) {
         if (this.length > 0 && this[0].nodeType === 1) {
-          let result = this[0].getAttribute(name);
+          const result = this[0].getAttribute(name);
           return result != null ? result : undefined;
         }
         return undefined;
@@ -1091,66 +1086,70 @@ let mepto: Mepto = (function () {
 
       // Setter
       for (let i = 0, len = this.length; i < len; i++) {
-        let el = this[i];
+        const el = this[i];
         if (el.nodeType !== 1) continue;
         if (isObject(name)) {
-          for (let key in name) setAttribute(el, key, name[key]);
+          for (const k in name as Record<string, string | null>) setAttribute(el, k, (name as Record<string, string | null>)[k]);
         } else {
-          setAttribute(el, name, isFunction(value) ? value.call(el, i, el.getAttribute(name)) : value);
+          setAttribute(el, name as string, isFunction(value) ? (value as Function).call(el, i, el.getAttribute(name as string)) : value as string | null);
         }
       }
       return this;
     },
-    removeAttr: function (name) {
+    removeAttr: function (name: string) {
       return this.each(function () {
         this.nodeType === 1 &&
           name.split(' ').forEach(function (attribute) {
-            setAttribute(this, attribute);
+            setAttribute(this as any, attribute);
           }, this);
       });
     },
-    prop: function (name, value) {
-      name = propMap[name] || name;
-      return typeof name == 'string' && !(1 in arguments)
-        ? this[0] && this[0][name]
+    prop: function (name: string | Record<string, any>, value?: any) {
+      const resolvedName: string | Record<string, any> = typeof name === 'string' ? (propMap[name] || name) : name;
+      return typeof resolvedName == 'string' && !(1 in arguments)
+        ? this[0] && (this[0] as any)[resolvedName]
         : this.each(function (idx) {
-            if (isObject(name)) for (key in name) this[propMap[key] || key] = name[key];
-            else this[name] = isFunction(value) ? value.call(this, idx, this[name]) : value;
+            if (isObject(resolvedName)) {
+              for (const k in resolvedName as Record<string, any>)
+                (this as any)[propMap[k] || k] = (resolvedName as Record<string, any>)[k];
+            } else {
+              (this as any)[resolvedName as string] = isFunction(value) ? value.call(this, idx, (this as any)[resolvedName as string]) : value;
+            }
           });
     },
-    removeProp: function (name) {
-      name = propMap[name] || name;
+    removeProp: function (name: string) {
+      const resolvedName = propMap[name] || name;
       return this.each(function () {
-        delete this[name];
+        delete (this as any)[resolvedName];
       });
     },
-    data: function (name, value) {
-      let attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
+    data: function (name: string, value?: any) {
+      const attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
 
       if (arguments.length > 1) {
         return this.attr(attrName, value);
       }
 
-      let data = this.attr(attrName);
-      return data !== null ? deserializeValue(data) : undefined;
+      const data = this.attr(attrName);
+      return data !== undefined ? deserializeValue(data) : undefined;
     },
-    val: function (value) {
+    val: function (value?: string | string[] | ((idx: number, current: string) => string)) {
       // Setter
       if (arguments.length > 0) {
-        let v = value == null ? '' : value;
+        const v = value == null ? '' : value;
         for (let i = 0, len = this.length; i < len; i++) {
-          let el = this[i];
-          el.value = isFunction(v) ? v.call(el, i, el.value) : v;
+          const el = this[i] as any;
+          el.value = isFunction(v) ? (v as Function).call(el, i, el.value) : v;
         }
         return this;
       }
 
       // Getter
-      let el = this[0];
+      const el = this[0] as any;
       if (!el) return undefined;
 
       if (el.multiple) {
-        let result = [];
+        const result: string[] = [];
         for (let i = 0, len = el.selectedOptions.length; i < len; i++) {
           result.push(el.selectedOptions[i].value);
         }
@@ -1159,24 +1158,25 @@ let mepto: Mepto = (function () {
 
       return el.value;
     },
-    offset: function (coordinates) {
+    offset: function (coordinates?: { top: number; left: number } | ((index: number, current: { top: number; left: number }) => { top: number; left: number })) {
       if (coordinates)
         return this.each(function (index) {
-          let $this = $(this),
-            coords = isFunction(coordinates) ? coordinates.call(this, index, $this.offset()) : coordinates,
-            parentOffset = $this.offsetParent().offset(),
-            props = {
-              top: coords.top - parentOffset.top,
-              left: coords.left - parentOffset.left,
-            };
-
+          const $this = $(this);
+          const coords = isFunction(coordinates)
+            ? (coordinates as Function).call(this, index, $this.offset())
+            : coordinates as { top: number; left: number };
+          const parentOffset = $this.offsetParent().offset();
+          const props: Record<string, string | number> = {
+            top: coords.top - parentOffset.top,
+            left: coords.left - parentOffset.left,
+          };
           if ($this.css('position') == 'static') props['position'] = 'relative';
           $this.css(props);
         });
       if (!this.length) return null;
       if (document.documentElement !== this[0] && !$.contains(document.documentElement, this[0]))
         return { top: 0, left: 0 };
-      let obj = this[0].getBoundingClientRect();
+      const obj = this[0].getBoundingClientRect();
       return {
         left: obj.left + window.pageXOffset,
         top: obj.top + window.pageYOffset,
@@ -1184,21 +1184,21 @@ let mepto: Mepto = (function () {
         height: Math.round(obj.height),
       };
     },
-    css: function (property, value) {
+    css: function (property: string | string[] | Record<string, string | number | null | undefined>, value?: string | number | null) {
       if (arguments.length < 2) {
-        let element = this[0];
+        const element = this[0] as HTMLElement | undefined;
         if (typeof property == 'string') {
           if (!element) return;
           return (
-            element.style[camelize(property)] ||
-            getComputedStyle(element, '').getPropertyValue(property)
+            (element.style as any)[camelize(property as string)] ||
+            getComputedStyle(element, '').getPropertyValue(property as string)
           );
         } else if (isArray(property)) {
           if (!element) return;
-          let props = {};
-          let computedStyle = getComputedStyle(element, '');
-          $.each(property, function (_, prop) {
-            props[prop] = element.style[camelize(prop)] || computedStyle.getPropertyValue(prop);
+          const props: Record<string, string> = {};
+          const computedStyle = getComputedStyle(element, '');
+          $.each(property as string[], function (_: number, prop: string) {
+            props[prop] = (element.style as any)[camelize(prop)] || computedStyle.getPropertyValue(prop);
           });
           return props;
         }
@@ -1208,66 +1208,66 @@ let mepto: Mepto = (function () {
       if (type(property) == 'string') {
         if (!value && value !== 0)
           this.each(function () {
-            this.style.removeProperty(dasherize(property));
+            (this as HTMLElement).style.removeProperty(dasherize(property as string));
           });
-        else css = dasherize(property) + ':' + maybeAddPx(property, value);
+        else css = dasherize(property as string) + ':' + maybeAddPx(property as string, value as string | number);
       } else {
-        for (key in property)
-          if (!property[key] && property[key] !== 0)
+        for (const key in property as Record<string, any>) {
+          if (!(property as Record<string, any>)[key] && (property as Record<string, any>)[key] !== 0)
             this.each(function () {
-              this.style.removeProperty(dasherize(key));
+              (this as HTMLElement).style.removeProperty(dasherize(key));
             });
-          else css += dasherize(key) + ':' + maybeAddPx(key, property[key]) + ';';
+          else css += dasherize(key) + ':' + maybeAddPx(key, (property as Record<string, any>)[key]) + ';';
+        }
       }
 
       return this.each(function () {
-        this.style.cssText += ';' + css;
+        (this as HTMLElement).style.cssText += ';' + css;
       });
     },
-    index: function (element) {
+    index: function (element?: string | Element | ArrayLike<Element>): number {
       return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0]);
     },
-    hasClass: function (name) {
+    hasClass: function (name: string): boolean {
       if (!name) return false;
       return emptyArray.some.call(
         this,
-        function (el) {
-          return this.test(className(el));
+        function (this: RegExp, el: Element) {
+          return this.test(className(el as any));
         },
         classRE(name)
       );
     },
-    addClass: function (name) {
+    addClass: function (name: string | ((index: number, currentClass: string) => string)) {
       if (!name) return this;
       return this.each(function (idx) {
         if (!('className' in this)) return;
-        classList = [];
-        let cls = className(this),
-          newName = isFunction(name) ? name.call(this, idx, cls) : name;
+        const cls = className(this as any) as string;
+        const newName = isFunction(name) ? (name as Function).call(this, idx, cls) : name as string;
+        const toAdd: string[] = [];
         newName.split(/\s+/g).forEach(function (klass) {
-          if (!$(this).hasClass(klass)) classList.push(klass);
-        }, this);
-        classList.length && className(this, cls + (cls ? ' ' : '') + classList.join(' '));
+          if (!classRE(klass).test(cls)) toAdd.push(klass);
+        });
+        if (toAdd.length) className(this as any, cls + (cls ? ' ' : '') + toAdd.join(' '));
       });
     },
-    removeClass: function (name) {
+    removeClass: function (name?: string | ((index: number, currentClass: string) => string)) {
       return this.each(function (idx) {
         if (!('className' in this)) return;
-        if (name === undefined) return className(this, '');
-        classList = className(this);
-        (isFunction(name) ? name.call(this, idx, classList) : name)
-          .split(/\s+/g)
-          .forEach(function (klass) {
-            classList = classList.replace(classRE(klass), ' ');
-          });
-        className(this, classList.trim());
+        if (name === undefined) return className(this as any, '');
+        let cls = className(this as any) as string;
+        const resolved = isFunction(name) ? (name as Function).call(this, idx, cls) : name as string;
+        resolved.split(/\s+/g).forEach(function (klass) {
+          cls = cls.replace(classRE(klass), ' ');
+        });
+        className(this as any, cls.trim());
       });
     },
-    toggleClass: function (name, when) {
+    toggleClass: function (name: string | ((index: number, currentClass: string) => string), when?: boolean) {
       if (!name) return this;
       return this.each(function (idx) {
-        let $this = $(this),
-          names = isFunction(name) ? name.call(this, idx, className(this)) : name;
+        const $this = $(this);
+        const names = isFunction(name) ? (name as Function).call(this, idx, className(this as any)) : name as string;
         names.split(/\s+/g).forEach(function (klass) {
           (when === undefined ? !$this.hasClass(klass) : when)
             ? $this.addClass(klass)
@@ -1275,45 +1275,35 @@ let mepto: Mepto = (function () {
         });
       });
     },
-    scrollTop: function (value) {
+    scrollTop: function (value?: number) {
       if (!this.length) return;
-      let hasScrollTop = 'scrollTop' in this[0];
-      if (value === undefined) return hasScrollTop ? this[0].scrollTop : this[0].pageYOffset;
+      const hasScrollTop = 'scrollTop' in this[0];
+      if (value === undefined) return hasScrollTop ? (this[0] as any).scrollTop : (this[0] as any).pageYOffset;
       return this.each(
         hasScrollTop
-          ? function () {
-              this.scrollTop = value;
-            }
-          : function () {
-              this.scrollTo(this.scrollX, value);
-            }
+          ? function () { (this as any).scrollTop = value; }
+          : function () { (this as any).scrollTo((this as any).scrollX, value); }
       );
     },
-    scrollLeft: function (value) {
+    scrollLeft: function (value?: number) {
       if (!this.length) return;
-      let hasScrollLeft = 'scrollLeft' in this[0];
-      if (value === undefined) return hasScrollLeft ? this[0].scrollLeft : this[0].pageXOffset;
+      const hasScrollLeft = 'scrollLeft' in this[0];
+      if (value === undefined) return hasScrollLeft ? (this[0] as any).scrollLeft : (this[0] as any).pageXOffset;
       return this.each(
         hasScrollLeft
-          ? function () {
-              this.scrollLeft = value;
-            }
-          : function () {
-              this.scrollTo(value, this.scrollY);
-            }
+          ? function () { (this as any).scrollLeft = value; }
+          : function () { (this as any).scrollTo(value, (this as any).scrollY); }
       );
     },
     position: function () {
       if (!this.length) return;
 
-      let elem = this[0],
-        // Get *real* offsetParent
-        offsetParent = this.offsetParent(),
-        // Get correct offsets
-        offset = this.offset(),
-        parentOffset = rootNodeRE.test(offsetParent[0].nodeName)
-          ? { top: 0, left: 0 }
-          : offsetParent.offset();
+      const elem = this[0];
+      const offsetParent = this.offsetParent();
+      const offset = this.offset();
+      const parentOffset = rootNodeRE.test(offsetParent[0].nodeName)
+        ? { top: 0, left: 0 }
+        : offsetParent.offset();
 
       // Subtract element margins
       // note: when an element has margin: auto the offsetLeft and marginLeft
@@ -1325,7 +1315,6 @@ let mepto: Mepto = (function () {
       parentOffset.top += parseFloat($(offsetParent[0]).css('border-top-width')) || 0;
       parentOffset.left += parseFloat($(offsetParent[0]).css('border-left-width')) || 0;
 
-      // Subtract the two offsets
       return {
         top: offset.top - parentOffset.top,
         left: offset.left - parentOffset.left,

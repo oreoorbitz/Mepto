@@ -1,7 +1,61 @@
 # Agent Development Guide for Mepto
 
-## Current Goal
-Transition all JS files to TS files without breaking functionality.
+## Library Goal
+
+Mepto is a lightweight, modern replacement for jQuery. The core aim is to match jQuery's ergonomics while outperforming it by reducing browser overhead — fewer reflows, repaints, layout thrashes, and unnecessary DOM queries. Teams should be able to gradually replace jQuery with Mepto without sacrificing performance, and often gaining it.
+
+**Browser target: evergreen browsers only.** No IE, no legacy Edge, no Safari < 14. Do not add polyfills, fallbacks, or feature-detection code for old browsers. Use native platform APIs (`WeakMap`, `WeakSet`, `queueMicrotask`, `AbortController`, `ResizeObserver`, `MutationObserver`, `requestAnimationFrame`, `classList`, `closest`, `dataset`, etc.) freely — they are all available in the target environment. If you encounter legacy-compatibility code in the existing source, you may remove it.
+
+## Current Task
+
+Transition all source files to TypeScript, adding parameter types to untyped functions. Refactor antipatterns (shared mutable module-level variables, parameter mutation, `let` where `const` applies) as they are encountered. Verify each change with the 228-test suite before moving on.
+
+---
+
+## Performance Philosophy
+
+Every API decision should minimize live DOM touches. The browser's layout engine dominates real-world cost. jQuery's convenience hides per-operation overhead (selector engine, wrapper allocations, repeated traversals) that compounds in loops and large UIs. Mepto wins by providing ergonomic APIs that internally batch, cache, and reuse — while exposing zero-dependency, modern code.
+
+### High-Impact Areas (in priority order)
+
+1. **Batching DOM updates** — Use `DocumentFragment` for bulk insertions. One-by-one appends trigger multiple reflows; a fragment batches them into one.
+2. **Read/write separation** — Never interleave layout reads (`getBoundingClientRect`, `offsetWidth`, `scrollTop`) with DOM writes. A read after a write forces a synchronous layout recalculation.
+3. **Caching & minimal queries** — `querySelector` and traversals are slow when repeated. Cache results; scope queries narrowly. Use `WeakMap` for element-associated data.
+4. **Scheduling with rAF** — Batch visual changes to align with paint cycles. Use `requestAnimationFrame` for animations and high-frequency updates.
+5. **Memory & cleanup** — Use `WeakMap`/`WeakSet` for element data so GC can collect removed nodes. Prefer modify-in-place over destroy/create cycles.
+6. **Event delegation** — A single listener on a container scales better than per-element listeners, especially for dynamic content.
+
+### Patterns to Prefer
+
+| Prefer | Over |
+|--------|------|
+| `DocumentFragment` + single `appendChild` | Repeated per-element `appendChild` in a loop |
+| `element.classList` or batch `cssText` | Many individual `element.style.prop = value` sets |
+| Cache `querySelector` result before a loop | Repeated `querySelector` for the same selector inside a loop |
+| `WeakMap` for element-associated data | Expanding properties directly onto DOM nodes |
+| `<template>` clone + insert | Many `createElement` + `setAttribute` calls |
+| CSS `transform`/`opacity` for animation | JS-driven `style.top`/`style.left` updates |
+| Modify existing elements in-place | Remove + recreate cycles |
+
+### Patterns to Avoid
+
+- **Layout thrashing**: reading `offsetWidth`, `getBoundingClientRect`, `scrollTop` etc. inside a write loop forces synchronous layout recalc on every iteration.
+- **Per-element listeners** on dynamic content — use event delegation instead.
+- **Repeated DOM queries inside loops** — cache the result before the loop.
+- **Unnecessary `$(el)` wrapper allocations** in hot paths — call helpers directly when possible.
+
+### Measurement
+
+Profile with Chrome DevTools **Performance** tab on realistic scenarios (large lists, frequent updates, mobile). Focus on:
+- Reflow/repaint count and long tasks
+- Heap growth over time
+- Direct comparison against jQuery equivalents
+
+Target: smooth 60fps and good INP (Interaction to Next Paint).
+
+### V8 Note (library internals only)
+
+In hot internal helper functions, prefer consistent object shapes (fixed property order in config objects). Do not sacrifice API clarity for marginal JIT gains — the layout engine dominates costs.
 
 ---
 
@@ -237,7 +291,9 @@ The project uses relaxed TypeScript settings (`tsconfig.json`):
 - `allowJs: true` - Can import JavaScript
 - `noImplicitAny: false` - No errors on implicit any
 
-This enables progressive enhancement - add types as needed without breaking existing code.
+This enables progressive enhancement — add types as needed without breaking existing code. Do not tighten these settings during the TS transition; correctness comes first.
+
+Do not introduce `@types/` packages or type stubs for legacy browser APIs that don't exist in the target environment. If the TypeScript DOM lib is missing a type for a modern API, use a type assertion rather than polyfilling or downgrading.
 
 ---
 
