@@ -297,10 +297,9 @@ let mepto: Mepto = (function () {
         });
   }
 
-  function Z(dom, selector) {
-    let i,
-      len = dom ? dom.length : 0;
-    for (i = 0; i < len; i++) this[i] = dom[i];
+  function Z(dom: ArrayLike<Element> | null | undefined, selector: string) {
+    const len = dom ? dom.length : 0;
+    for (let i = 0; i < len; i++) this[i] = dom![i];
     this.length = len;
     this.selector = selector || '';
   }
@@ -404,28 +403,53 @@ let mepto: Mepto = (function () {
     return mepto.init(selector, context);
   };
 
-  function extend(target, source, deep) {
-    for (key in source)
-      if (deep && (isPlainObject(source[key]) || isArray(source[key]))) {
-        if (isPlainObject(source[key]) && !isPlainObject(target[key])) target[key] = {};
-        if (isArray(source[key]) && !isArray(target[key])) target[key] = [];
-        extend(target[key], source[key], deep);
-      } else if (source[key] !== undefined) target[key] = source[key];
+  /**
+   * Recursively merge properties from `source` into `target`.
+   * When `deep` is true, plain objects and arrays are merged recursively;
+   * otherwise properties are copied by reference (shallow copy).
+   * Properties with `undefined` values are always skipped.
+   */
+  function extend(
+    target: Record<string, any>,
+    source: Record<string, any>,
+    deep: boolean
+  ): void {
+    for (const key in source) {
+      if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+
+      const sourceValue = source[key];
+
+      if (deep && (isPlainObject(sourceValue) || isArray(sourceValue))) {
+        // Ensure the target has a compatible container before recursing
+        if (isPlainObject(sourceValue) && !isPlainObject(target[key])) {
+          target[key] = {};
+        }
+        if (isArray(sourceValue) && !isArray(target[key])) {
+          target[key] = [];
+        }
+        extend(target[key], sourceValue, deep);
+      } else if (sourceValue !== undefined) {
+        target[key] = sourceValue;
+      }
+    }
   }
 
   // Copy all but undefined properties from one or more
   // objects to the `target` object.
-  $.extend = function (target) {
-    let deep,
-      args = slice.call(arguments, 1);
-    if (typeof target == 'boolean') {
+  $.extend = function (target: any, ...rest: any[]): any {
+    let deep = false;
+    let destination = target;
+
+    if (typeof target === 'boolean') {
       deep = target;
-      target = args.shift();
+      destination = rest.shift();
     }
-    args.forEach(function (arg) {
-      extend(target, arg, deep);
+
+    rest.forEach(function (arg) {
+      extend(destination, arg, deep);
     });
-    return target;
+
+    return destination;
   };
 
   // `$.mepto.qsa` is mepto's CSS selector implementation which

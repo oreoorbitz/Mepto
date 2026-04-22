@@ -40,24 +40,66 @@ We have built a secure Puppeteer-based testing harness at `tools/llm-test-harnes
 # Install harness dependencies
 cd tools/llm-test-harness && npm install
 cd ../..
+# Build the harness
+cd tools/llm-test-harness && npm run build && cd ../..
 ```
 
-### Usage Examples
+---
+
+## Running the Full Unit Test Suite
+
+`test/mepto-unit.html` is a self-contained test page covering every method in `src/mepto.ts` plus events and forms. It runs 228 tests automatically when loaded, logs `PASS/FAIL` to the browser console, and exposes `window.meptoTestResults`.
+
+```bash
+# Start Vite, run all 228 tests, get JSON summary
+node tools/llm-test-harness/bin/mepto-test.js \
+  --url=http://localhost:3000/test/mepto-unit.html \
+  --code='return window.meptoTestResults' \
+  --json
+
+# Or with --no-server if Vite is already running
+node tools/llm-test-harness/bin/mepto-test.js --no-server \
+  --url=http://localhost:3000/test/mepto-unit.html \
+  --code='return window.meptoTestResults' \
+  --json
+```
+
+The result object:
+```json
+{
+  "success": true,
+  "result": {
+    "passed": 228,
+    "failed": 0,
+    "total": 228,
+    "results": [
+      { "name": "$.type string", "pass": true },
+      ...
+    ]
+  }
+}
+```
+
+You can also open `http://localhost:3000/test/mepto-unit.html` in a browser for a visual pass/fail list.
+
+---
+
+### Harness Usage Examples
 
 #### Test Mepto DOM Manipulation
 ```bash
-# Test adding a class
+# Test adding a class (use `return` for expression values)
 node tools/llm-test-harness/bin/mepto-test.js \
-  --code="$('.test').addClass('active').hasClass('active')" \
+  --code="return $('.test').addClass('active').hasClass('active')" \
   --html="<div class='test'></div>" \
   --json
 
-# Test element selection
+# Test element count
 node tools/llm-test-harness/bin/mepto-test.js \
-  --code="$('div').length" \
+  --code="return $('div').length" \
   --html="<div>A</div><div>B</div>"
 
-# Test event handling
+# Test event handling (return gives back the assertion value)
 node tools/llm-test-harness/bin/mepto-test.js \
   --code="
     var clicked = false;
@@ -68,12 +110,15 @@ node tools/llm-test-harness/bin/mepto-test.js \
   --html="<button class='btn'>Click</button>"
 ```
 
+> **Note:** To return a value from `--code`, use an explicit `return` statement.
+> Multi-statement code runs in a function body so `return` is always valid.
+
 #### Validate Code Before Execution
 ```bash
 # Check if code is safe (doesn't execute)
 node tools/llm-test-harness/bin/mepto-test.js \
   --validate \
-  --code="$('.item').length"
+  --code="return $('.item').length"
 ```
 
 #### Run From File
@@ -151,22 +196,34 @@ mepto/
 ## Development Workflow
 
 ### 1. Make Changes to Source Files
-Edit files in `src/` - all files are now TypeScript (`.ts`)
+Edit files in `src/` — all files are TypeScript (`.ts`).
 
-### 2. Test Changes with Harness
-Use the LLM harness to verify functionality without risk:
-```bash
-node tools/llm-test-harness/bin/mepto-test.js \
-  --code="YOUR_TEST_CODE" \
-  --html="<div>fixture</div>"
-```
-
-### 3. Build and Verify
+### 2. Build the Library
 ```bash
 npm run build
 ```
 
-### 4. Run Linting
+### 3. Run the Full Test Suite
+```bash
+# Start Vite if not running
+npm run dev &
+
+# Run 228 unit tests against the compiled bundle
+node tools/llm-test-harness/bin/mepto-test.js --no-server \
+  --url=http://localhost:3000/test/mepto-unit.html \
+  --code='return window.meptoTestResults' --json
+```
+
+A passing run returns `"failed": 0`.
+
+### 4. Test a Specific Method
+```bash
+node tools/llm-test-harness/bin/mepto-test.js --no-server \
+  --code="return $('.test').addClass('active').hasClass('active')" \
+  --html="<div class='test'></div>"
+```
+
+### 5. Run Linting
 ```bash
 npm run lint
 ```
