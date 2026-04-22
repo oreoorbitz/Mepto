@@ -6,7 +6,6 @@
   var touch = {},
     touchTimeout, tapTimeout, swipeTimeout, longTapTimeout,
     longTapDelay = 750,
-    gesture,
     down, up, move,
     eventMap,
     initialized = false
@@ -39,14 +38,11 @@
   }
 
   function isPrimaryTouch(event){
-    return (event.pointerType == 'touch' ||
-      event.pointerType == event.MSPOINTER_TYPE_TOUCH)
-      && event.isPrimary
+    return event.pointerType == 'touch' && event.isPrimary
   }
 
   function isPointerEventType(e, type){
-    return (e.type == 'pointer'+type ||
-      e.type.toLowerCase() == 'mspointer'+type)
+    return e.type == 'pointer'+type
   }
 
   // helper function for tests, so they check for different APIs
@@ -73,27 +69,10 @@
       'onpointerdown' in document ?
       { 'down': 'pointerdown', 'up': 'pointerup',
         'move': 'pointermove', 'cancel': 'pointercancel' } :
-       'onmspointerdown' in document ?
-      { 'down': 'MSPointerDown', 'up': 'MSPointerUp',
-        'move': 'MSPointerMove', 'cancel': 'MSPointerCancel' } : false)
+       false)
 
     // No API availables for touch events
     if (!eventMap) return
-
-    if ('MSGesture' in window) {
-      gesture = new MSGesture()
-      gesture.target = document.body
-
-      $(document)
-        .bind('MSGestureEnd', function(e){
-          var swipeDirectionFromVelocity =
-            e.velocityX > 1 ? 'Right' : e.velocityX < -1 ? 'Left' : e.velocityY > 1 ? 'Down' : e.velocityY < -1 ? 'Up' : null
-          if (swipeDirectionFromVelocity) {
-            touch.el.trigger('swipe')
-            touch.el.trigger('swipe'+ swipeDirectionFromVelocity)
-          }
-        })
-    }
 
     down = function(e){
       if((_isPointerType = isPointerEventType(e, 'down')) &&
@@ -115,7 +94,6 @@
       if (delta > 0 && delta <= 250) touch.isDoubleTap = true
       touch.last = now
       longTapTimeout = setTimeout(longTap, longTapDelay)
-      if (gesture && _isPointerType) gesture.addPointer(e.pointerId)
     }
 
     move = function(e){

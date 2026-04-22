@@ -12,6 +12,48 @@ Transition all source files to TypeScript, adding parameter types to untyped fun
 
 ---
 
+## Progress Report (as of Apr 2026)
+
+### Overall: ~10–15% complete
+
+The file renames from `.js` → `.ts` are done, but meaningful TypeScript typing is early stage. Only 3 of 20 source files have substantial types; 17 are still JavaScript in practice (all `var`, zero annotations).
+
+### Per-File Status
+
+| File | Lines | Typing | Key Issues |
+|------|-------|--------|------------|
+| `types.ts` | 466 | **Done** | `Mepto.matches` typed as bare `Function` — should get a proper signature |
+| `meptos.ts` | 55 | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false |
+| `mepto.ts` | 1453 | **Partial** | Many `any` types on core APIs (`mepto.init`, `$()`, `$.extend`, `$.fn.*` methods). `let` used where `const` applies (`$`, `concat`, `filter`, `slice`, regex constants, `propMap`, `containers`, `class2type`). Shared mutable `elementDisplay`, `classCache`, `class2type`. Parameter mutation in `fragment` and adjacency operators |
+| `event.ts` | 277 | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
+| `ajax.ts` | 381 | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)` |
+| `form.ts` | 40 | **Not started** | All `var`, zero annotations |
+| `fx.ts` | 123 | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect |
+| `fx_methods.ts` | 71 | **Not started** | All `var`, zero annotations |
+| `selector.ts` | 85 | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg` |
+| `data.ts` | 89 | **Not started** | All `var`, zero annotations. Uses plain object cache — should migrate to `WeakMap`. `node[exp]` property expansion on elements |
+| `deferred.ts` | 118 | **Not started** | All `var`, zero annotations. String-based property access (`tuple[0] + "With"`). Circular `promise`/`deferred` pattern |
+| `callbacks.ts` | 122 | **Not started** | All `var`, zero annotations. Heavy shared mutable closure state (`memory`, `fired`, `firing`, etc.) |
+| `assets.ts` | 21 | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID |
+| `detect.ts` | 72 | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context |
+| `stack.ts` | 22 | **Not started** | All `var`, zero annotations |
+| `gesture.ts` | 35 | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout` |
+| `touch.ts` | 211 | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs, `MSGesture` reference (legacy IE) |
+| `ie.ts` | 20 | **To delete** | IE `getComputedStyle` polyfill — violates evergreen-only policy |
+| `ios3.ts` | 36 | **To delete** | iOS 3 polyfills (`trim`, `reduce`) — violates evergreen-only policy |
+| `amd_layout.ts` | 9 | **To delete/evaluate** | AMD build wrapper template; may no longer be needed with Vite |
+
+### Recommended Next Steps
+
+1. **Delete dead legacy files**: `ie.ts`, `ios3.ts`, and evaluate `amd_layout.ts`
+2. **Convert `mepto.ts`**: Resolve `any` types, `let` → `const`, shared mutable state — this is the largest and most impactful file
+3. **Convert remaining modules in dependency order**: `data.ts` → `callbacks.ts` → `deferred.ts` → `event.ts` → `ajax.ts` → `form.ts` → `fx.ts` → `fx_methods.ts` → `selector.ts` → `detect.ts` → `touch.ts` → `gesture.ts` → `assets.ts` → `stack.ts`
+4. **Migrate `data.ts` cache to `WeakMap`** per performance philosophy
+5. **Expand test coverage**: The 228-test suite does not cover AJAX, deferreds, callbacks, animations, touch, or detect. These modules need tests before/alongside conversion
+6. **Tighten `tsconfig.json`** after all files are typed (incrementally enable `strict`, `noImplicitAny`, etc.)
+
+---
+
 ## Performance Philosophy
 
 Every API decision should minimize live DOM touches. The browser's layout engine dominates real-world cost. jQuery's convenience hides per-operation overhead (selector engine, wrapper allocations, repeated traversals) that compounds in loops and large UIs. Mepto wins by providing ergonomic APIs that internally batch, cache, and reuse — while exposing zero-dependency, modern code.

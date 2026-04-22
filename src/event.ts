@@ -166,15 +166,6 @@
     return this.off(event, selector, callback)
   }
 
-  $.fn.live = function(event, callback){
-    $(document.body).delegate(this.selector, event, callback)
-    return this
-  }
-  $.fn.die = function(event, callback){
-    $(document.body).undelegate(this.selector, event, callback)
-    return this
-  }
-
   $.fn.on = function(event, selector, data, callback, one){
     var autoRemove, delegator, $this = this
     if (event && !isString(event)) {
