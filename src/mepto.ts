@@ -30,6 +30,10 @@ let mepto: Mepto = (function () {
   let tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi;
   let rootNodeRE = /^(?:body|html)$/i;
   let capitalRE = /([A-Z])/g;
+  let doubleColonRE = /::/g;
+  let upperUpperLowerRE = /([A-Z]+)([A-Z][a-z])/g;
+  let lowerDigitUpperRE = /([a-z\d])([A-Z])/g;
+  let underscoreRE = /_/g;
 
   // special attributes that should be get/set via method calls
   let methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'];
@@ -51,7 +55,7 @@ let mepto: Mepto = (function () {
   let toString = class2type.toString;
   let mepto: any = {};
   let camelize: any;
-  let uniq: any;
+  let uniq: <T>(array: ArrayLike<T>) => T[];
   let tempParent = document.createElement('div');
   let propMap: Record<string, string> = {
     tabindex: 'tabIndex',
@@ -216,28 +220,60 @@ let mepto: Mepto = (function () {
       return chr ? chr.toUpperCase() : '';
     });
   };
-  function dasherize(str) {
+  /**
+   * Converts a camelCase or PascalCase string to a dash-separated lowercase
+   * string (e.g. `backgroundColor` → `background-color`, `XMLParser` →
+   * `xml-parser`).  The `::` token is treated as a namespace separator and
+   * converted to `/`.
+   */
+  function dasherize(str: string): string {
+    if (!str) return str;
     return str
-      .replace(/::/g, '/')
-      .replace(/([A-Z]+)([A-Z][a-z])/g, '$1_$2')
-      .replace(/([a-z\d])([A-Z])/g, '$1_$2')
-      .replace(/_/g, '-')
+      .replace(doubleColonRE, '/')           // `::` → `/` (namespace separator)
+      .replace(upperUpperLowerRE, '$1_$2')   // `XMLParser` → `XML_Parser`
+      .replace(lowerDigitUpperRE, '$1_$2')   // `fooBar1B` → `foo_Bar1_B`
+      .replace(underscoreRE, '-')            // `_` → `-`
       .toLowerCase();
   }
-  uniq = function (array) {
-    return filter.call(array, function (item, idx) {
-      return array.indexOf(item) == idx;
-    });
+  /**
+   * Returns a new array with duplicate elements removed, preserving the
+   * order of first occurrence. Uses a `Set` for O(n) lookups instead of
+   * repeated `indexOf` scans (which would be O(n²)).
+   */
+  uniq = function <T>(array: ArrayLike<T>): T[] {
+    if (!array || (array as any).length === 0) return [] as T[];
+    const seen = new Set<T>();
+    return filter.call(array, function (item: T): boolean {
+      if (seen.has(item)) return false;
+      seen.add(item);
+      return true;
+    }) as T[];
   };
 
-  function classRE(name) {
+  /**
+   * Builds (and caches) a RegExp that matches a CSS class name as a
+   * whole word — i.e., bounded by whitespace or start/end of the string.
+   * Returns an empty-matching RegExp for falsy names as a safe fallback.
+   *
+   * @param name - The CSS class name to build a regex for.
+   */
+  function classRE(name: string): RegExp {
+    if (!name) return /(?:)/;
     return name in classCache
       ? classCache[name]
       : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'));
   }
 
-  function maybeAddPx(name, value) {
-    return typeof value == 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value;
+  /**
+   * Appends "px" to a numeric `value` when the CSS property identified
+   * by `name` is **not** a unitless property (as listed in `cssNumber`).
+   *
+   * @param name  - A CSS property name (camelCase or dash-case).
+   * @param value - The property value, typically a number or string.
+   * @returns The value with "px" appended when appropriate.
+   */
+  function maybeAddPx(name: string, value: string | number): string | number {
+    return typeof value === 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value;
   }
 
   function defaultDisplay(nodeName) {
@@ -487,8 +523,26 @@ let mepto: Mepto = (function () {
     return found ? $([found]) : $();
   };
 
-  function filtered(nodes, selector) {
-    return selector == null ? $(nodes) : $(nodes).filter(selector);
+  /**
+   * Wraps `nodes` in a Mepto collection, optionally filtering by `selector`.
+   *
+   * Used internally by traversal methods (`parents`, `parent`, `children`,
+   * `siblings`) to apply an optional CSS selector filter to collected DOM nodes.
+   *
+   * - `null` / `undefined` selector → all nodes are included as-is.
+   * - Non-empty string selector    → only matching nodes are kept.
+   * - Empty-string selector (`""`) → returns an empty collection (nothing matches).
+   *
+   * @param nodes    - Array-like of DOM elements (or a single element) to wrap.
+   * @param selector - Optional CSS selector string, or `null`/`undefined` to skip filtering.
+   * @returns A new Mepto collection containing the (optionally filtered) nodes.
+   */
+  function filtered(
+    nodes: Element | ArrayLike<Element>,
+    selector?: string | null
+  ): any {
+    if (selector == null) return $(nodes);
+    return $(nodes).filter(selector);
   }
 
   $.contains = function (parent: Node, node: Node): boolean {
@@ -888,34 +942,58 @@ let mepto: Mepto = (function () {
       return this.before(newContent).remove();
     },
     wrap: function (structure) {
-      let func = isFunction(structure);
-      let dom;
-      let clone;
-      if (this[0] && !func) {
-        ((dom = $(structure).get(0)), (clone = dom.parentNode || this.length > 1));
+      const isCallable = isFunction(structure);
+      let wrapperElement: Element | undefined;
+      let shouldClone = false;
+
+      if (this[0] && !isCallable) {
+        wrapperElement = $(structure).get(0);
+        shouldClone =
+          !!wrapperElement && (!!wrapperElement.parentNode || this.length > 1);
       }
 
       return this.each(function (index) {
-        $(this).wrapAll(func ? structure.call(this, index) : clone ? dom.cloneNode(true) : dom);
+        const wrapper = isCallable
+          ? structure.call(this, index)
+          : shouldClone
+            ? wrapperElement!.cloneNode(true)
+            : wrapperElement;
+        $(this).wrapAll(wrapper);
       });
     },
     wrapAll: function (structure) {
-      if (this[0]) {
-        $(this[0]).before((structure = $(structure)));
-        let children;
-        // drill down to the inmost element
-        while ((children = structure.children()).length) structure = children.first();
-        $(structure).append(this);
+      if (!this[0]) return this;
+
+      const wrapper = $(structure);
+      $(this[0]).before(wrapper);
+
+      // Drill down to the innermost element
+      let innermost = wrapper;
+      let children = innermost.children();
+      while (children.length) {
+        innermost = children.first();
+        children = innermost.children();
       }
+
+      $(innermost).append(this);
       return this;
     },
     wrapInner: function (structure) {
-      let func = isFunction(structure);
+      if (structure == null) return this;
+
+      const isCallable = isFunction(structure);
       return this.each(function (index) {
-        let self = $(this),
-          contents = self.contents(),
-          dom = func ? structure.call(this, index) : structure;
-        contents.length ? contents.wrapAll(dom) : self.append(dom);
+        const self = $(this);
+        const contents = self.contents();
+        const wrappingContent = isCallable
+          ? structure.call(this, index)
+          : structure;
+
+        if (contents.length) {
+          contents.wrapAll(wrappingContent);
+        } else {
+          self.append(wrappingContent);
+        }
       });
     },
     unwrap: function () {

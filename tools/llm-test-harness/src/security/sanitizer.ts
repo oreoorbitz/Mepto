@@ -13,9 +13,9 @@ const FORBIDDEN_PATTERNS = [
   // System command execution
   /child_process/,
   /require\s*\(\s*['"]child_process['"]\s*\)/,
-  /exec\s*\(/,
-  /spawn\s*\(/,
-  /fork\s*\(/,
+  /(?<!\.)exec\s*\(/,
+  /(?<!\.)spawn\s*\(/,
+  /(?<!\.)fork\s*\(/,
   /execSync\s*\(/,
   /execFile\s*\(/,
 

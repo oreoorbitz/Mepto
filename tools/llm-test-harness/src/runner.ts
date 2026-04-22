@@ -210,6 +210,9 @@ export class TestRunner {
       throw new Error('Page not created. Call createPage() first.');
     }
 
+    // Wrap in IIFE so `return` statements work in user code
+    const wrapped = `(function() {\n${code}\n})()`;
+
     try {
       const result = await this.page.evaluate(
         (js) => {
@@ -223,7 +226,7 @@ export class TestRunner {
             };
           }
         },
-        code
+        wrapped
       );
 
       return result;
