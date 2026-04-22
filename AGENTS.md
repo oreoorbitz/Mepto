@@ -14,9 +14,20 @@ Transition all source files to TypeScript, adding parameter types to untyped fun
 
 ## Progress Report (as of Apr 2026)
 
-### Overall: ~10–15% complete
+### Overall: ~30% complete
 
-The file renames from `.js` → `.ts` are done, but meaningful TypeScript typing is early stage. Only 3 of 20 source files have substantial types; 17 are still JavaScript in practice (all `var`, zero annotations).
+Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix removal done. 4 of 17 modules fully converted (`data.ts`, `callbacks.ts`, `deferred.ts`, `form.ts`). 10 modules remain as JavaScript in practice.
+
+### Completed
+
+- [x] **Delete dead legacy files**: Removed `ie.ts`, `ios3.ts`, `amd_layout.ts`
+- [x] **Remove legacy IE code from `touch.ts`**: Removed `MSGesture`, `MSPointer*`, `onmspointerdown` vendor-prefixed code
+- [x] **Remove deprecated jQuery APIs from `event.ts`**: Removed `$.fn.live` and `$.fn.die`
+- [x] **Convert `mepto.ts` antipatterns**: `let` → `const` for 25+ module-level variables. Removed `const undefined = void 0` antipattern. Simplified `mepto.matches` (removed vendor-prefix fallbacks). `const` for local vars where applicable.
+- [x] **Convert `data.ts`**: `var` → `const`/`let`, added type annotations, migrated plain object cache to `WeakMap`, replaced `node[exp]` property expansion with `Symbol`
+- [x] **Convert `callbacks.ts`**: `var` → `const`/`let`, typed closure state and all params
+- [x] **Convert `deferred.ts`**: `var` → `const`/`let`, typed tuples, deferred, and promise objects
+- [x] **Convert `form.ts`**: `var` → `const`/`let`, typed all params and return values
 
 ### Per-File Status
 
@@ -24,31 +35,28 @@ The file renames from `.js` → `.ts` are done, but meaningful TypeScript typing
 |------|-------|--------|------------|
 | `types.ts` | 466 | **Done** | `Mepto.matches` typed as bare `Function` — should get a proper signature |
 | `meptos.ts` | 55 | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false |
-| `mepto.ts` | 1453 | **Partial** | Many `any` types on core APIs (`mepto.init`, `$()`, `$.extend`, `$.fn.*` methods). `let` used where `const` applies (`$`, `concat`, `filter`, `slice`, regex constants, `propMap`, `containers`, `class2type`). Shared mutable `elementDisplay`, `classCache`, `class2type`. Parameter mutation in `fragment` and adjacency operators |
-| `event.ts` | 277 | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
+| `mepto.ts` | ~1430 | **Partial** | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type` |
+| `data.ts` | 92 | **Done** | `WeakMap` cache, `Symbol` expando, typed params |
+| `callbacks.ts` | 122 | **Done** | Typed closure state and all methods |
+| `deferred.ts` | 118 | **Done** | Typed tuples, deferred/promise objects |
+| `form.ts` | 40 | **Done** | All params and return values typed |
+| `event.ts` | ~270 | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
 | `ajax.ts` | 381 | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)` |
-| `form.ts` | 40 | **Not started** | All `var`, zero annotations |
 | `fx.ts` | 123 | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect |
 | `fx_methods.ts` | 71 | **Not started** | All `var`, zero annotations |
 | `selector.ts` | 85 | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg` |
-| `data.ts` | 89 | **Not started** | All `var`, zero annotations. Uses plain object cache — should migrate to `WeakMap`. `node[exp]` property expansion on elements |
-| `deferred.ts` | 118 | **Not started** | All `var`, zero annotations. String-based property access (`tuple[0] + "With"`). Circular `promise`/`deferred` pattern |
-| `callbacks.ts` | 122 | **Not started** | All `var`, zero annotations. Heavy shared mutable closure state (`memory`, `fired`, `firing`, etc.) |
 | `assets.ts` | 21 | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID |
 | `detect.ts` | 72 | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context |
 | `stack.ts` | 22 | **Not started** | All `var`, zero annotations |
 | `gesture.ts` | 35 | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout` |
-| `touch.ts` | 211 | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs, `MSGesture` reference (legacy IE) |
-| `ie.ts` | 20 | **To delete** | IE `getComputedStyle` polyfill — violates evergreen-only policy |
-| `ios3.ts` | 36 | **To delete** | iOS 3 polyfills (`trim`, `reduce`) — violates evergreen-only policy |
-| `amd_layout.ts` | 9 | **To delete/evaluate** | AMD build wrapper template; may no longer be needed with Vite |
+| `touch.ts` | ~190 | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed) |
 
 ### Recommended Next Steps
 
-1. **Delete dead legacy files**: `ie.ts`, `ios3.ts`, and evaluate `amd_layout.ts`
-2. **Convert `mepto.ts`**: Resolve `any` types, `let` → `const`, shared mutable state — this is the largest and most impactful file
-3. **Convert remaining modules in dependency order**: `data.ts` → `callbacks.ts` → `deferred.ts` → `event.ts` → `ajax.ts` → `form.ts` → `fx.ts` → `fx_methods.ts` → `selector.ts` → `detect.ts` → `touch.ts` → `gesture.ts` → `assets.ts` → `stack.ts`
-4. **Migrate `data.ts` cache to `WeakMap`** per performance philosophy
+1. ~~**Delete dead legacy files**: `ie.ts`, `ios3.ts`, and evaluate `amd_layout.ts`~~ **Done**
+2. **Continue `mepto.ts` typing**: Resolve remaining `any` types on core APIs (`mepto.init`, `$()`, `$.extend`, `$.fn.*` methods)
+3. **Convert remaining modules**: `event.ts` → `ajax.ts` → `fx.ts` → `fx_methods.ts` → `selector.ts` → `detect.ts` → `touch.ts` → `gesture.ts` → `assets.ts` → `stack.ts`
+4. ~~**Migrate `data.ts` cache to `WeakMap`** per performance philosophy~~ **Done**
 5. **Expand test coverage**: The 228-test suite does not cover AJAX, deferreds, callbacks, animations, touch, or detect. These modules need tests before/alongside conversion
 6. **Tighten `tsconfig.json`** after all files are typed (incrementally enable `strict`, `noImplicitAny`, etc.)
 

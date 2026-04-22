@@ -5,16 +5,15 @@
 import { type Mepto, type PlainObject } from './types';
 
 let mepto: Mepto = (function () {
-  let undefined;
-  let $;
-  let emptyArray: any[] = [];
-  let concat = emptyArray.concat;
-  let filter = emptyArray.filter;
-  let slice = emptyArray.slice;
-  let document = window.document;
-  let elementDisplay: Record<string, any> = {};
-  let classCache: Record<string, any> = {};
-  let cssNumber: Record<string, number> = {
+  let $: any;
+  const emptyArray: any[] = [];
+  const concat = emptyArray.concat;
+  const filter = emptyArray.filter;
+  const slice = emptyArray.slice;
+  const document = window.document;
+  const elementDisplay: Record<string, any> = {};
+  const classCache: Record<string, any> = {};
+  const cssNumber: Record<string, number> = {
     'column-count': 1,
     columns: 1,
     'font-weight': 1,
@@ -23,23 +22,22 @@ let mepto: Mepto = (function () {
     'z-index': 1,
     zoom: 1,
   };
-  let fragmentRE = /^\s*<(\w+|!)[^>]*>/;
-  let singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/;
-  let tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi;
-  let rootNodeRE = /^(?:body|html)$/i;
-  let capitalRE = /([A-Z])/g;
-  let doubleColonRE = /::/g;
-  let upperUpperLowerRE = /([A-Z]+)([A-Z][a-z])/g;
-  let lowerDigitUpperRE = /([a-z\d])([A-Z])/g;
-  let underscoreRE = /_/g;
+  const fragmentRE = /^\s*<(\w+|!)[^>]*>/;
+  const singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/;
+  const tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi;
+  const rootNodeRE = /^(?:body|html)$/i;
+  const capitalRE = /([A-Z])/g;
+  const doubleColonRE = /::/g;
+  const upperUpperLowerRE = /([A-Z]+)([A-Z][a-z])/g;
+  const lowerDigitUpperRE = /([a-z\d])([A-Z])/g;
+  const underscoreRE = /_/g;
 
-  // special attributes that should be get/set via method calls
-  let methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'];
+  const methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'];
 
-  let adjacencyOperators = ['after', 'prepend', 'before', 'append'];
-  let table = document.createElement('table');
-  let tableRow = document.createElement('tr');
-  let containers = {
+  const adjacencyOperators = ['after', 'prepend', 'before', 'append'];
+  const table = document.createElement('table');
+  const tableRow = document.createElement('tr');
+  const containers = {
     tr: document.createElement('tbody'),
     tbody: table,
     thead: table,
@@ -48,14 +46,14 @@ let mepto: Mepto = (function () {
     th: tableRow,
     '*': document.createElement('div'),
   };
-  let simpleSelectorRE = /^[\w-]*$/;
-  let class2type: Record<string, any> = {};
-  let toString = class2type.toString;
-  let mepto: any = {};
+  const simpleSelectorRE = /^[\w-]*$/;
+  const class2type: Record<string, any> = {};
+  const toString = class2type.toString;
+  const mepto: any = {};
   let camelize: any;
   let uniq: <T>(array: ArrayLike<T>) => T[];
-  let tempParent = document.createElement('div');
-  let propMap: Record<string, string> = {
+  const tempParent = document.createElement('div');
+  const propMap: Record<string, string> = {
     tabindex: 'tabIndex',
     readonly: 'readOnly',
     for: 'htmlFor',
@@ -69,7 +67,7 @@ let mepto: Mepto = (function () {
     frameborder: 'frameBorder',
     contenteditable: 'contentEditable',
   };
-  let isArray =
+  const isArray =
     Array.isArray ||
     function (object: any) {
       return object instanceof Array;
@@ -77,40 +75,11 @@ let mepto: Mepto = (function () {
 
   /**
    * Checks if `element` matches the given CSS `selector`.
-   * Uses the standard `Element.matches` API with vendor-prefix fallbacks,
-   * and falls back to a `qsa`-based query for unsupported browsers.
+   * Uses the standard `Element.matches` API.
    */
   mepto.matches = function (element: Element, selector: string): boolean {
     if (!selector || !element || element.nodeType !== 1) return false;
-
-    // Standard + vendor-prefixed matches implementations
-    const matchesSelector =
-      element.matches ||
-      (element as any).webkitMatchesSelector ||
-      (element as any).mozMatchesSelector ||
-      (element as any).oMatchesSelector ||
-      (element as any).msMatchesSelector;
-
-    if (matchesSelector) {
-      return matchesSelector.call(element, selector);
-    }
-
-    // Fallback: query the parent node for elements matching the selector
-    let parent = element.parentNode;
-    const isOrphan = !parent;
-
-    if (isOrphan) {
-      parent = tempParent;
-      parent.appendChild(element);
-    }
-
-    const match = mepto.qsa(parent, selector).indexOf(element) > -1;
-
-    if (isOrphan) {
-      tempParent.removeChild(element);
-    }
-
-    return match;
+    return element.matches(selector);
   };
 
   /**
@@ -274,6 +243,13 @@ let mepto: Mepto = (function () {
     return typeof value === 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value;
   }
 
+  /**
+   * Returns the default CSS `display` value for the given `nodeName`.
+   * Results are cached in `elementDisplay` so each tag is only probed once.
+   *
+   * @param nodeName - The DOM element tag name (e.g. `"div"`, `"span"`).
+   * @returns The default `display` value (e.g. `"block"`, `"inline"`).
+   */
   function defaultDisplay(nodeName: string): string {
     if (!elementDisplay[nodeName]) {
       const element = document.createElement(nodeName);
@@ -286,6 +262,14 @@ let mepto: Mepto = (function () {
     return elementDisplay[nodeName];
   }
 
+  /**
+   * Returns the child `Element` nodes of `element`, handling both nodes
+   * that have a `.children` collection (Elements, Documents) and those
+   * that don't (text nodes, etc.).
+   *
+   * @param element - The parent node whose children to retrieve.
+   * @returns An array of child `Element` nodes.
+   */
   function children(element: Node): Element[] {
     return 'children' in element
       ? slice.call((element as Element).children)
@@ -294,6 +278,14 @@ let mepto: Mepto = (function () {
         });
   }
 
+  /**
+   * Mepto collection constructor. Stores matched DOM elements as indexed
+   * properties with a `length` and `selector` string.
+   * Not called directly — use `mepto.Z()` which delegates here.
+   *
+   * @param dom      - Array-like list of matched elements.
+   * @param selector - The CSS selector string that produced this collection.
+   */
   function Z(dom: ArrayLike<Element> | null | undefined, selector: string) {
     const len = dom ? dom.length : 0;
     for (let i = 0; i < len; i++) this[i] = dom![i];
@@ -301,11 +293,18 @@ let mepto: Mepto = (function () {
     this.selector = selector || '';
   }
 
-  // `$.mepto.fragment` takes a html string and an optional tag name
-  // to generate DOM nodes from the given html string.
-  // The generated DOM nodes are returned as an array.
-  // This function can be overridden in plugins for example to make
-  // it compatible with browsers that don't support the DOM fully.
+  /**
+   * Parses an HTML string into DOM nodes, optionally applying properties.
+   * Selects the correct container element (`<tbody>`, `<tr>`, `<div>`, etc.)
+   * so the browser parses the fragment correctly.
+   *
+   * This method can be overridden in plugins.
+   *
+   * @param html       - The HTML string to parse.
+   * @param name       - Optional tag name hint for container selection.
+   * @param properties - Optional plain object of attributes/method-values to apply.
+   * @returns An array-like collection of created DOM elements.
+   */
   mepto.fragment = function (html: string, name: string | undefined, properties: PlainObject | null | undefined): ArrayLike<Element> {
     let dom: ArrayLike<Element>;
 
@@ -342,23 +341,39 @@ let mepto: Mepto = (function () {
     return dom;
   };
 
-  // `$.mepto.Z` swaps out the prototype of the given `dom` array
-  // of nodes with `$.fn` and thus supplying all the mepto functions
-  // to the array. This method can be overridden in plugins.
+  /**
+   * Creates a new Mepto collection wrapping the given DOM nodes.
+   * This method can be overridden in plugins.
+   *
+   * @param dom      - Array-like list of matched elements.
+   * @param selector - The CSS selector string that produced this collection.
+   * @returns A new Mepto collection instance.
+   */
   mepto.Z = function (dom: ArrayLike<Element> | null | undefined, selector: string) {
     return new Z(dom, selector);
   };
 
-  // `$.mepto.isZ` should return `true` if the given object is a mepto
-  // collection. This method can be overridden in plugins.
+  /**
+   * Returns `true` if the given object is a Mepto collection instance.
+   * This method can be overridden in plugins.
+   *
+   * @param object - Value to test.
+   */
   mepto.isZ = function (object: unknown): boolean {
     return object instanceof mepto.Z;
   };
 
-  // `$.mepto.init` is mepto's counterpart to jQuery's `$.fn.init` and
-  // takes a CSS selector and an optional context (and handles various
-  // special cases).
-  // This method can be overridden in plugins.
+  /**
+   * Mepto's selector initializer — counterpart to jQuery's `$.fn.init`.
+   * Accepts a CSS selector string, HTML fragment, DOM element, array,
+   * function (DOMContentLoaded shortcut), or existing Mepto collection.
+   *
+   * This method can be overridden in plugins.
+   *
+   * @param selector - Selector string, element, array, function, or collection.
+   * @param context  - Optional root element to scope the query.
+   * @returns A Mepto collection.
+   */
   mepto.init = function (selector: any, context?: any): any {
     let dom: ArrayLike<Element> | null | undefined;
     let finalSelector: any = selector;
@@ -406,10 +421,14 @@ let mepto: Mepto = (function () {
     return mepto.Z(dom, finalSelector);
   };
 
-  // `$` will be the base `mepto` object. When calling this
-  // function just call `$.mepto.init, which makes the implementation
-  // details of selecting nodes and creating mepto collections
-  // patchable in plugins.
+  /**
+   * The main Mepto factory function. Delegates to `mepto.init` so that
+   * selector logic remains patchable in plugins.
+   *
+   * @param selector - Selector string, element, array, function, or collection.
+   * @param context  - Optional root element to scope the query.
+   * @returns A Mepto collection.
+   */
   $ = function (selector: any, context?: any) {
     return mepto.init(selector, context);
   };
@@ -445,8 +464,15 @@ let mepto: Mepto = (function () {
     }
   }
 
-  // Copy all but undefined properties from one or more
-  // objects to the `target` object.
+  /**
+   * Merges properties from one or more source objects into `target`.
+   * Pass `true` as the first argument for a deep (recursive) merge.
+   * Properties with `undefined` values are always skipped.
+   *
+   * @param target - Destination object, or `true` for deep merge followed by destination.
+   * @param rest   - One or more source objects whose properties are copied.
+   * @returns The modified `target` object.
+   */
   $.extend = function (target: any, ...rest: any[]): any {
     let deep = false;
     let destination = target;
@@ -463,13 +489,21 @@ let mepto: Mepto = (function () {
     return destination;
   };
 
-  // `$.mepto.qsa` is mepto's CSS selector implementation which
-  // uses `document.querySelectorAll` and optimizes for some special cases, like `#id`.
-  // This method can be overridden in plugins.
+  /**
+   * Mepto's CSS selector engine. Optimises for simple ID (`#foo`),
+   * class (`.bar`), and tag (`div`) selectors by using native
+   * `getElementById`, `getElementsByClassName`, and `getElementsByTagName`
+   * before falling back to `querySelectorAll`.
+   *
+   * This method can be overridden in plugins.
+   *
+   * @param element  - The root element to query within.
+   * @param selector - A CSS selector string.
+   * @returns An array of matched `Element` nodes.
+   */
   mepto.qsa = function (element: ParentNode, selector: string): Element[] {
     const maybeID = selector[0] === '#';
     const maybeClass = !maybeID && selector[0] === '.';
-    // For ID/class selectors, strip the prefix; otherwise use the full selector
     const nameOnly = (maybeID || maybeClass) ? selector.slice(1) : selector;
     const isSimple = simpleSelectorRE.test(nameOnly);
 
@@ -580,15 +614,37 @@ let mepto: Mepto = (function () {
     return $(nodes).filter(selector);
   }
 
+  /**
+   * Checks whether `parent` contains `node` in the DOM tree.
+   * Returns `false` when both nodes are the same element.
+   *
+   * @param parent - The potential ancestor node.
+   * @param node   - The potential descendant node.
+   */
   $.contains = function (parent: Node, node: Node): boolean {
     return parent !== node && parent.contains(node);
   };
 
+  /**
+   * Sets or removes an attribute on `node`. When `value` is `null` or
+   * `undefined`, the attribute is removed; otherwise it is set.
+   *
+   * @param node  - The target element.
+   * @param name  - The attribute name.
+   * @param value - The attribute value, or `null`/`undefined` to remove.
+   */
   function setAttribute(node: Element, name: string, value: string | null | undefined): void {
     value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
   }
 
-  // access className property while respecting SVGAnimatedString
+  /**
+   * Gets or sets the `className` property of an element, correctly
+   * handling SVG elements whose `className` is an `SVGAnimatedString`.
+   *
+   * @param node  - The target element (may be an SVG element).
+   * @param value - When provided, sets the class name; otherwise returns it.
+   * @returns The current class name string when called as a getter.
+   */
   function className(node: Element & { className: any }, value?: string): string | void {
     const klass = node.className || '';
     const svg = klass && klass.baseVal !== undefined;
@@ -597,14 +653,15 @@ let mepto: Mepto = (function () {
     svg ? (klass.baseVal = value) : (node.className = value);
   }
 
-  // "true"  => true
-  // "false" => false
-  // "null"  => null
-  // "42"    => 42
-  // "42.5"  => 42.5
-  // "08"    => "08"   (preserved — not a valid decimal literal)
-  // JSON    => parse if valid, otherwise return as-is
-  // String  => self
+  /**
+   * Deserializes a `data-*` attribute value string into its JavaScript
+   * equivalent. Converts `"true"` → `true`, `"false"` → `false`,
+   * `"null"` → `null`, numeric strings → numbers, and JSON → objects.
+   * Strings that can't be converted are returned as-is.
+   *
+   * @param value - The raw attribute value string.
+   * @returns The deserialized value.
+   */
   function deserializeValue(value: string): any {
     // Falsy values (empty string, null, undefined) — return as-is
     if (!value) return value;
@@ -639,11 +696,23 @@ let mepto: Mepto = (function () {
   $.isArray = isArray;
   $.isPlainObject = isPlainObject;
 
+  /**
+   * Returns `true` if the given object has no own enumerable properties.
+   *
+   * @param obj - The object to test.
+   */
   $.isEmptyObject = function (obj: Record<string, unknown>): boolean {
     for (const _name in obj) return false;
     return true;
   };
 
+  /**
+   * Returns `true` if `val` represents a finite number.
+   * Numeric strings are considered numeric; `NaN`, `Infinity`,
+   * booleans, and `null` are not.
+   *
+   * @param val - The value to test.
+   */
   $.isNumeric = function (val: unknown): boolean {
     const num = Number(val);
     const type = typeof val;
@@ -657,11 +726,25 @@ let mepto: Mepto = (function () {
     );
   };
 
+  /**
+   * Returns the index of `elem` in `array`, or `-1` if not found.
+   * Optionally starts the search at index `i`.
+   *
+   * @param elem  - The value to locate.
+   * @param array - The array-like to search.
+   * @param i     - Optional starting index.
+   */
   $.inArray = function <T>(elem: T, array: ArrayLike<T>, i?: number): number {
     return emptyArray.indexOf.call(array, elem, i);
   };
 
   $.camelCase = camelize;
+  /**
+   * Trims leading and trailing whitespace from `str`.
+   * Returns an empty string for `null`/`undefined`.
+   *
+   * @param str - The string to trim.
+   */
   $.trim = function (str: string | null | undefined): string {
     return str == null ? '' : String.prototype.trim.call(str);
   };
@@ -672,6 +755,17 @@ let mepto: Mepto = (function () {
   $.expr = {};
   $.noop = function (): void {};
 
+  /**
+   * Iterates over `elements` (array-like or object), collecting non-null
+   * return values from `callback` into a flat array. Nested arrays returned
+   * by the callback are flattened one level.
+   *
+   * @typeParam T - The input element type.
+   * @typeParam U - The output element type.
+   * @param elements - An array-like or plain object to iterate.
+   * @param callback - Function returning a value to collect, or `null`/`undefined` to skip.
+   * @returns A flattened array of collected values.
+   */
   $.map = function <T, U>(
     elements: ArrayLike<T> | Record<string, T>,
     callback: (item: T, index: number | string) => U | null | undefined
@@ -692,6 +786,17 @@ let mepto: Mepto = (function () {
     return flatten(values);
   };
 
+  /**
+   * Iterates over `elements` (array-like or object), calling `callback`
+   * for each item. Returning `false` from the callback breaks the loop.
+   * For array-likes, the callback receives `(index, item)`;
+   * for plain objects, it receives `(key, value)`.
+   *
+   * @typeParam T - The element type.
+   * @param elements - An array-like or plain object to iterate.
+   * @param callback - Function called with each item. Return `false` to stop.
+   * @returns The original `elements` collection.
+   */
   $.each = function <T>(
     elements: ArrayLike<T> | Record<string, T>,
     callback: (this: T, index: number | string, item: T) => boolean | void
@@ -707,6 +812,14 @@ let mepto: Mepto = (function () {
     return elements;
   };
 
+  /**
+   * Filters `elements` using `callback`, returning only items for which
+   * `callback` returns `true`. Delegates to `Array.prototype.filter`.
+   *
+   * @param elements - An array-like collection to filter.
+   * @param callback - Predicate function called with `(item, index)`.
+   * @returns A new array of matching elements.
+   */
   $.grep = function (elements, callback) {
     return filter.call(elements, callback);
   };
@@ -760,6 +873,13 @@ let mepto: Mepto = (function () {
       return $(slice.call(this, start, end));
     },
 
+    /**
+     * Executes `callback` when the DOM is ready (DOMContentLoaded).
+     * If the DOM is already loaded, the callback is scheduled via `setTimeout`.
+     *
+     * @param callback - Function receiving the `$` factory.
+     * @returns The collection for chaining.
+     */
     ready: function (callback: (mepto: any) => void) {
       if (document.readyState !== 'loading') {
         setTimeout(() => callback($), 0);
@@ -768,6 +888,13 @@ let mepto: Mepto = (function () {
       }
       return this;
     },
+    /**
+     * Retrieves an element by index, or the entire collection as an array.
+     * Negative indices count from the end (`-1` is the last element).
+     *
+     * @param idx - Zero-based index, or `undefined` for the full array.
+     * @returns A single DOM element, or an array of all elements.
+     */
     get: function (idx?: number) {
       return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length];
     },
@@ -782,12 +909,27 @@ let mepto: Mepto = (function () {
         if (this.parentNode != null) this.parentNode.removeChild(this);
       });
     },
+    /**
+     * Iterates over the collection, calling `callback` for each element.
+     * Returning `false` from the callback breaks the loop.
+     *
+     * @param callback - Function called with `(index, element)`, `this` bound to the element.
+     * @returns The collection for chaining.
+     */
     each: function (callback: (this: Element, index: number, element: Element) => boolean | void) {
       for (let i = 0, len = this.length; i < len; i++) {
         if (callback.call(this[i], i, this[i]) === false) break;
       }
       return this;
     },
+    /**
+     * Filters the collection by a CSS selector or predicate function.
+     * When a function is provided, keeps elements for which it returns `true`.
+     * When a string is provided, keeps elements matching the selector.
+     *
+     * @param selector - CSS selector string or predicate function.
+     * @returns A new Mepto collection of matching elements.
+     */
     filter: function (selector: string | ((index: number, element: Element) => boolean)) {
       if (isFunction(selector)) {
         // Filter directly with the callback — O(n) instead of the previous
@@ -814,11 +956,25 @@ let mepto: Mepto = (function () {
     add: function (selector: any, context?: any) {
       return $(uniq(this.concat($(selector, context))));
     },
+    /**
+     * Checks whether the first element matches the given CSS selector,
+     * or compares `selector` properties when passed a Mepto collection.
+     *
+     * @param selector - CSS selector string or Mepto collection to compare.
+     * @returns `true` if the first element matches.
+     */
     is: function (selector: string | { selector: string }): boolean {
       return typeof selector == 'string'
         ? this.length > 0 && mepto.matches(this[0], selector)
         : !!(selector && this.selector == (selector as { selector: string }).selector);
     },
+    /**
+     * Returns a new collection excluding elements matched by the selector,
+     * element(s), or predicate function.
+     *
+     * @param selector - CSS selector string, element(s), or predicate function.
+     * @returns A new Mepto collection of non-matching elements.
+     */
     not: function (selector: string | Element | ArrayLike<Element> | ((this: Element, index: number) => boolean)) {
       const nodes: Element[] = [];
       if (isFunction(selector))
@@ -838,11 +994,25 @@ let mepto: Mepto = (function () {
       }
       return $(nodes);
     },
+    /**
+     * Filters elements to those that contain a descendant matching the
+     * given selector, or that contain the given DOM node.
+     *
+     * @param selector - CSS selector string or DOM node.
+     * @returns A new Mepto collection of matching elements.
+     */
     has: function (selector: string | Node) {
       return this.filter(function (this: HTMLElement) {
         return isObject(selector) ? $.contains(this, selector as Node) : $(this).find(selector as string).length > 0;
       });
     },
+    /**
+     * Returns the element at the given index as a Mepto collection.
+     * Negative indices count from the end.
+     *
+     * @param idx - Zero-based index (negative counts from end).
+     * @returns A new Mepto collection containing the single element.
+     */
     eq: function (idx: number) {
       return idx === -1 ? this.slice(idx) : this.slice(idx, +idx + 1);
     },
@@ -854,6 +1024,13 @@ let mepto: Mepto = (function () {
       const el = this[this.length - 1];
       return el && !isObject(el) ? el : $(el);
     },
+    /**
+     * Finds descendant elements matching the given CSS selector,
+     * or filters for elements containing the given element(s).
+     *
+     * @param selector - CSS selector string, element, or array-like of elements.
+     * @returns A new Mepto collection of matched descendants.
+     */
     find: function (selector: string | Element | ArrayLike<Element>) {
       if (!selector) return $();
 
@@ -878,6 +1055,14 @@ let mepto: Mepto = (function () {
         return mepto.qsa(el, selector as string);
       }))));
     },
+    /**
+     * Traverses ancestors of each element, returning the first that matches
+     * `selector`. Stops at `context` or the document root.
+     *
+     * @param selector - CSS selector string, element, or array-like of elements to match.
+     * @param context  - Optional boundary element; traversal stops here.
+     * @returns A new Mepto collection of closest matching ancestors.
+     */
     closest: function (selector: string | Element | ArrayLike<Element>, context?: Element | Document) {
       const nodes: Element[] = [];
       const collection = typeof selector == 'object' && $(selector);
@@ -970,9 +1155,23 @@ let mepto: Mepto = (function () {
           this.style.display = defaultDisplay(this.nodeName);
       });
     },
+    /**
+     * Replaces each element in the collection with `newContent`.
+     *
+     * @param newContent - HTML string, element, or Mepto collection to insert.
+     * @returns The original (now detached) collection.
+     */
     replaceWith: function (newContent: any) {
       return this.before(newContent).remove();
     },
+    /**
+     * Wraps `structure` around each element in the collection.
+     * `structure` can be an HTML string, DOM element, or a function
+     * returning one.
+     *
+     * @param structure - Wrapper element, HTML string, or function.
+     * @returns The original collection for chaining.
+     */
     wrap: function (structure: string | Element | ((index: number) => string | Element)) {
       const isCallable = isFunction(structure);
       let wrapperElement: Element | undefined;
@@ -992,6 +1191,13 @@ let mepto: Mepto = (function () {
         $(this).wrapAll(wrapper);
       });
     },
+    /**
+     * Wraps `structure` around the entire collection as a single group,
+     * inserting it before the first element and moving all elements inside.
+     *
+     * @param structure - Wrapper element, HTML string, or Mepto collection.
+     * @returns The original collection for chaining.
+     */
     wrapAll: function (structure: string | Element | ArrayLike<Element>) {
       if (!this[0]) return this;
 
@@ -1008,6 +1214,13 @@ let mepto: Mepto = (function () {
       $(innermost).append(this);
       return this;
     },
+    /**
+     * Wraps the inner contents of each element with `structure`.
+     * Pass `null` to skip wrapping.
+     *
+     * @param structure - Wrapper element, HTML string, or function returning one.
+     * @returns The original collection for chaining.
+     */
     wrapInner: function (structure: string | Element | ((index: number) => string | Element) | null) {
       if (structure == null) return this;
 
@@ -1052,6 +1265,14 @@ let mepto: Mepto = (function () {
     next: function (selector?: string) {
       return $(this.pluck('nextElementSibling')).filter(selector || '*');
     },
+    /**
+     * Gets or sets the `innerHTML` of elements.
+     * When called without arguments, returns the HTML of the first element.
+     * Accepts a function receiving `(index, currentHtml)`.
+     *
+     * @param html - HTML string or function returning HTML.
+     * @returns HTML string (getter) or the collection (setter).
+     */
     html: function (html?: string | ((idx: number, currentHtml: string) => string)) {
       return 0 in arguments
         ? this.each(function (idx) {
@@ -1064,6 +1285,14 @@ let mepto: Mepto = (function () {
           ? this[0].innerHTML
           : null;
     },
+    /**
+     * Gets or sets the `textContent` of elements.
+     * When called without arguments, returns the concatenated text of all elements.
+     * Accepts a function receiving `(index, currentText)`.
+     *
+     * @param text - Text string, number, or function returning text.
+     * @returns Text string (getter) or the collection (setter).
+     */
     text: function (text?: string | number | null | ((idx: number, current: string | null) => string | null)) {
       return 0 in arguments
         ? this.each(function (idx) {
@@ -1074,6 +1303,17 @@ let mepto: Mepto = (function () {
           ? this.pluck('textContent').join('')
           : null;
     },
+    /**
+     * Gets or sets HTML attributes on elements.
+     * - `.attr(name)` — get attribute of first element.
+     * - `.attr(name, value)` — set attribute on all elements.
+     * - `.attr({ name: value, ... })` — set multiple attributes.
+     * - `.attr(name, fn)` — set via function receiving `(index, oldValue)`.
+     *
+     * @param name  - Attribute name, or object of name/value pairs.
+     * @param value - Attribute value, function, or `null` to remove.
+     * @returns Attribute value (getter) or the collection (setter).
+     */
     attr: function (name: string | Record<string, string | null | undefined>, value?: string | null | ((i: number, old: string | null) => string | null)) {
       // Getter
       if (typeof name == 'string' && arguments.length < 2) {
@@ -1096,6 +1336,12 @@ let mepto: Mepto = (function () {
       }
       return this;
     },
+    /**
+     * Removes one or more space-separated attributes from every element.
+     *
+     * @param name - Space-separated attribute names to remove.
+     * @returns The collection for chaining.
+     */
     removeAttr: function (name: string) {
       return this.each(function () {
         this.nodeType === 1 &&
@@ -1104,6 +1350,18 @@ let mepto: Mepto = (function () {
           }, this);
       });
     },
+    /**
+     * Gets or sets DOM properties on elements. Normalises property names
+     * via `propMap` (e.g. `"for"` → `"htmlFor"`, `"class"` → `"className"`).
+     *
+     * - `.prop(name)` — get property of first element.
+     * - `.prop(name, value)` — set property on all elements.
+     * - `.prop({ name: value })` — set multiple properties.
+     *
+     * @param name  - Property name or object of name/value pairs.
+     * @param value - Property value or function receiving `(index, oldValue)`.
+     * @returns Property value (getter) or the collection (setter).
+     */
     prop: function (name: string | Record<string, any>, value?: any) {
       const resolvedName: string | Record<string, any> = typeof name === 'string' ? (propMap[name] || name) : name;
       return typeof resolvedName == 'string' && !(1 in arguments)
@@ -1117,12 +1375,27 @@ let mepto: Mepto = (function () {
             }
           });
     },
+    /**
+     * Deletes a DOM property from every element. Normalises via `propMap`.
+     *
+     * @param name - Property name to delete.
+     * @returns The collection for chaining.
+     */
     removeProp: function (name: string) {
       const resolvedName = propMap[name] || name;
       return this.each(function () {
         delete (this as any)[resolvedName];
       });
     },
+    /**
+     * Reads or writes a `data-*` attribute. The attribute name is
+     * dasherized automatically (e.g. `data("myVal")` reads `data-my-val`).
+     * Values are deserialized via `deserializeValue`.
+     *
+     * @param name  - Data key name.
+     * @param value - Value to set (omitted for getter).
+     * @returns Deserialized value (getter) or the collection (setter).
+     */
     data: function (name: string, value?: any) {
       const attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
 
@@ -1133,6 +1406,14 @@ let mepto: Mepto = (function () {
       const data = this.attr(attrName);
       return data !== undefined ? deserializeValue(data) : undefined;
     },
+    /**
+     * Gets or sets the value of form elements.
+     * For `<select multiple>`, returns an array of selected values.
+     * Accepts a function receiving `(index, currentValue)`.
+     *
+     * @param value - Value string, array, or function.
+     * @returns Value (getter) or the collection (setter).
+     */
     val: function (value?: string | string[] | ((idx: number, current: string) => string)) {
       // Setter
       if (arguments.length > 0) {
@@ -1158,6 +1439,14 @@ let mepto: Mepto = (function () {
 
       return el.value;
     },
+    /**
+     * Gets or sets the position of the first element relative to the document.
+     * As a setter, positions elements relative to their offset parent.
+     * Accepts a function receiving `(index, currentOffset)`.
+     *
+     * @param coordinates - `{ top, left }` object or function returning one.
+     * @returns Object with `top`, `left`, `width`, `height` (getter) or the collection (setter).
+     */
     offset: function (coordinates?: { top: number; left: number } | ((index: number, current: { top: number; left: number }) => { top: number; left: number })) {
       if (coordinates)
         return this.each(function (index) {
@@ -1184,6 +1473,17 @@ let mepto: Mepto = (function () {
         height: Math.round(obj.height),
       };
     },
+    /**
+     * Gets or sets CSS properties on elements.
+     * - `.css(prop)` — get computed value of a single property.
+     * - `.css([prop, ...])` — get multiple properties as an object.
+     * - `.css(prop, value)` — set a single property (omit value to remove).
+     * - `.css({ prop: value })` — set multiple properties.
+     *
+     * @param property - CSS property name(s) or an object of name/value pairs.
+     * @param value    - CSS value, or omitted/`null` to remove the property.
+     * @returns CSS value (getter) or the collection (setter).
+     */
     css: function (property: string | string[] | Record<string, string | number | null | undefined>, value?: string | number | null) {
       if (arguments.length < 2) {
         const element = this[0] as HTMLElement | undefined;
@@ -1225,9 +1525,22 @@ let mepto: Mepto = (function () {
         (this as HTMLElement).style.cssText += ';' + css;
       });
     },
+    /**
+     * Returns the index of the first element among its siblings,
+     * or the index of `element` within this collection.
+     *
+     * @param element - Optional selector or element to locate.
+     * @returns Zero-based index.
+     */
     index: function (element?: string | Element | ArrayLike<Element>): number {
       return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0]);
     },
+    /**
+     * Checks whether any element in the collection has the given CSS class.
+     *
+     * @param name - CSS class name to check for.
+     * @returns `true` if at least one element has the class.
+     */
     hasClass: function (name: string): boolean {
       if (!name) return false;
       return emptyArray.some.call(
@@ -1238,6 +1551,13 @@ let mepto: Mepto = (function () {
         classRE(name)
       );
     },
+    /**
+     * Adds one or more CSS classes to every element. Duplicates are skipped.
+     * Accepts a function receiving `(index, currentClass)`.
+     *
+     * @param name - Space-separated class names, or function returning them.
+     * @returns The collection for chaining.
+     */
     addClass: function (name: string | ((index: number, currentClass: string) => string)) {
       if (!name) return this;
       return this.each(function (idx) {
@@ -1251,6 +1571,14 @@ let mepto: Mepto = (function () {
         if (toAdd.length) className(this as any, cls + (cls ? ' ' : '') + toAdd.join(' '));
       });
     },
+    /**
+     * Removes one or more CSS classes from every element.
+     * With no arguments, removes all classes. Accepts a function
+     * receiving `(index, currentClass)`.
+     *
+     * @param name - Space-separated class names, or function returning them.
+     * @returns The collection for chaining.
+     */
     removeClass: function (name?: string | ((index: number, currentClass: string) => string)) {
       return this.each(function (idx) {
         if (!('className' in this)) return;
@@ -1263,6 +1591,15 @@ let mepto: Mepto = (function () {
         className(this as any, cls.trim());
       });
     },
+    /**
+     * Toggles one or more CSS classes on every element.
+     * Pass `true`/`false` as `when` to force add/remove.
+     * Accepts a function receiving `(index, currentClass)`.
+     *
+     * @param name - Space-separated class names, or function returning them.
+     * @param when - `true` to add, `false` to remove; omit to toggle.
+     * @returns The collection for chaining.
+     */
     toggleClass: function (name: string | ((index: number, currentClass: string) => string), when?: boolean) {
       if (!name) return this;
       return this.each(function (idx) {
@@ -1275,6 +1612,12 @@ let mepto: Mepto = (function () {
         });
       });
     },
+    /**
+     * Gets or sets the vertical scroll position of the first element.
+     *
+     * @param value - Scroll position in pixels (omit to get).
+     * @returns Current scroll position (getter) or the collection (setter).
+     */
     scrollTop: function (value?: number) {
       if (!this.length) return;
       const hasScrollTop = 'scrollTop' in this[0];
@@ -1285,6 +1628,12 @@ let mepto: Mepto = (function () {
           : function () { (this as any).scrollTo((this as any).scrollX, value); }
       );
     },
+    /**
+     * Gets or sets the horizontal scroll position of the first element.
+     *
+     * @param value - Scroll position in pixels (omit to get).
+     * @returns Current scroll position (getter) or the collection (setter).
+     */
     scrollLeft: function (value?: number) {
       if (!this.length) return;
       const hasScrollLeft = 'scrollLeft' in this[0];
@@ -1335,7 +1684,7 @@ let mepto: Mepto = (function () {
 
   // Generate the `width` and `height` functions
   ['width', 'height'].forEach(function (dimension) {
-    let dimensionProperty = dimension.replace(/./, function (m) {
+    const dimensionProperty = dimension.replace(/./, function (m) {
       return m[0].toUpperCase();
     });
 
@@ -1356,7 +1705,15 @@ let mepto: Mepto = (function () {
     };
   });
 
-  function traverseNode(node: Node, callback: (node: any) => void): void {
+    /**
+     * Recursively visits `node` and all its descendants, calling
+     * `callback` on each. Used to execute inline `<script>` tags
+     * after DOM insertion.
+     *
+     * @param node     - The root node to traverse.
+     * @param callback - Function called for each node in the subtree.
+     */
+    function traverseNode(node: Node, callback: (node: any) => void): void {
     if (!node) return;
     callback(node);
     const children = node.childNodes;
@@ -1368,7 +1725,7 @@ let mepto: Mepto = (function () {
   // Generate the `after`, `prepend`, `before`, `append`,
   // `insertAfter`, `insertBefore`, `appendTo`, and `prependTo` methods.
   adjacencyOperators.forEach(function (operator, operatorIndex) {
-    let inside = operatorIndex % 2; //=> prepend, append
+    const inside = operatorIndex % 2;
 
     $.fn[operator] = function () {
       // arguments can be nodes, arrays of nodes, mepto objects and HTML strings
@@ -1403,7 +1760,7 @@ let mepto: Mepto = (function () {
                 ? target
                 : null;
 
-        let parentInDocument = $.contains(document.documentElement, parent);
+        const parentInDocument = $.contains(document.documentElement, parent);
 
         nodes.forEach(function (node) {
           if (copyByClone) node = node.cloneNode(true);
@@ -1418,7 +1775,7 @@ let mepto: Mepto = (function () {
                 (!el.type || el.type === 'text/javascript') &&
                 !el.src
               ) {
-                let target = el.ownerDocument ? el.ownerDocument.defaultView : window;
+                const target = el.ownerDocument ? el.ownerDocument.defaultView : window;
                 target['eval'].call(target, el.innerHTML);
               }
             });

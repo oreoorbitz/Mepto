@@ -4,57 +4,55 @@
 //
 //     Some code (c) 2005, 2013 jQuery Foundation, Inc. and other contributors
 
-;(function($){
-  var slice = Array.prototype.slice
+;(function($: any){
+  const slice = Array.prototype.slice
 
-  function Deferred(func) {
-    var tuples = [
-          // action, add listener, listener list, final state
-          [ "resolve", "done", $.Callbacks({once:1, memory:1}), "resolved" ],
-          [ "reject", "fail", $.Callbacks({once:1, memory:1}), "rejected" ],
-          [ "notify", "progress", $.Callbacks({memory:1}) ]
-        ],
-        state = "pending",
-        promise = {
-          state: function() {
-            return state
-          },
-          always: function() {
-            deferred.done(arguments).fail(arguments)
-            return this
-          },
-          then: function(/* fnDone [, fnFailed [, fnProgress]] */) {
-            var fns = arguments
-            return Deferred(function(defer){
-              $.each(tuples, function(i, tuple){
-                var fn = $.isFunction(fns[i]) && fns[i]
-                deferred[tuple[1]](function(){
-                  var returned = fn && fn.apply(this, arguments)
-                  if (returned && $.isFunction(returned.promise)) {
-                    returned.promise()
-                      .done(defer.resolve)
-                      .fail(defer.reject)
-                      .progress(defer.notify)
-                  } else {
-                    var context = this === promise ? defer.promise() : this,
-                        values = fn ? [returned] : arguments
-                    defer[tuple[0] + "With"](context, values)
-                  }
-                })
-              })
-              fns = null
-            }).promise()
-          },
+  function Deferred(func?: (deferred: any) => void): any {
+    const tuples: [string, string, any, string?][] = [
+      [ "resolve", "done", $.Callbacks({once:1, memory:1}), "resolved" ],
+      [ "reject", "fail", $.Callbacks({once:1, memory:1}), "rejected" ],
+      [ "notify", "progress", $.Callbacks({memory:1}) ]
+    ]
+    let state = "pending"
+    const deferred: Record<string, any> = {}
 
-          promise: function(obj) {
-            return obj != null ? $.extend( obj, promise ) : promise
-          }
-        },
-        deferred = {}
+    const promise: Record<string, any> = {
+      state: function(): string {
+        return state
+      },
+      always: function(): any {
+        deferred.done(arguments).fail(arguments)
+        return this
+      },
+      then: function(): any {
+        const fns = arguments
+        return Deferred(function(defer: any){
+          $.each(tuples, function(i: number, tuple: [string, string, any, string?]){
+            const fn = $.isFunction(fns[i]) && fns[i]
+            deferred[tuple[1]](function(){
+              const returned = fn && fn.apply(this, arguments)
+              if (returned && $.isFunction(returned.promise)) {
+                returned.promise()
+                  .done(defer.resolve)
+                  .fail(defer.reject)
+                  .progress(defer.notify)
+              } else {
+                const context = this === promise ? defer.promise() : this
+                const values = fn ? [returned] : arguments
+                defer[tuple[0] + "With"](context, values)
+              }
+            })
+          })
+        }).promise()
+      },
+      promise: function(obj?: any): any {
+        return obj != null ? $.extend(obj, promise) : promise
+      }
+    }
 
-    $.each(tuples, function(i, tuple){
-      var list = tuple[2],
-          stateString = tuple[3]
+    $.each(tuples, function(i: number, tuple: [string, string, any, string?]){
+      const list = tuple[2]
+      const stateString = tuple[3]
 
       promise[tuple[1]] = list.add
 
@@ -76,30 +74,30 @@
     return deferred
   }
 
-  $.when = function(sub) {
-    var resolveValues = slice.call(arguments),
-        len = resolveValues.length,
-        i = 0,
-        remain = len !== 1 || (sub && $.isFunction(sub.promise)) ? len : 0,
-        deferred = remain === 1 ? sub : Deferred(),
-        progressValues, progressContexts, resolveContexts,
-        updateFn = function(i, ctx, val){
-          return function(value){
-            ctx[i] = this
-            val[i] = arguments.length > 1 ? slice.call(arguments) : value
-            if (val === progressValues) {
-              deferred.notifyWith(ctx, val)
-            } else if (!(--remain)) {
-              deferred.resolveWith(ctx, val)
-            }
-          }
+  $.when = function(sub?: any): any {
+    const resolveValues = slice.call(arguments)
+    const len = resolveValues.length
+    let remain = len !== 1 || (sub && $.isFunction(sub.promise)) ? len : 0
+    const deferred = remain === 1 ? sub : Deferred()
+    let progressValues: any[], progressContexts: any[], resolveContexts: any[]
+
+    const updateFn = function(i: number, ctx: any[], val: any[]): (value: any) => void {
+      return function(value: any){
+        ctx[i] = this
+        val[i] = arguments.length > 1 ? slice.call(arguments) : value
+        if (val === progressValues) {
+          deferred.notifyWith(ctx, val)
+        } else if (!(--remain)) {
+          deferred.resolveWith(ctx, val)
         }
+      }
+    }
 
     if (len > 1) {
       progressValues = new Array(len)
       progressContexts = new Array(len)
       resolveContexts = new Array(len)
-      for ( ; i < len; ++i ) {
+      for (let i = 0; i < len; ++i) {
         if (resolveValues[i] && $.isFunction(resolveValues[i].promise)) {
           resolveValues[i].promise()
             .done(updateFn(i, resolveContexts, resolveValues))
