@@ -1682,6 +1682,88 @@ let mepto: Mepto = (function () {
   // for now
   $.fn.detach = $.fn.remove;
 
+  /**
+   * Provides a `classList`-compatible API on Mepto collections, mirroring
+   * the native `Element.classList` (`DOMTokenList`). This is a migration
+   * bridge: an LLM can map `$('.x').addClass('y')` → `$('.x').classList.add('y')`
+   * → `el.classList.add('y')` without any conceptual leap.
+   *
+   * All mutating methods (`add`, `remove`, `toggle`, `replace`) return the
+   * Mepto collection for chaining:
+   *
+   *   $('.item').classList.add('active').classList.remove('stale')
+   *
+   * Read methods (`contains`, `toString`) operate on the first element.
+   *
+   *   $('.item').classList.contains('active')   // → true | false
+   *   $('.item').classList.toString()            // → "foo bar baz"
+   */
+  Object.defineProperty($.fn, 'classList', {
+    get: function () {
+      const collection = this
+      return {
+        add: function (...tokens: string[]) {
+          return collection.each(function () {
+            this.classList.add(...tokens)
+          })
+        },
+        remove: function (...tokens: string[]) {
+          return collection.each(function () {
+            this.classList.remove(...tokens)
+          })
+        },
+        toggle: function (token: string, force?: boolean) {
+          return collection.each(function () {
+            this.classList.toggle(token, force)
+          })
+        },
+        contains: function (token: string): boolean {
+          return collection.length > 0 && collection[0].classList.contains(token)
+        },
+        replace: function (oldToken: string, newToken: string) {
+          return collection.each(function () {
+            this.classList.replace(oldToken, newToken)
+          })
+        },
+        entries: function () {
+          return collection.length > 0
+            ? collection[0].classList.entries()
+            : ([] as string[])[Symbol.iterator]()
+        },
+        forEach: function (callback: (value: string, key: number, list: DOMTokenList) => void) {
+          if (collection.length > 0) collection[0].classList.forEach(callback)
+        },
+        item: function (index: number): string | null {
+          return collection.length > 0 ? collection[0].classList.item(index) : null
+        },
+        keys: function () {
+          return collection.length > 0
+            ? collection[0].classList.keys()
+            : ([] as string[])[Symbol.iterator]()
+        },
+        values: function () {
+          return collection.length > 0
+            ? collection[0].classList.values()
+            : ([] as string[])[Symbol.iterator]()
+        },
+        toString: function (): string {
+          return collection.length > 0 ? collection[0].classList.toString() : ''
+        },
+        get length(): number {
+          return collection.length > 0 ? collection[0].classList.length : 0
+        },
+        get value(): string {
+          return collection.length > 0 ? collection[0].classList.value : ''
+        },
+        set value(val: string) {
+          collection.each(function () {
+            this.classList.value = val
+          })
+        },
+      }
+    },
+  })
+
   // Generate the `width` and `height` functions
   ['width', 'height'].forEach(function (dimension) {
     const dimensionProperty = dimension.replace(/./, function (m) {
