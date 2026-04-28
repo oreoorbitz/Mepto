@@ -2,7 +2,7 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type MeptoStatic, type PlainObject } from './types'
+import { type MeptoCollection, type MeptoStatic, type PlainObject } from './types'
 
 const mepto: MeptoStatic = (function (): MeptoStatic {
   let $: MeptoStatic = null as unknown as MeptoStatic
@@ -828,30 +828,57 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
 
     // Because a collection acts like an array,
     // copy over these useful native array methods.
-    forEach: emptyArray.forEach,
-    reduce: emptyArray.reduce,
-    push: emptyArray.push,
-    sort: emptyArray.sort,
-    splice: emptyArray.splice,
-    indexOf: emptyArray.indexOf,
-    concat: function (...args: any[]) {
-      const normalizedArgs = args.map(arg => (mepto.isZ(arg) ? arg.toArray() : arg))
-      return concat.apply(mepto.isZ(this) ? this.toArray() : this, normalizedArgs)
+    // Explicit functions are used over emptyArray.* to satisfy unbound-method linter rules
+    // while preserving the dynamic `this` binding required for array-like operations.
+    forEach: function (this: any[], ...args: Parameters<Array<any>['forEach']>) {
+      return emptyArray.forEach.apply(this, args)
+    },
+    reduce: function (this: any[], ...args: Parameters<Array<any>['reduce']>) {
+      return emptyArray.reduce.apply(this, args)
+    },
+    push: function (this: any[], ...args: any[]) {
+      return emptyArray.push.apply(this, args)
+    },
+    sort: function (this: any[], ...args: Parameters<Array<any>['sort']>) {
+      return emptyArray.sort.apply(this, args)
+    },
+    splice: function (this: any[], ...args: Parameters<Array<any>['splice']>) {
+      return emptyArray.splice.apply(this, args)
+    },
+    indexOf: function (this: any[], ...args: Parameters<Array<any>['indexOf']>) {
+      return emptyArray.indexOf.apply(this, args)
     },
 
-    // `map` and `slice` in the jQuery API work differently
-    // from their array counterparts
+    /**
+     * Merges the collection with additional elements, arrays, or MeptoCollections.
+     * MeptoCollection arguments are flattened to their underlying element arrays
+     * before merging, matching `Array.prototype.concat` semantics.
+     *
+     * @param args - Elements, arrays, or MeptoCollections to concatenate.
+     * @returns A new plain array containing all merged elements.
+     */
+    concat: function (...args: any[]): any[] {
+      // Flatten MeptoCollection arguments to plain arrays so concat
+      // spreads their elements rather than nesting the whole object.
+      const flattened = args.map(arg =>
+        mepto.isZ(arg) ? arg.toArray() : arg
+      )
+      return emptyArray.concat(
+        mepto.isZ(this) ? this.toArray() : this,
+        ...flattened
+      )
+    },
+
+    // `map` and `slice` follow jQuery conventions, not Array.prototype:
+    // - `map` invokes the callback as `(index, element)` with `this` bound to
+    //   the element, and excludes null/undefined results from the output.
+    // - `slice` wraps the result in a new Mepto collection instead of a plain array.
     map: function <U>(
       fn: (this: Element, index: number, element: Element) => U | null | undefined
-    ) {
-      const values: U[] = []
-      for (let i = 0, len = this.length; i < len; i++) {
-        const value = fn.call(this[i], i, this[i])
-        if (value != null) values.push(value)
-      }
-      return $(flatten(values))
+    ): MeptoCollection {
+      return $($.map(this, (el, i) => fn.call(el, i, el)))
     },
-    slice: function (start?, end?) {
+    slice: function (start?: number, end?: number): MeptoCollection {
       return $(slice.call(this, start, end))
     },
 
@@ -900,7 +927,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      */
     each: function (callback: (this: Element, index: number, element: Element) => boolean | void) {
       for (let i = 0, len = this.length; i < len; i++) {
-        if (callback.call(this[i], i, this[i]) === false) break
+        const element = this[i]
+        if (callback.call(element, i, element) === false) break
       }
       return this
     },
@@ -913,27 +941,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns A new Mepto collection of matching elements.
      */
     filter: function (selector: string | ((index: number, element: Element) => boolean)) {
-      if (isFunction(selector)) {
-        // Filter directly with the callback — O(n) instead of the previous
-        // double-negation pattern this.not(this.not(selector)) which was
-        // O(n*m) and created two intermediate collections.
-        return $(
-          filter.call(this, function (element: Element, index: number) {
-            return selector.call(element, index, element)
-          })
-        )
-      }
-
-      // Short-circuit on nullish selector — avoids iterating when no element
-      // can possibly match. mepto.matches already guards against this, but we
-      // skip the loop entirely.
       if (selector == null) return $()
-
-      return $(
-        filter.call(this, function (element: Element) {
-          return mepto.matches(element, selector as string)
-        })
-      )
+      const predicate: (el: Element, i: number) => boolean = isFunction(selector)
+        ? (el, i) => selector.call(el, i, el)
+        : el => mepto.matches(el, selector as string)
+      return $(filter.call(this, predicate))
     },
     add: function (selector: any, context?: any) {
       return $(uniq(this.concat($(selector, context))))

@@ -6,6 +6,69 @@ Mepto is a lightweight, modern replacement for jQuery. The core aim is to match 
 
 **Browser target: evergreen browsers only.** No IE, no legacy Edge, no Safari < 14. Do not add polyfills, fallbacks, or feature-detection code for old browsers. Use native platform APIs (`WeakMap`, `WeakSet`, `queueMicrotask`, `AbortController`, `ResizeObserver`, `MutationObserver`, `requestAnimationFrame`, `classList`, `closest`, `dataset`, etc.) freely — they are all available in the target environment. If you encounter legacy-compatibility code in the existing source, you may remove it.
 
+## Quick Start for LLMs
+
+When making changes to this codebase, follow this routine to avoid common pitfalls:
+
+### Verify your change (fast path — no build needed)
+
+```bash
+npm test                              # Vitest: 73 tests in jsdom, ~1s
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # Playwright: 228 tests in real browser, ~2s
+```
+
+**The root `index.html` loads Mepto from source via ES module imports.** No build step is required for testing. Both Vitest and Playwright work directly against source.
+
+### One-shot full validation
+
+```bash
+npm run test:all                      # kills old servers, runs vitest + playwright
+```
+
+### If you get port conflicts
+
+Dev servers linger on ports 3000-3099. Kill them first:
+
+```bash
+npm run killports                     # kills all servers on 3000-3099
+npx playwright test ...               # Playwright will auto-start a fresh dev server
+```
+
+### About `npm run build`
+
+**The build will print TypeScript errors.** This is expected. The project is ~30% through a TypeScript transition — 10 of 17 modules are unconverted and contain type errors. These errors come from `vite-plugin-dts` (type declaration generator), not from esbuild (which strips types and produces working JS).
+
+- The build **succeeds** (exit code 0) despite the errors
+- `dist/meptos.umd.cjs` and `dist/meptos.js` are produced correctly
+- If you see a flood of red error output from `vite build`, that's normal — ignore it
+- To check if YOU introduced a new error, use `npm run typecheck` (runs `tsc --noEmit`) with a baseline comparison, or just compare build error count
+
+### The three test commands, ranked by speed
+
+| Command | Time | Tests | What it checks |
+|---------|------|-------|----------------|
+| `npm test` | ~1s | 73 | Vitest in jsdom — fast unit tests |
+| `npx playwright test ... --project=chromium` | ~2s | 228 | Full suite in real Chromium |
+| `npm run test:e2e` | ~5s | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
+
+Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final verification.
+
+### How the dev server works
+
+`npm run dev` scans ports 3000–3099, binds to the first available one, and writes it to `.port`. The Playwright config reads `.port` at startup and navigates to `http://localhost:<port>/`. The test page at `/` (root `index.html`) loads Mepto from source and runs 228 assertions.
+
+### Do not edit these files
+
+- `.claude/settings.local.json` — Claude permissions/settings
+- `plans/` — planning documents
+- `tools/llm-test-harness/` — Harness source; only modify if improving the harness itself
+
+### What's tested / what's not
+
+The 228-test suite in `index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the root `index.html` suite.
+
+---
+
 ## Current Task
 
 Transition all source files to TypeScript, adding parameter types to untyped functions. Refactor antipatterns (shared mutable module-level variables, parameter mutation, `let` where `const` applies) as they are encountered. Verify each change with the 228-test suite before moving on.
