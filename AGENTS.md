@@ -98,11 +98,10 @@ Reference completed conversions to see these patterns in practice:
 Build the library and record the passing test count before making any changes. Every step must maintain this baseline.
 
 ```bash
-npm run build
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-A clean baseline looks like: `228 passed (0 failed)`.
+A clean baseline looks like: `1 passed` (the single Playwright test, which internally asserts 228 pass and 0 fail).
 
 > **Important:** The test suite loads `/dist/meptos.umd.cjs`. Always run `npm run build` before running tests — the harness tests the compiled output, not the source.
 
@@ -176,11 +175,10 @@ Address these as you encounter them inside the module being converted. Do not fi
 ### Step 6 — Build and verify
 
 ```bash
-npm run build
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-`0 failed` is the only acceptable result. If tests regress, revert the last change and diagnose before continuing.
+`1 passed` is the only acceptable result. If tests regress, revert the last change and diagnose before continuing.
 
 ---
 
@@ -245,10 +243,19 @@ npm run dev &
 The dev server scans ports 3000–3099 and binds to the first available one. The chosen port is written to `.port` the moment the server is ready.
 
 ```bash
-# Get the URL after starting
 cat .port                          # → e.g. 3000
-echo "http://localhost:$(cat .port)"
 ```
+
+### Landing Page — Unit Test Suite
+
+`http://localhost:$(cat .port)/` is the unit test suite. It loads Mepto directly from source — **no build step required**. All 228 tests run automatically on page load and the result is visible immediately.
+
+- `#summary.pass` — all tests passed
+- `#summary.fail` — one or more tests failed (failures listed inline with ✗)
+- `document.body.dataset.status` — `"passed"` or `"failed"` (machine-readable)
+- `window.meptoTestResults` — `{ passed, failed, total, results[] }`
+
+Because it loads from source, editing a `.ts` file and refreshing the page is enough to re-run the suite — no `npm run build` needed.
 
 ### 3. Confirm the Server is Ready
 
@@ -296,18 +303,13 @@ cd tools/llm-test-harness && npm run build && cd ../..
 
 ## Running the Full Unit Test Suite
 
-`test/mepto-unit.html` is a self-contained test page covering every method in `src/mepto.ts` plus events and forms. It runs 228 tests automatically when loaded and exposes `window.meptoTestResults`.
-
-> **The test page loads `/dist/meptos.umd.cjs`.** Always run `npm run build` before running tests — without it you are testing stale compiled output, not your changes.
+The landing page (`/`) is the unit test suite. It loads from source — no build step needed.
 
 ```bash
-npm run build
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-Playwright waits automatically for `meptoTestResults` to be populated, then asserts `failed === 0` and `passed === 228`. On failure it prints the names of every failing test.
-
-You can also open `http://localhost:$(cat .port)/test/mepto-unit.html` in a browser for a visual pass/fail list.
+Playwright navigates to `/`, waits for `#summary` to get class `pass` or `fail`, then asserts `failed === 0` and `passed === 228`. On failure it prints the names of every failing test.
 
 ---
 
@@ -430,14 +432,12 @@ Edit files in `src/` — all files are TypeScript (`.ts`).
 npm run build
 ```
 
-### 3. Build Then Run the Full Test Suite
+### 3. Run the Full Test Suite
 ```bash
-# Build first — the test page loads /dist/meptos.umd.cjs, not the source
-npm run build
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-A passing run prints `1 passed`. Any failure prints the names of the specific failing tests.
+The landing page loads from source — no build step needed. A passing run prints `1 passed`. Any failure prints the names of the specific failing tests.
 
 ### 4. Test a Specific Behaviour
 

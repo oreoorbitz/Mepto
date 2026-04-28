@@ -8,19 +8,16 @@ interface TestResults {
 }
 
 test('228 unit tests pass', async ({ page }) => {
-  await page.goto('/test/mepto-unit.html');
+  await page.goto('/');
 
-  const handle = await page.waitForFunction(
-    () => {
-      const r = (window as unknown as { meptoTestResults?: TestResults }).meptoTestResults;
-      return r && r.total > 0 ? r : undefined;
-    },
-    { timeout: 15000 },
+  // #summary gets class "pass" or "fail" when the suite finishes
+  await page.locator('#summary.pass, #summary.fail').waitFor({ timeout: 15000 });
+
+  const data = await page.evaluate(
+    () => (window as unknown as { meptoTestResults: TestResults }).meptoTestResults,
   );
 
-  const data = (await handle.jsonValue()) as TestResults;
   const failures = data.results.filter((r) => !r.pass).map((r) => r.name);
-
   expect(failures, `Failed tests:\n${failures.join('\n')}`).toHaveLength(0);
   expect(data.passed).toBe(228);
 });

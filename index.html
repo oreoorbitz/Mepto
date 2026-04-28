@@ -3,301 +3,706 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mepto - Development Playground</title>
+  <title>Mepto Unit Tests</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-      line-height: 1.6;
-      color: #333;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      min-height: 100vh;
-      padding: 40px 20px;
+    body { font-family: system-ui, sans-serif; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2em; margin-bottom: 8px; }
+    h2 { font-size: 1em; margin: 12px 0 4px; color: #333; border-top: 1px solid #ddd; padding-top: 8px; }
+    #summary { font-weight: bold; font-size: 1.1em; padding: 10px; border-radius: 4px; margin-bottom: 12px; }
+    #summary.running { background: #fff3cd; color: #856404; }
+    #summary.pass { background: #d4edda; color: #155724; }
+    #summary.fail { background: #f8d7da; color: #721c24; }
+    .row { font-family: monospace; font-size: 0.85em; padding: 1px 0; }
+    .row.pass { color: #1a7340; }
+    .row.fail { color: #c0392b; font-weight: bold; }
+    /* Fixture container: rendered (so dimensions work) but invisible */
+    #fixtures {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 400px;
+      visibility: hidden;
     }
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-      padding: 40px;
-    }
-    h1 {
-      color: #667eea;
-      margin-bottom: 10px;
-      font-size: 2.5em;
-    }
-    .subtitle {
-      color: #666;
-      margin-bottom: 30px;
-      font-size: 1.1em;
-    }
-    .section {
-      margin-bottom: 30px;
-      padding: 20px;
-      background: #f8f9fa;
-      border-radius: 8px;
-    }
-    h2 {
-      color: #764ba2;
-      margin-bottom: 15px;
-      font-size: 1.3em;
-    }
-    .demo-box {
-      background: white;
-      border: 2px dashed #ddd;
-      padding: 20px;
-      margin: 10px 0;
-      border-radius: 6px;
-    }
-    button {
-      background: #667eea;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      margin: 5px;
-      transition: all 0.3s;
-    }
-    button:hover {
-      background: #764ba2;
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    }
-    .test-element {
-      padding: 15px;
-      margin: 10px 0;
-      background: #e3f2fd;
-      border-radius: 6px;
-      transition: all 0.3s;
-    }
-    .highlight {
-      background: #fff3cd !important;
-      transform: scale(1.02);
-    }
-    .hidden {
-      display: none;
-    }
-    code {
-      background: #f4f4f4;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-family: 'Courier New', monospace;
-      font-size: 0.9em;
-    }
-    .console-output {
-      background: #1e1e1e;
-      color: #4ec9b0;
-      padding: 15px;
-      border-radius: 6px;
-      font-family: 'Courier New', monospace;
-      font-size: 13px;
-      max-height: 200px;
-      overflow-y: auto;
-      margin-top: 10px;
-    }
-    .console-output .error { color: #f48771; }
-    .console-output .warn { color: #dcdcaa; }
-    .info-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-top: 15px;
-    }
-    .info-card {
-      background: white;
-      padding: 15px;
-      border-radius: 6px;
-      border-left: 4px solid #667eea;
-    }
-    .info-card h4 {
-      color: #667eea;
-      margin-bottom: 5px;
-    }
+    #fixtures .box { width: 100px; height: 50px; }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h1>⚚ Mepto</h1>
-    <p class="subtitle">Modern TypeScript fork of mepto.js - jQuery-compatible library</p>
+  <h1>Mepto Unit Tests</h1>
+  <div id="summary" class="running">Running…</div>
+  <div id="test-output"></div>
 
-    <div class="section">
-      <h2>🚀 Quick Test</h2>
-      <div class="demo-box">
-        <div id="test-box" class="test-element">
-          <strong>Test Element</strong> - Click buttons below to test Mepto functionality
-        </div>
-        <div>
-          <button id="btn-add-class">Add Class</button>
-          <button id="btn-remove-class">Remove Class</button>
-          <button id="btn-toggle">Toggle Visibility</button>
-          <button id="btn-clone">Clone Element</button>
-        </div>
-        <div id="clone-container" style="margin-top: 15px;"></div>
+  <!-- Fixture DOM — position:absolute so dimensions are computed but visually hidden -->
+  <div id="fixtures">
+    <div id="fix-id" class="fix-class other-class" data-val="hello" data-num="42" data-obj='{"a":1}'>text content</div>
+    <div id="fix-parent" class="parent-el">
+      <div id="fix-child1" class="child box">First</div>
+      <div id="fix-child2" class="child box">Second</div>
+      <div id="fix-sibling" class="sibling">Third</div>
+    </div>
+    <div id="fix-ancestor">
+      <div id="fix-mid">
+        <div id="fix-deep"></div>
       </div>
     </div>
-
-    <div class="section">
-      <h2>📐 Library Info</h2>
-      <div class="info-grid">
-        <div class="info-card">
-          <h4>Version</h4>
-          <p id="version">2.0.0</p>
-        </div>
-        <div class="info-card">
-          <h4>Mepto Loaded</h4>
-          <p id="loaded">Checking...</p>
-        </div>
-        <div class="info-card">
-          <h4>jQuery Compatible</h4>
-          <p>Yes ($ alias available)</p>
-        </div>
-        <div class="info-card">
-          <h4>Build</h4>
-          <p id="build-info">ESM + UMD</p>
-        </div>
-      </div>
+    <div id="fix-insert-anchor">anchor</div>
+    <input id="fix-input" type="text" value="initial" />
+    <select id="fix-select">
+      <option value="a">A</option>
+      <option value="b" selected>B</option>
+    </select>
+    <select id="fix-multi" multiple>
+      <option value="x" selected>X</option>
+      <option value="y">Y</option>
+      <option value="z" selected>Z</option>
+    </select>
+    <form id="fix-form">
+      <input name="username" value="alice" />
+      <input name="age" type="number" value="30" />
+      <input name="active" type="checkbox" value="yes" checked />
+      <input name="skip" type="submit" value="Submit" />
+    </form>
+    <div id="fix-visible" class="box" style="display:block">visible</div>
+    <div id="fix-hidden" style="display:none">hidden</div>
+    <div id="fix-css" style="font-size:16px;color:rgb(255,0,0)" class="box">styled</div>
+    <div id="fix-wrap1">wrap-target</div>
+    <div id="fix-wrap2">wrap-target-2</div>
+    <div id="fix-scroll" style="overflow:auto;width:200px;height:100px">
+      <div style="width:1000px;height:1000px"></div>
     </div>
-
-    <div class="section">
-      <h2>💻 Console Output</h2>
-      <div id="console" class="console-output">// Console output will appear here...</div>
-      <button id="btn-clear">Clear Console</button>
-    </div>
-
-    <div class="section">
-      <h2>📝 Example Code</h2>
-      <div class="demo-box">
-        <p>Open browser console (F12) and try:</p>
-        <pre style="background: #f4f4f4; padding: 15px; border-radius: 6px; margin-top: 10px; overflow-x: auto;"><code>// Select elements
-$('h1').text('Hello Mepto!');
-
-// Add classes
-$('#test-box').addClass('highlight');
-
-// Chain methods
-$('.demo-box').css('border-color', '#667eea').fadeIn();
-
-// Event handling
-$('button').on('click', function() {
-  console.log('Clicked!', $(this).text());
-});
-
-// AJAX (if you have a server)
-$.get('/api/data', function(data) {
-  console.log(data);
-});</code></pre>
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>🧪 Test Fixtures</h2>
-      <div class="demo-box" id="fixtures">
-        <div class="item" data-id="1">Item 1</div>
-        <div class="item" data-id="2">Item 2</div>
-        <div class="item" data-id="3">Item 3</div>
-      </div>
-      <button id="btn-count">Count Items</button>
-      <button id="btn-data">Read Data Attributes</button>
-    </div>
+    <label id="fix-label" for="fix-input2"></label>
+    <input id="fix-input2" type="text" tabindex="5" maxlength="20" readonly />
+    <div id="fix-prop-target" contenteditable="true"></div>
   </div>
 
-  <!-- Load Mepto -->
   <script type="module">
-    import Mepto from './src/meptos.ts';
-    window.Mepto = Mepto;
-    window.$ = Mepto;
-    window.mepto = Mepto;
-    
-    // Update UI
-    document.getElementById('loaded').textContent = typeof Mepto !== 'undefined' ? 'Yes ✓' : 'No ✗';
-    
-    // Console capture
-    const consoleDiv = document.getElementById('console');
-    const originalLog = console.log;
-    const originalError = console.error;
-    const originalWarn = console.warn;
-    
-    function addToConsole(type, args) {
-      const line = document.createElement('div');
-      line.className = type;
-      line.textContent = '> ' + Array.from(args).map(a => 
-        typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)
-      ).join(' ');
-      consoleDiv.appendChild(line);
-      consoleDiv.scrollTop = consoleDiv.scrollHeight;
-    }
-    
-    console.log = function(...args) {
-      addToConsole('log', args);
-      originalLog.apply(console, args);
-    };
-    
-    console.error = function(...args) {
-      addToConsole('error', args);
-      originalError.apply(console, args);
-    };
-    
-    console.warn = function(...args) {
-      addToConsole('warn', args);
-      originalWarn.apply(console, args);
-    };
-    
-    console.log('Mepto loaded successfully!');
-    console.log('Try running: $("h1").text("Hello!")');
-  </script>
+  import { $ } from '/src/meptos.ts';
 
-  <script type="module">
-    // Button handlers
-    document.getElementById('btn-add-class').addEventListener('click', () => {
-      if (window.$) {
-        window.$('#test-box').addClass('highlight');
-        console.log('Added highlight class');
+  (function() {
+    var T = { passed: 0, failed: 0, total: 0, results: [] };
+    var out = document.getElementById('test-output');
+
+    function assert(name, condition, detail) {
+      T.total++;
+      var ok = !!condition;
+      if (ok) {
+        T.passed++;
+        console.log('PASS: ' + name);
+        T.results.push({ name: name, pass: true });
+      } else {
+        T.failed++;
+        var msg = detail ? name + ' — ' + detail : name;
+        console.error('FAIL: ' + msg);
+        T.results.push({ name: name, pass: false, detail: detail || '' });
       }
-    });
-    
-    document.getElementById('btn-remove-class').addEventListener('click', () => {
-      if (window.$) {
-        window.$('#test-box').removeClass('highlight');
-        console.log('Removed highlight class');
-      }
-    });
-    
-    document.getElementById('btn-toggle').addEventListener('click', () => {
-      if (window.$) {
-        window.$('#test-box').toggle();
-        console.log('Toggled visibility');
-      }
-    });
-    
-    document.getElementById('btn-clone').addEventListener('click', () => {
-      if (window.$) {
-        const clone = window.$('#test-box').clone();
-        window.$('#clone-container').append(clone);
-        console.log('Cloned element');
-      }
-    });
-    
-    document.getElementById('btn-clear').addEventListener('click', () => {
-      document.getElementById('console').innerHTML = '';
-    });
-    
-    document.getElementById('btn-count').addEventListener('click', () => {
-      if (window.$) {
-        const count = window.$('#fixtures .item').length;
-        console.log('Number of items:', count);
-      }
-    });
-    
-    document.getElementById('btn-data').addEventListener('click', () => {
-      if (window.$) {
-        window.$('#fixtures .item').each(function(i, el) {
-          console.log('Item', i, 'data-id:', window.$(el).data('id'));
-        });
-      }
-    });
+      var row = document.createElement('div');
+      row.className = 'row ' + (ok ? 'pass' : 'fail');
+      row.textContent = (ok ? '✓ ' : '✗ ') + name + (detail && !ok ? '  (' + detail + ')' : '');
+      out.appendChild(row);
+    }
+
+    function eq(name, actual, expected) {
+      var ok = actual === expected;
+      assert(name, ok, ok ? '' : 'expected ' + JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    function deepEq(name, actual, expected) {
+      var a = JSON.stringify(actual), e = JSON.stringify(expected);
+      assert(name, a === e, a === e ? '' : 'expected ' + e + ', got ' + a);
+    }
+
+    function section(name) {
+      var h2 = document.createElement('h2');
+      h2.textContent = name;
+      out.appendChild(h2);
+      console.log('\n=== ' + name + ' ===');
+    }
+
+    // ─── helpers ─────────────────────────────────────────────────────────────
+    function fresh(id) {
+      // Return a clone of a fixture element so tests don't corrupt each other
+      return document.getElementById(id).cloneNode(true);
+    }
+
+    function inDoc(el) {
+      // Append to fixtures so the element has computed styles
+      document.getElementById('fixtures').appendChild(el);
+      return el;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    section('Type utilities');
+    eq('$.type string',    $.type('hello'),      'string');
+    eq('$.type number',    $.type(42),           'number');
+    eq('$.type boolean',   $.type(true),         'boolean');
+    eq('$.type array',     $.type([]),            'array');
+    eq('$.type object',    $.type({}),            'object');
+    eq('$.type null',      $.type(null),          'null');
+    eq('$.type undefined', $.type(undefined),     'undefined');
+    eq('$.type function',  $.type(function(){}),  'function');
+    eq('$.type regexp',    $.type(/x/),           'regexp');
+    eq('$.type date',      $.type(new Date()),    'date');
+
+    section('Type predicates');
+    assert('$.isFunction fn',        $.isFunction(function(){}));
+    assert('$.isFunction not fn',   !$.isFunction({}));
+    assert('$.isWindow window',      $.isWindow(window));
+    assert('$.isWindow not window', !$.isWindow({}));
+    assert('$.isArray array',        $.isArray([]));
+    assert('$.isArray not array',   !$.isArray({}));
+    assert('$.isPlainObject plain',  $.isPlainObject({}));
+    assert('$.isPlainObject array', !$.isPlainObject([]));
+    assert('$.isPlainObject window',!$.isPlainObject(window));
+    assert('$.isEmptyObject empty',  $.isEmptyObject({}));
+    assert('$.isEmptyObject not',   !$.isEmptyObject({a:1}));
+    assert('$.isNumeric integer',    $.isNumeric(42));
+    assert('$.isNumeric string num', $.isNumeric('42'));
+    assert('$.isNumeric float',      $.isNumeric('3.14'));
+    assert('$.isNumeric NaN',       !$.isNumeric(NaN));
+    assert('$.isNumeric string',    !$.isNumeric('abc'));
+    assert('$.isNumeric null',      !$.isNumeric(null));
+
+    section('String utilities');
+    eq('$.trim leading/trailing',  $.trim('  hello  '), 'hello');
+    eq('$.trim empty',             $.trim(''),          '');
+    eq('$.trim null → empty',      $.trim(null),        '');
+    eq('$.camelCase one dash',     $.camelCase('background-color'), 'backgroundColor');
+    eq('$.camelCase multi dash',   $.camelCase('border-top-width'), 'borderTopWidth');
+    eq('$.camelCase no dash',      $.camelCase('color'), 'color');
+
+    section('Array/object utilities');
+    eq('$.inArray found',          $.inArray(2, [1,2,3]), 1);
+    eq('$.inArray not found',      $.inArray(5, [1,2,3]), -1);
+    eq('$.inArray with from',      $.inArray(1, [1,2,1], 1), 2);
+    deepEq('$.map array',          $.map([1,2,3], function(x){ return x*2; }), [2,4,6]);
+    deepEq('$.map filter null',    $.map([1,2,3], function(x){ return x>1?x:null; }), [2,3]);
+    (function(){
+      var sum = 0;
+      $.each([10,20,30], function(i,v){ sum += v; });
+      eq('$.each sum', sum, 60);
+    })();
+    (function(){
+      var keys = [];
+      $.each({a:1,b:2}, function(k){ keys.push(k); });
+      eq('$.each object keys count', keys.length, 2);
+    })();
+    (function(){
+      var stopped = 0;
+      $.each([1,2,3], function(i){ stopped = i; if(i===1) return false; });
+      eq('$.each early exit', stopped, 1);
+    })();
+    deepEq('$.grep even',          $.grep([1,2,3,4], function(x){ return x%2===0; }), [2,4]);
+    assert('$.parseJSON object',   $.parseJSON('{"a":1}').a === 1);
+    assert('$.parseJSON array',    $.parseJSON('[1,2,3]')[1] === 2);
+    deepEq('$.extend shallow',     $.extend({}, {a:1}, {b:2}), {a:1, b:2});
+    (function(){
+      var r = $.extend(true, {a:{x:1}}, {a:{y:2}});
+      assert('$.extend deep merge', r.a.x === 1 && r.a.y === 2);
+    })();
+    assert('$.noop returns undef', $.noop() === undefined);
+
+    section('DOM utilities');
+    (function(){
+      var parent = document.getElementById('fix-parent');
+      var child  = document.getElementById('fix-child1');
+      assert('$.contains child',          $.contains(parent, child));
+      assert('$.contains reversed false', !$.contains(child, parent));
+      assert('$.contains same false',     !$.contains(parent, parent));
+    })();
+    assert('$.mepto.matches class',  $.mepto.matches(document.getElementById('fix-id'), '.fix-class'));
+    assert('$.mepto.matches id',     $.mepto.matches(document.getElementById('fix-id'), '#fix-id'));
+    assert('$.mepto.matches false',  !$.mepto.matches(document.getElementById('fix-id'), '.nonexistent'));
+    assert('$.mepto.isZ collection', $.mepto.isZ($('#fix-id')));
+    assert('$.mepto.isZ plain obj',  !$.mepto.isZ({}));
+    assert('$.mepto.isZ array',      !$.mepto.isZ([]));
+
+    section('Selector — mepto.qsa');
+    eq('qsa by id',    $.mepto.qsa(document, '#fix-id').length, 1);
+    eq('qsa by class', $.mepto.qsa(document, '.child').length,  2);
+    eq('qsa by tag in context',
+       $.mepto.qsa(document.getElementById('fix-parent'), '.child').length, 2);
+    eq('qsa empty result', $.mepto.qsa(document, '.nonexistent').length, 0);
+
+    section('Selector — standalone helpers');
+    assert('mepto.getElementById',
+      $.mepto.getElementById('fix-id')[0] === document.getElementById('fix-id'));
+    eq('mepto.getElementsByClassName count',
+      $.mepto.getElementsByClassName('child').length, 2);
+    assert('mepto.getElementsByTagName returns collection',
+      $.mepto.getElementsByTagName('input').length >= 1);
+
+    section('Selector — $()');
+    eq('$(#id)',        $('#fix-id').length,      1);
+    eq('$(.class)',     $('.child').length,        2);
+    eq('$(tag)',        $('input').length >= 1,    true);
+    eq('$() empty',     $().length,               0);
+    eq('$(null) empty', $(null).length,            0);
+    assert('$(element)', $(document.getElementById('fix-id'))[0] === document.getElementById('fix-id'));
+    assert('$(array of elements)', $([document.getElementById('fix-child1'), document.getElementById('fix-child2')]).length === 2);
+    (function(){
+      var frag = $('<div class="dynamic"><span></span></div>');
+      eq('$(html fragment) length', frag.length, 1);
+      eq('$(html fragment) class',  frag.hasClass('dynamic'), true);
+      eq('$(html fragment) child',  frag.find('span').length, 1);
+    })();
+    assert('$(mepto collection) identity', (function(){ var c = $('#fix-id'); return $(c) === c; })());
+
+    section('Collection core — size / get / toArray');
+    eq('.length',       $('.child').length,           2);
+    eq('.size()',       $('.child').size(),            2);
+    assert('.get(0) returns element', $('.child').get(0) === document.getElementById('fix-child1'));
+    assert('.get(-1) returns last',   $('.child').get(-1) === document.getElementById('fix-child2'));
+    assert('.get() returns array',    Array.isArray($('.child').get()));
+    eq('.get() length',               $('.child').get().length, 2);
+    assert('.toArray() is array',     Array.isArray($('.child').toArray()));
+    eq('.toArray() length',           $('.child').toArray().length, 2);
+
+    section('Collection core — each / map / slice');
+    (function(){
+      var ids = [];
+      $('.child').each(function(i, el){ ids.push(el.id); });
+      deepEq('.each ids', ids, ['fix-child1','fix-child2']);
+    })();
+    (function(){
+      var result = $('.child').map(function(){ return this.id; });
+      eq('.map result[0]', result[0], 'fix-child1');
+      eq('.map result[1]', result[1], 'fix-child2');
+    })();
+    eq('.slice(0,1) length', $('.child').slice(0,1).length, 1);
+    eq('.slice(1) length',   $('.child').slice(1).length,   1);
+
+    section('Collection core — filter / is / not / has / eq / first / last');
+    eq('.filter string',  $('[class]', document.getElementById('fix-parent')).filter('.child').length, 2);
+    eq('.filter fn',      $('.child').filter(function(){ return this.id === 'fix-child1'; }).length, 1);
+    assert('.is true',    $('#fix-id').is('.fix-class'));
+    assert('.is false',  !$('#fix-id').is('.nonexistent'));
+    eq('.not',            $('.child').not('#fix-child1').length, 1);
+    assert('.has',        $('#fix-parent').has('.child').length > 0);
+    assert('.eq(0)',      $('.child').eq(0)[0] === document.getElementById('fix-child1'));
+    assert('.eq(-1)',     $('.child').eq(-1)[0] === document.getElementById('fix-child2'));
+    assert('.first()',    $('.child').first()[0] === document.getElementById('fix-child1'));
+    assert('.last()',     $('.child').last()[0] === document.getElementById('fix-child2'));
+
+    section('Collection core — add / index / pluck');
+    eq('.add',   $('#fix-child1').add('#fix-child2').length, 2);
+    eq('.index() among siblings', $('#fix-child2').index(), 1);
+    eq('.index(selector)',        $('.child').index('#fix-child2'), 1);
+    deepEq('.pluck id', $('.child').pluck('id'), ['fix-child1','fix-child2']);
+    deepEq('.pluck nodeName', $('.child').pluck('nodeName'), ['DIV','DIV']);
+
+    section('Traversal — find / closest / parent / parents');
+    eq('.find by class',    $('#fix-parent').find('.child').length,         2);
+    eq('.find by id',       $('#fixtures').find('#fix-child1').length,      1);
+    eq('.find no match',    $('#fix-parent').find('.nonexistent').length,   0);
+    assert('.closest self',           $('#fix-child1').closest('.child')[0] === document.getElementById('fix-child1'));
+    assert('.closest ancestor',       $('#fix-deep').closest('#fix-ancestor')[0] === document.getElementById('fix-ancestor'));
+    eq('.closest no match',           $('#fix-deep').closest('.nonexistent').length, 0);
+    assert('.parent',                 $('#fix-child1').parent()[0] === document.getElementById('fix-parent'));
+    assert('.parent with filter',     $('#fix-child1').parent('.parent-el')[0] === document.getElementById('fix-parent'));
+    eq('.parent no filter match',     $('#fix-child1').parent('.nonexistent').length, 0);
+    assert('.parents finds ancestor', $('#fix-deep').parents().toArray().indexOf(document.getElementById('fix-ancestor')) >= 0);
+    eq('.parents with filter',        $('#fix-deep').parents('#fix-ancestor').length, 1);
+
+    section('Traversal — children / siblings / next / prev / contents');
+    eq('.children count',         $('#fix-parent').children().length,        3);
+    eq('.children with filter',   $('#fix-parent').children('.child').length, 2);
+    eq('.siblings count',         $('#fix-child1').siblings().length,         2);
+    eq('.siblings with filter',   $('#fix-child1').siblings('.child').length,  1);
+    assert('.next',               $('#fix-child1').next()[0] === document.getElementById('fix-child2'));
+    eq('.next with filter miss',  $('#fix-child1').next('.nonexistent').length, 0);
+    assert('.prev',               $('#fix-child2').prev()[0] === document.getElementById('fix-child1'));
+    eq('.prev with filter miss',  $('#fix-child2').prev('.nonexistent').length, 0);
+    assert('.contents has nodes', $('#fix-parent').contents().length >= 3);
+
+    section('DOM content — html / text / empty / clone / remove / detach');
+    (function(){
+      var d = inDoc($('<div><b>bold</b></div>')[0]);
+      eq('.html() get', $(d).html(), '<b>bold</b>');
+      $(d).html('<i>italic</i>');
+      eq('.html() set', $(d).html(), '<i>italic</i>');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div>hello <b>world</b></div>')[0]);
+      eq('.text() get', $(d).text(), 'hello world');
+      $(d).text('plain');
+      eq('.text() set', $(d).text(), 'plain');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div><span></span></div>')[0]);
+      $(d).empty();
+      eq('.empty()', $(d).html(), '');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div id="clone-src"><span>hi</span></div>')[0]);
+      var c = $(d).clone();
+      assert('.clone() is mepto collection', $.mepto.isZ(c));
+      assert('.clone() deep', c.find('span').length === 1);
+      assert('.clone() different node', c[0] !== d);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div id="remove-test"></div>')[0]);
+      assert('.remove() pre-check', document.getElementById('remove-test') !== null);
+      $(d).remove();
+      assert('.remove() removed', document.getElementById('remove-test') === null);
+    })();
+
+    section('Insertion — append / prepend / after / before and *To / insert*');
+    (function(){
+      var wrap = inDoc($('<div><div id="ins-container"></div></div>')[0]);
+      var c = document.getElementById('ins-container');
+
+      $('#ins-container').append('<span class="app">A</span>');
+      eq('.append child count', $('#ins-container').children().length, 1);
+
+      $('#ins-container').prepend('<span class="pre">P</span>');
+      eq('.prepend first child', $('#ins-container').children().first().text(), 'P');
+
+      $('<span class="aft">AF</span>').insertAfter('#ins-container');
+      assert('.insertAfter', c.nextElementSibling && c.nextElementSibling.textContent === 'AF');
+
+      $('<span class="bef">BF</span>').insertBefore('#ins-container');
+      assert('.insertBefore', c.previousElementSibling && c.previousElementSibling.textContent === 'BF');
+
+      var appTo = $('<span>AT</span>');
+      appTo.appendTo('#ins-container');
+      eq('.appendTo appended', $('#ins-container').children().last().text(), 'AT');
+
+      var preeTo = $('<span>PT</span>');
+      preeTo.prependTo('#ins-container');
+      eq('.prependTo prepended', $('#ins-container').children().first().text(), 'PT');
+
+      wrap.parentNode && wrap.parentNode.removeChild(wrap);
+    })();
+
+    section('replaceWith / wrap / wrapAll / wrapInner / unwrap');
+    (function(){
+      var d = inDoc($('<div><span id="rw-target">old</span></div>')[0]);
+      $('#rw-target').replaceWith('<b id="rw-new">new</b>');
+      assert('.replaceWith new exists', d.querySelector('#rw-new') !== null);
+      assert('.replaceWith old gone',   d.querySelector('#rw-target') === null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div><span class="wt">A</span><span class="wt">B</span></div>')[0]);
+      d.querySelectorAll('.wt')[0].id = 'wt0';
+      $(d).find('.wt').eq(0).wrap('<div class="wr">');
+      assert('.wrap single', d.querySelector('.wr') !== null);
+      assert('.wrap inner', d.querySelector('.wr span') !== null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div><span class="wa">A</span><span class="wa">B</span></div>')[0]);
+      $(d).find('.wa').wrapAll('<div class="wa-wrap">');
+      eq('.wrapAll wrapper count', d.querySelectorAll('.wa-wrap').length, 1);
+      eq('.wrapAll spans inside', d.querySelector('.wa-wrap').querySelectorAll('.wa').length, 2);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div id="wi-host">A<b>B</b></div>')[0]);
+      $(d).wrapInner('<span class="wi">');
+      assert('.wrapInner wrapper', d.querySelector('.wi') !== null);
+      assert('.wrapInner content', d.querySelector('.wi b') !== null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div><div class="uw-wrap"><span class="uw-inner">X</span></div></div>')[0]);
+      $(d).find('.uw-inner').unwrap();
+      assert('.unwrap parent gone', d.querySelector('.uw-wrap') === null);
+      assert('.unwrap inner present', d.querySelector('.uw-inner') !== null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Attributes — attr / removeAttr');
+    eq('.attr() get',               $('#fix-id').attr('data-val'), 'hello');
+    eq('.attr() missing',           $('#fix-id').attr('data-missing'), undefined);
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      $(d).attr('data-test', 'v1');
+      eq('.attr() set', $(d).attr('data-test'), 'v1');
+      $(d).attr({id:'dyn-attr-id', 'data-extra':'ex'});
+      eq('.attr() set object id',    $(d).attr('id'), 'dyn-attr-id');
+      eq('.attr() set object extra', $(d).attr('data-extra'), 'ex');
+      $(d).removeAttr('data-test');
+      eq('.removeAttr()', $(d).attr('data-test'), undefined);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Properties — prop / removeProp');
+    (function(){
+      var inp = document.getElementById('fix-input2');
+      eq('.prop() tabindex',   $(inp).prop('tabindex'), 5);
+      eq('.prop() maxlength',  $(inp).prop('maxlength'), 20);
+      assert('.prop() readonly', $(inp).prop('readonly') === true);
+      // prop('for') maps through propMap to htmlFor
+      eq('.prop() for via htmlFor', $('#fix-label').prop('for'), 'fix-input2');
+    })();
+    (function(){
+      var d = inDoc($('<input type="checkbox">')[0]);
+      $(d).prop('checked', true);
+      assert('.prop() set checked', d.checked === true);
+      // removeProp on IDL attributes is a no-op; test with a custom property instead
+      $(d).prop('_customProp', 'test');
+      assert('.prop() set custom', $(d).prop('_customProp') === 'test');
+      $(d).removeProp('_customProp');
+      assert('.removeProp() custom prop gone', $(d).prop('_customProp') === undefined);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Data — data()');
+    eq('.data() string',      $('#fix-id').data('val'), 'hello');
+    eq('.data() numeric',     $('#fix-id').data('num'), 42);
+    deepEq('.data() json obj',  $('#fix-id').data('obj'), {a:1});
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      $(d).data('myKey', 'myVal');
+      eq('.data() set/get', $(d).data('myKey'), 'myVal');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Values — val()');
+    eq('.val() text input',      $('#fix-input').val(), 'initial');
+    (function(){
+      var inp = inDoc(document.getElementById('fix-input').cloneNode(true));
+      $(inp).removeAttr('id');
+      $(inp).val('changed');
+      eq('.val() set', $(inp).val(), 'changed');
+      inp.parentNode && inp.parentNode.removeChild(inp);
+    })();
+    eq('.val() select single',   $('#fix-select').val(), 'b');
+    (function(){
+      var multi = document.getElementById('fix-multi');
+      var vals = $(multi).val();
+      assert('.val() select multiple', Array.isArray(vals) && vals.indexOf('x') >= 0 && vals.indexOf('z') >= 0);
+    })();
+
+    section('CSS — css()');
+    (function(){
+      var el = document.getElementById('fix-css');
+      eq('.css() inline string', $(el).css('font-size'), '16px');
+      var multi = $(el).css(['font-size','color']);
+      assert('.css() array get', typeof multi === 'object' && 'font-size' in multi);
+    })();
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      $(d).css('background-color', 'blue');
+      var got = $(d).css('background-color');
+      assert('.css() set string', got === 'blue' || got === 'rgb(0, 0, 255)');
+      $(d).css({fontSize: '20px', color: 'red'});
+      assert('.css() set object', $(d).css('font-size') === '20px');
+      $(d).css('font-size', '');
+      assert('.css() unset', $(d).css('font-size') !== '20px');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('CSS — classes');
+    (function(){
+      var d = inDoc($('<div class="a b">')[0]);
+      assert('.hasClass true',        $(d).hasClass('a'));
+      assert('.hasClass false',       !$(d).hasClass('c'));
+      $(d).addClass('c');
+      assert('.addClass',             $(d).hasClass('c'));
+      $(d).addClass('c');
+      assert('.addClass duplicate',   $(d).hasClass('c') && d.className.split(' ').filter(function(x){return x==='c';}).length === 1);
+      $(d).removeClass('b');
+      assert('.removeClass',          !$(d).hasClass('b'));
+      $(d).toggleClass('a');
+      assert('.toggleClass off',      !$(d).hasClass('a'));
+      $(d).toggleClass('a');
+      assert('.toggleClass on',       $(d).hasClass('a'));
+      $(d).toggleClass('z', true);
+      assert('.toggleClass with when true',  $(d).hasClass('z'));
+      $(d).toggleClass('z', false);
+      assert('.toggleClass with when false', !$(d).hasClass('z'));
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Display — show / hide / toggle');
+    (function(){
+      var visible = inDoc(document.getElementById('fix-visible').cloneNode(true));
+      var hidden  = inDoc(document.getElementById('fix-hidden').cloneNode(true));
+      eq('.css display initial visible', $(visible).css('display'), 'block');
+      eq('.css display initial hidden',  $(hidden).css('display'),  'none');
+      $(visible).hide();
+      eq('.hide()', $(visible).css('display'), 'none');
+      $(hidden).show();
+      assert('.show()', $(hidden).css('display') !== 'none');
+      $(visible).toggle();
+      assert('.toggle() from none → visible', $(visible).css('display') !== 'none');
+      $(visible).toggle(false);
+      eq('.toggle(false) hides', $(visible).css('display'), 'none');
+      $(visible).toggle(true);
+      assert('.toggle(true) shows', $(visible).css('display') !== 'none');
+      visible.parentNode && visible.parentNode.removeChild(visible);
+      hidden.parentNode  && hidden.parentNode.removeChild(hidden);
+    })();
+
+    section('Dimensions — width / height / offset / position / scroll');
+    (function(){
+      var el = document.getElementById('fix-visible');
+      assert('.width() > 0',  $(el).width() > 0);
+      assert('.height() > 0', $(el).height() > 0);
+      var off = $(el).offset();
+      assert('.offset() has top',  typeof off.top  === 'number');
+      assert('.offset() has left', typeof off.left === 'number');
+      assert('.offset() has width', typeof off.width === 'number');
+      var pos = $(el).position();
+      assert('.position() has top',  typeof pos.top  === 'number');
+      assert('.position() has left', typeof pos.left === 'number');
+    })();
+    (function(){
+      var el = document.getElementById('fix-scroll');
+      el.scrollTop  = 10;
+      el.scrollLeft = 20;
+      eq('.scrollTop() get',  $(el).scrollTop(),  10);
+      eq('.scrollLeft() get', $(el).scrollLeft(), 20);
+      $(el).scrollTop(5);
+      $(el).scrollLeft(15);
+      eq('.scrollTop() set',  $(el).scrollTop(),  5);
+      eq('.scrollLeft() set', $(el).scrollLeft(), 15);
+    })();
+    (function(){
+      var d = inDoc($('<div style="width:80px;height:40px">')[0]);
+      eq('.width() set', ($(d).width(120), $(d).width()), 120);
+      eq('.height() set', ($(d).height(60), $(d).height()), 60);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Events — on / off / trigger / triggerHandler / one');
+    (function(){
+      var d = inDoc($('<button>')[0]);
+      var count = 0;
+      function handler() { count++; }
+      $(d).on('click', handler);
+      $(d).trigger('click');
+      eq('.on + .trigger fires', count, 1);
+      $(d).trigger('click');
+      eq('.trigger fires again', count, 2);
+      $(d).off('click', handler);
+      $(d).trigger('click');
+      eq('.off stops handler', count, 2);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      var count = 0;
+      $(d).one('click', function(){ count++; });
+      $(d).trigger('click');
+      $(d).trigger('click');
+      eq('.one fires only once', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      var fired = false;
+      $(d).bind('custom-event', function(){ fired = true; });
+      $(d).trigger('custom-event');
+      assert('.bind + custom event', fired);
+      $(d).unbind('custom-event');
+      fired = false;
+      $(d).trigger('custom-event');
+      assert('.unbind stops handler', !fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      var count = 0;
+      $(d).on('click.myns', function(){ count++; });
+      $(d).trigger('click');
+      eq('namespaced event fires on trigger', count, 1);
+      $(d).off('click.myns');
+      $(d).trigger('click');
+      eq('namespaced .off removes handler', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<div>')[0]);
+      $(d).on('custom', function(){ return 'retval'; });
+      var ret = $(d).triggerHandler('custom');
+      eq('.triggerHandler return value', ret, 'retval');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc($('<ul><li class="item">A</li><li class="item">B</li></ul>')[0]);
+      var count = 0;
+      $(d).on('click', '.item', function(){ count++; });
+      $(d).find('.item').eq(0).trigger('click');
+      eq('.on delegation fires', count, 1);
+      $(d).off('click');
+      $(d).find('.item').eq(0).trigger('click');
+      eq('.off all removes delegate', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Forms — serialize / serializeArray');
+    (function(){
+      var form = document.getElementById('fix-form');
+      var arr = $(form).serializeArray();
+      assert('.serializeArray is array', Array.isArray(arr));
+      assert('.serializeArray username', arr.some(function(f){ return f.name === 'username' && f.value === 'alice'; }));
+      assert('.serializeArray age',      arr.some(function(f){ return f.name === 'age'      && f.value === '30'; }));
+      assert('.serializeArray checkbox', arr.some(function(f){ return f.name === 'active'   && f.value === 'yes'; }));
+      assert('.serializeArray no submit',!arr.some(function(f){ return f.name === 'skip'; }));
+      var str = $(form).serialize();
+      assert('.serialize string', typeof str === 'string');
+      assert('.serialize contains username', str.indexOf('username=alice') >= 0);
+    })();
+
+    section('$.mepto.fragment — HTML parsing');
+    (function(){
+      var nodes = $.mepto.fragment('<span class="frag">hi</span>', 'span', null);
+      assert('.fragment returns array-like', nodes && nodes.length >= 1);
+      assert('.fragment correct tag', nodes[0] && nodes[0].tagName === 'SPAN');
+      var table = $.mepto.fragment('<tr><td>cell</td></tr>', 'tr', null);
+      assert('.fragment table row', table[0] && table[0].tagName === 'TR');
+    })();
+
+    section('Utility — $.extend on $.fn (plugin pattern)');
+    (function(){
+      $.fn.testPlugin = function(val) {
+        return this.each(function(){ this.setAttribute('data-plugin', val); });
+      };
+      var d = inDoc($('<div>')[0]);
+      $(d).testPlugin('test123');
+      eq('.fn plugin', $(d).attr('data-plugin'), 'test123');
+      delete $.fn.testPlugin;
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    section('Utility — detach / concat');
+    (function(){
+      var d = inDoc($('<div id="detach-test">')[0]);
+      assert('.detach removes element', document.getElementById('detach-test') !== null);
+      $(d).detach();
+      assert('.detach element gone', document.getElementById('detach-test') === null);
+    })();
+    (function(){
+      var a = $('#fix-child1'), b = $('#fix-child2');
+      var combined = a.concat(b.get());
+      assert('.concat result length', combined.length === 2);
+    })();
+
+    // ─── Summary ─────────────────────────────────────────────────────────────
+    var summary = document.getElementById('summary');
+    var msg = T.passed + ' passed, ' + T.failed + ' failed out of ' + T.total + ' tests';
+    summary.textContent = msg;
+    summary.className   = T.failed === 0 ? 'pass' : 'fail';
+    document.body.dataset.status = T.failed === 0 ? 'passed' : 'failed';
+    if (T.failed === 0) {
+      console.log('RESULTS: ' + msg);
+    } else {
+      console.error('RESULTS: ' + msg);
+    }
+
+    window.meptoTestResults = {
+      passed: T.passed,
+      failed: T.failed,
+      total:  T.total,
+      results: T.results
+    };
+  })();
   </script>
 </body>
 </html>
