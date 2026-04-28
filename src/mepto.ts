@@ -1765,7 +1765,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         },
       }
     },
-  })
+  });
 
   // Generate the `width` and `height` functions
   ['width', 'height'].forEach(function (dimension) {

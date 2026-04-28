@@ -99,13 +99,10 @@ Build the library and record the passing test count before making any changes. E
 
 ```bash
 npm run build
-node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
-  --code='return window.meptoTestResults' \
-  --json
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-A clean baseline looks like: `"passed": 228, "failed": 0`.
+A clean baseline looks like: `228 passed (0 failed)`.
 
 > **Important:** The test suite loads `/dist/meptos.umd.cjs`. Always run `npm run build` before running tests — the harness tests the compiled output, not the source.
 
@@ -180,13 +177,10 @@ Address these as you encounter them inside the module being converted. Do not fi
 
 ```bash
 npm run build
-node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
-  --code='return window.meptoTestResults' \
-  --json
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-`"failed": 0` is the only acceptable result. If tests regress, revert the last change and diagnose before continuing.
+`0 failed` is the only acceptable result. If tests regress, revert the last change and diagnose before continuing.
 
 ---
 
@@ -256,7 +250,23 @@ cat .port                          # → e.g. 3000
 echo "http://localhost:$(cat .port)"
 ```
 
-### 3. Build the Library
+### 3. Confirm the Server is Ready
+
+Never assume the server is up just because `.port` exists — it may still be binding. Use this one-liner, which retries on connection refused and exits the moment the server responds:
+
+```bash
+curl -s -o /dev/null -w "%{http_code}" \
+  --retry 5 --retry-delay 1 --retry-connrefused \
+  "http://localhost:$(cat .port)/"
+```
+
+**Healthy output:** `200`
+**Not ready yet / failed:** `000` (curl ran out of retries — wait a moment and try again)
+**Server not started:** `curl: (7) Failed to connect` (`.port` may not exist yet)
+
+Do not use `curl ... && <next command>` without the retry flags — if the server is still starting, `&&` short-circuits and produces blank output, which is ambiguous.
+
+### 4. Build the Library
 ```bash
 npm run build
 ```
@@ -286,40 +296,16 @@ cd tools/llm-test-harness && npm run build && cd ../..
 
 ## Running the Full Unit Test Suite
 
-`test/mepto-unit.html` is a self-contained test page covering every method in `src/mepto.ts` plus events and forms. It runs 228 tests automatically when loaded, logs `PASS/FAIL` to the browser console, and exposes `window.meptoTestResults`.
+`test/mepto-unit.html` is a self-contained test page covering every method in `src/mepto.ts` plus events and forms. It runs 228 tests automatically when loaded and exposes `window.meptoTestResults`.
 
-> **The test page loads `/dist/meptos.umd.cjs`.** Always run `npm run build` before running the test suite — without it the harness tests stale compiled output, not your changes.
+> **The test page loads `/dist/meptos.umd.cjs`.** Always run `npm run build` before running tests — without it you are testing stale compiled output, not your changes.
 
 ```bash
-# Build first, then run all 228 tests
 npm run build
-node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
-  --code='return window.meptoTestResults' \
-  --json
-
-# Or with --no-server if Vite is already running in the background
-node tools/llm-test-harness/bin/mepto-test.js --no-server \
-  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
-  --code='return window.meptoTestResults' \
-  --json
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-The result object:
-```json
-{
-  "success": true,
-  "result": {
-    "passed": 228,
-    "failed": 0,
-    "total": 228,
-    "results": [
-      { "name": "$.type string", "pass": true },
-      ...
-    ]
-  }
-}
-```
+Playwright waits automatically for `meptoTestResults` to be populated, then asserts `failed === 0` and `passed === 228`. On failure it prints the names of every failing test.
 
 You can also open `http://localhost:$(cat .port)/test/mepto-unit.html` in a browser for a visual pass/fail list.
 
@@ -448,22 +434,33 @@ npm run build
 ```bash
 # Build first — the test page loads /dist/meptos.umd.cjs, not the source
 npm run build
-
-# Run 228 unit tests against the compiled bundle (harness starts Vite automatically)
-node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
-  --code='return window.meptoTestResults' --json
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-A passing run returns `"failed": 0`.
+A passing run prints `1 passed`. Any failure prints the names of the specific failing tests.
 
-### 4. Test a Specific Method
+### 4. Test a Specific Behaviour
+
+Write a short spec in `test/e2e/` and run it directly:
+
+```ts
+// test/e2e/scratch.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('addClass works', async ({ page }) => {
+  await page.goto('/');
+  const result = await page.evaluate(() =>
+    $('.test').addClass('active').hasClass('active')
+  );
+  expect(result).toBe(true);
+});
+```
+
 ```bash
-node tools/llm-test-harness/bin/mepto-test.js --no-server \
-  --url=http://localhost:$(cat .port) \
-  --code="return $('.test').addClass('active').hasClass('active')" \
-  --html="<div class='test'></div>"
+npx playwright test test/e2e/scratch.spec.ts --project=chromium
 ```
+
+Playwright handles waiting automatically — no manual `setTimeout` or retry loops needed.
 
 ### 5. Run Linting
 ```bash
@@ -489,20 +486,21 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Vite dev server |
+| `npm run dev` | Start Vite dev server (port written to `.port`) |
+| `cat .port` | Get the port the dev server is running on |
 | `npm run build` | Build library to `dist/` |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Run Prettier |
 | `npm run typecheck` | Check TypeScript |
 
-### Harness Commands
+### Playwright Commands
 
 | Command | Description |
 |---------|-------------|
-| `mepto-test --code="..."` | Execute code with auto-start |
-| `mepto-test --validate --code="..."` | Validate without executing |
-| `mepto-test --file=./test.js` | Run code from file |
-| `mepto-test --no-headless` | Show browser window |
+| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite |
+| `npx playwright test test/e2e/scratch.spec.ts --project=chromium` | Run a scratch spec |
+| `npx playwright test --project=chromium` | Run all e2e specs in Chromium |
+| `npx playwright test --headed` | Run with visible browser window |
 
 ---
 

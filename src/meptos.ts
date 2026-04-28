@@ -48,8 +48,7 @@ export const $ = Mepto;
 
 // Make it available globally when used via UMD
 if (typeof window !== 'undefined') {
-  (window as unknown as Record<string, unknown>).Mepto = Mepto;
-  if($ === undefined) {
-    (window as unknown as Record<string, unknown>).$ = Mepto;
-  }
+  const w = window as unknown as Record<string, unknown>;
+  w.Mepto = Mepto;
+  w.$ = Mepto;
 }
