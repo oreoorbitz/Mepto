@@ -2,14 +2,17 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type Mepto, type PlainObject } from './types';
+import { type MeptoStatic, type PlainObject } from './types';
 
-let mepto: Mepto = (function () {
-  let $: any;
+const mepto: MeptoStatic = (function (): MeptoStatic {
+  let $: MeptoStatic = null as unknown as MeptoStatic;
   const emptyArray: any[] = [];
-  const concat = emptyArray.concat;
-  const filter = emptyArray.filter;
-  const slice = emptyArray.slice;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const concat = Array.prototype.concat;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const filter = Array.prototype.filter;
+  // eslint-disable-next-line @typescript-eslint/unbound-method
+  const slice = Array.prototype.slice;
   const document = window.document;
   const elementDisplay: Record<string, any> = {};
   const classCache: Record<string, any> = {};

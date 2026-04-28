@@ -62,6 +62,134 @@ Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix rem
 
 ---
 
+## Module Conversion Playbook
+
+This is the step-by-step process for converting a module. Follow it in order. Do not skip steps.
+
+### Understanding the Object Graph
+
+The naming is confusing because the word "mepto" is reused. Before touching any module, internalize this:
+
+| Name | What it is |
+|------|-----------|
+| Outer `mepto` (in `meptos.ts`) | The exported `MeptoStatic` object — same as `window.$` and `window.mepto` |
+| Inner `mepto` (inside `mepto.ts` IIFE) | The private implementation namespace: `mepto.init`, `mepto.Z`, `mepto.fragment`, etc. |
+| `$.mepto` | The inner `mepto` object exposed for plugins and other modules |
+| `$` inside each module's IIFE | The outer `mepto` — i.e., the full `MeptoStatic` public API |
+
+Every unconverted module is wrapped in:
+```typescript
+;(function($: MeptoStatic) {
+  // $ === window.$ === window.mepto === MeptoStatic
+  // Collection methods go on $.fn
+  // Static utilities go directly on $
+})(mepto)
+```
+
+Reference completed conversions to see these patterns in practice:
+- **`src/callbacks.ts`** — typed closure state, all method signatures typed
+- **`src/data.ts`** — WeakMap for element-associated state, typed expando Symbol
+- **`src/form.ts`** — short and clean, best first read
+
+---
+
+### Step 0 — Establish a baseline
+
+Build the library and record the passing test count before making any changes. Every step must maintain this baseline.
+
+```bash
+npm run build
+node tools/llm-test-harness/bin/mepto-test.js \
+  --url=http://localhost:3000/test/mepto-unit.html \
+  --code='return window.meptoTestResults' \
+  --json
+```
+
+A clean baseline looks like: `"passed": 228, "failed": 0`.
+
+> **Important:** The test suite loads `/dist/meptos.umd.cjs`. Always run `npm run build` before running tests — the harness tests the compiled output, not the source.
+
+---
+
+### Step 1 — Type the IIFE parameter
+
+Add `MeptoStatic` to the module's IIFE parameter. If the file has no import yet, add one.
+
+```typescript
+import { type MeptoStatic } from './types';
+
+;(function($: MeptoStatic) {
+  // ...
+})(mepto)
+```
+
+---
+
+### Step 2 — `var` → `const`/`let`
+
+Replace every `var` declaration. Use `const` if the binding is never reassigned after declaration; `let` otherwise. Prefer `const` — if ESLint's `prefer-const` doesn't complain, use it.
+
+This applies to both module-level and function-level declarations.
+
+---
+
+### Step 3 — Type module-level variables
+
+Give explicit types to all module-level bindings. Do not eliminate shared mutable state yet — type it, leave the mutability, and move on. Removing shared state is a larger refactor that comes later.
+
+```typescript
+// Before
+var handlers = {}
+var _zid = 1
+
+// After
+const handlers: Record<number, EventHandler[]> = {}
+let _zid = 1
+```
+
+Use types from `src/types.ts` where they fit (`MeptoStatic`, `MeptoCollection`, `AjaxSettings`, `EventHandler`, etc.).
+
+---
+
+### Step 4 — Type all function parameters and return values
+
+Go function by function. Add types to every parameter and add return types where the inferred type is not obvious.
+
+- Use types from `types.ts` when they fit.
+- Prefer union types over `any` when the domain is known (e.g. `string | Element` instead of `any`).
+- `any` is allowed during the transition — do not block on it. Type what you can, annotate the rest `any` and move on.
+- Do not introduce `@types/` packages. If the DOM lib is missing a type for a modern API, use a type assertion.
+
+---
+
+### Step 5 — Fix local antipatterns
+
+Address these as you encounter them inside the module being converted. Do not fix them in other files.
+
+| Antipattern | Fix |
+|-------------|-----|
+| `let x` where `x` is never reassigned | → `const x` |
+| Parameter mutation (`arg = newValue`) | → introduce a local copy: `let local = arg; local = newValue` |
+| `var` in function scope | → `const`/`let` as above |
+| Callback `function` expressions that don't use `this` | → arrow function |
+| `fn` property monkey-patched inside a helper (e.g. hover emulation) | → keep but type `fn` explicitly |
+
+---
+
+### Step 6 — Build and verify
+
+```bash
+npm run build
+node tools/llm-test-harness/bin/mepto-test.js \
+  --url=http://localhost:3000/test/mepto-unit.html \
+  --code='return window.meptoTestResults' \
+  --json
+```
+
+`"failed": 0` is the only acceptable result. If tests regress, revert the last change and diagnose before continuing.
+
+---
+
 ## Performance Philosophy
 
 Every API decision should minimize live DOM touches. The browser's layout engine dominates real-world cost. jQuery's convenience hides per-operation overhead (selector engine, wrapper allocations, repeated traversals) that compounds in loops and large UIs. Mepto wins by providing ergonomic APIs that internally batch, cache, and reuse — while exposing zero-dependency, modern code.
@@ -154,8 +282,11 @@ cd tools/llm-test-harness && npm run build && cd ../..
 
 `test/mepto-unit.html` is a self-contained test page covering every method in `src/mepto.ts` plus events and forms. It runs 228 tests automatically when loaded, logs `PASS/FAIL` to the browser console, and exposes `window.meptoTestResults`.
 
+> **The test page loads `/dist/meptos.umd.cjs`.** Always run `npm run build` before running the test suite — without it the harness tests stale compiled output, not your changes.
+
 ```bash
-# Start Vite, run all 228 tests, get JSON summary
+# Build first, then run all 228 tests
+npm run build
 node tools/llm-test-harness/bin/mepto-test.js \
   --url=http://localhost:3000/test/mepto-unit.html \
   --code='return window.meptoTestResults' \
@@ -307,13 +438,13 @@ Edit files in `src/` — all files are TypeScript (`.ts`).
 npm run build
 ```
 
-### 3. Run the Full Test Suite
+### 3. Build Then Run the Full Test Suite
 ```bash
-# Start Vite if not running
-npm run dev &
+# Build first — the test page loads /dist/meptos.umd.cjs, not the source
+npm run build
 
-# Run 228 unit tests against the compiled bundle
-node tools/llm-test-harness/bin/mepto-test.js --no-server \
+# Run 228 unit tests against the compiled bundle (harness starts Vite automatically)
+node tools/llm-test-harness/bin/mepto-test.js \
   --url=http://localhost:3000/test/mepto-unit.html \
   --code='return window.meptoTestResults' --json
 ```
