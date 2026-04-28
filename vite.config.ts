@@ -1,14 +1,48 @@
 import { defineConfig } from 'vite';
 import dts from 'vite-plugin-dts';
 import { resolve } from 'path';
+import { createServer } from 'net';
+import { writeFileSync } from 'fs';
 
-export default defineConfig({
+const PORT_RANGE_START = 3000;
+const PORT_RANGE_END = 3099;
+
+function isPortAvailable(port: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const server = createServer();
+    server.once('error', () => resolve(false));
+    server.once('listening', () => server.close(() => resolve(true)));
+    server.listen(port);
+  });
+}
+
+async function findAvailablePort(): Promise<number> {
+  for (let port = PORT_RANGE_START; port <= PORT_RANGE_END; port++) {
+    if (await isPortAvailable(port)) return port;
+  }
+  throw new Error(`No available port in range ${PORT_RANGE_START}–${PORT_RANGE_END}`);
+}
+
+export default defineConfig(async () => {
+  const port = await findAvailablePort();
+  return {
   plugins: [
     dts({
       insertTypesEntry: true,
       include: ['src/**/*'],
       exclude: ['src/**/*.spec.ts', 'src/**/*.test.ts'],
     }),
+    {
+      name: 'write-port',
+      configureServer(server) {
+        server.httpServer?.once('listening', () => {
+          const addr = server.httpServer?.address();
+          if (addr && typeof addr === 'object') {
+            writeFileSync('.port', String(addr.port));
+          }
+        });
+      },
+    },
   ],
   esbuild: {
     target: 'es2020',
@@ -42,18 +76,16 @@ export default defineConfig({
     // Enable chunk splitting for better caching
     chunkSizeWarningLimit: 1000,
   },
-  // Development server configuration
   server: {
-    port: 3000,
+    port,
+    strictPort: true,
     open: true,
   },
-  // Path aliases for cleaner imports
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
     },
   },
-  // Test configuration
   test: {
     globals: true,
     environment: 'jsdom',
@@ -71,4 +103,5 @@ export default defineConfig({
       ],
     },
   },
+  };
 });

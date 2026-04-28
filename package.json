@@ -39,7 +39,8 @@
     "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\"",
     "typecheck": "tsc --noEmit",
     "size": "npm run build && size-limit",
-    "prepublishOnly": "npm run build && npm test"
+    "prepublishOnly": "npm run build && npm test",
+    "killports": "kill-port $(seq -s ' ' 3000 3099)"
   },
   "keywords": [
     "jquery",

@@ -100,7 +100,7 @@ Build the library and record the passing test count before making any changes. E
 ```bash
 npm run build
 node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:3000/test/mepto-unit.html \
+  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
   --code='return window.meptoTestResults' \
   --json
 ```
@@ -181,7 +181,7 @@ Address these as you encounter them inside the module being converted. Do not fi
 ```bash
 npm run build
 node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:3000/test/mepto-unit.html \
+  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
   --code='return window.meptoTestResults' \
   --json
 ```
@@ -246,9 +246,15 @@ npm install
 
 ### 2. Start Development Server
 ```bash
-npm run dev
+npm run dev &
 ```
-The Vite dev server starts at `http://localhost:3000`
+The dev server scans ports 3000–3099 and binds to the first available one. The chosen port is written to `.port` the moment the server is ready.
+
+```bash
+# Get the URL after starting
+cat .port                          # → e.g. 3000
+echo "http://localhost:$(cat .port)"
+```
 
 ### 3. Build the Library
 ```bash
@@ -288,13 +294,13 @@ cd tools/llm-test-harness && npm run build && cd ../..
 # Build first, then run all 228 tests
 npm run build
 node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:3000/test/mepto-unit.html \
+  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
   --code='return window.meptoTestResults' \
   --json
 
-# Or with --no-server if Vite is already running
+# Or with --no-server if Vite is already running in the background
 node tools/llm-test-harness/bin/mepto-test.js --no-server \
-  --url=http://localhost:3000/test/mepto-unit.html \
+  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
   --code='return window.meptoTestResults' \
   --json
 ```
@@ -315,7 +321,7 @@ The result object:
 }
 ```
 
-You can also open `http://localhost:3000/test/mepto-unit.html` in a browser for a visual pass/fail list.
+You can also open `http://localhost:$(cat .port)/test/mepto-unit.html` in a browser for a visual pass/fail list.
 
 ---
 
@@ -445,7 +451,7 @@ npm run build
 
 # Run 228 unit tests against the compiled bundle (harness starts Vite automatically)
 node tools/llm-test-harness/bin/mepto-test.js \
-  --url=http://localhost:3000/test/mepto-unit.html \
+  --url=http://localhost:$(cat .port)/test/mepto-unit.html \
   --code='return window.meptoTestResults' --json
 ```
 
@@ -454,6 +460,7 @@ A passing run returns `"failed": 0`.
 ### 4. Test a Specific Method
 ```bash
 node tools/llm-test-harness/bin/mepto-test.js --no-server \
+  --url=http://localhost:$(cat .port) \
   --code="return $('.test').addClass('active').hasClass('active')" \
   --html="<div class='test'></div>"
 ```
