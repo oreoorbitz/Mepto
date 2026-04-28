@@ -553,9 +553,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * // jQuery: $('li', listElement).remove()
    * // Mepto:  mepto.getElementsByTagName('li', listElement).remove()
    */
-  mepto.getElementsByTagName = function (tagName: string, context?: ParentNode): any {
-    const root = context || document
-    const elements = (root as Element).getElementsByTagName(tagName)
+  mepto.getElementsByTagName = function (tagName: string, context?: Document | Element): any {
+    const root: Document | Element = context || document
+    const elements = root.getElementsByTagName(tagName)
     return $(slice.call(elements))
   }
 
@@ -826,23 +826,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     letructor: mepto.Z,
     length: 0,
 
-    // Because a collection acts like an array
-    // copy over these useful array functions.
+    // Because a collection acts like an array,
+    // copy over these useful native array methods.
     forEach: emptyArray.forEach,
     reduce: emptyArray.reduce,
     push: emptyArray.push,
     sort: emptyArray.sort,
     splice: emptyArray.splice,
     indexOf: emptyArray.indexOf,
-    concat: function () {
-      let i,
-        value,
-        args = []
-      for (i = 0; i < arguments.length; i++) {
-        value = arguments[i]
-        args[i] = mepto.isZ(value) ? value.toArray() : value
-      }
-      return concat.apply(mepto.isZ(this) ? this.toArray() : this, args)
+    concat: function (...args: any[]) {
+      const normalizedArgs = args.map(arg => (mepto.isZ(arg) ? arg.toArray() : arg))
+      return concat.apply(mepto.isZ(this) ? this.toArray() : this, normalizedArgs)
     },
 
     // `map` and `slice` in the jQuery API work differently
@@ -966,23 +960,35 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     not: function (
       selector: string | Element | ArrayLike<Element> | ((this: Element, index: number) => boolean)
     ) {
-      const nodes: Element[] = []
-      if (isFunction(selector))
-        this.each(function (idx) {
-          if (!(selector as Function).call(this, idx)) nodes.push(this as Element)
-        })
-      else {
-        const excludes =
-          typeof selector == 'string'
-            ? this.filter(selector)
-            : likeArray(selector) && isFunction((selector as any).item)
-              ? slice.call(selector)
-              : $(selector)
-        this.forEach(function (el: Element) {
-          if (excludes.indexOf(el) < 0) nodes.push(el)
-        })
+      if (isFunction(selector)) {
+        // isFunction narrows selector to (...args: unknown[]) => unknown,
+        // so we can call it directly without casting to Function.
+        return $(
+          filter.call(this, function (el: Element, idx: number) {
+            return !selector.call(el, idx)
+          })
+        )
       }
-      return $(nodes)
+
+      // Resolve the set of elements to exclude:
+      //  - string  → filter this collection by CSS selector
+      //  - NodeList/HTMLCollection (array-like with .item) → slice to plain array
+      //  - anything else (Element, array, etc.) → wrap with $()
+      const excludes =
+        typeof selector === 'string'
+          ? this.filter(selector)
+          : likeArray(selector) &&
+              isFunction((selector as ArrayLike<Element> & { item?: unknown }).item)
+            ? slice.call(selector)
+            : $(selector)
+
+      // Build a Set for O(1) membership tests instead of repeated indexOf scans.
+      const excludeSet = new Set<Element>()
+      for (let i = 0, len = excludes.length; i < len; i++) {
+        excludeSet.add(excludes[i])
+      }
+
+      return $(filter.call(this, (el: Element) => !excludeSet.has(el)))
     },
     /**
      * Filters elements to those that contain a descendant matching the
