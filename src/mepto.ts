@@ -54,8 +54,6 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   const toString = class2type.toString;
   const mepto: any = {};
   let camelize: any;
-  let uniq: <T>(array: ArrayLike<T>) => T[];
-  const tempParent = document.createElement('div');
   const propMap: Record<string, string> = {
     tabindex: 'tabIndex',
     readonly: 'readOnly',
@@ -210,10 +208,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * order of first occurrence. Uses a `Set` for O(n) lookups instead of
    * repeated `indexOf` scans (which would be O(n²)).
    */
-  uniq = function <T>(array: ArrayLike<T>): T[] {
-    if (!array || (array as any).length === 0) return [] as T[];
+  const uniq = function <T>(array: ArrayLike<T>): T[] {
+    if (!array || array.length === 0) return [];
     const seen = new Set<T>();
-    return filter.call(array, function (item: T): boolean {
+    return filter.call(array, (item: T): boolean => {
       if (seen.has(item)) return false;
       seen.add(item);
       return true;
