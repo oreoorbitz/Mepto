@@ -444,8 +444,11 @@ mepto/
 │   └── llm-test-harness/    # Testing harness for agents
 │       ├── bin/mepto-test.js
 │       └── src/
+├── index.html                # Unit test suite (228 tests, loads from source)
 ├── test/                     # Test files
-│   └── blank.html           # Test page template
+│   ├── blank.html           # LLM test harness bridge page
+│   ├── e2e/                 # Playwright e2e specs
+│   └── functional/          # Manual interactive tests
 ├── vite.config.ts           # Vite configuration
 └── tsconfig.json            # TypeScript configuration
 ```
