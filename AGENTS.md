@@ -301,6 +301,36 @@ cd tools/llm-test-harness && npm run build && cd ../..
 
 ---
 
+## Vitest — Fast Unit Tests (no browser)
+
+`src/mepto.test.ts` covers the same API surface as the browser suite but runs in jsdom via Vitest. No browser, no build step — just fast per-method feedback.
+
+```bash
+npm test              # single run, exits with pass/fail
+npm run test:watch    # re-runs on every file save
+```
+
+Output on success:
+```
+✓ src/mepto.test.ts  (73 tests)
+Tests  73 passed
+```
+
+On failure, Vitest prints the exact assertion, the expected value, and the received value — no need to open a browser.
+
+**jsdom limitation:** `$.isWindow(window)` returns `false` in jsdom because jsdom's `window` is not a native `Window` instance. The positive case is covered by the Playwright browser suite. All other tests run correctly in jsdom.
+
+**When to use which:**
+| | Vitest (`npm test`) | Playwright (`npx playwright test`) |
+|---|---|---|
+| Speed | ~1s | ~2s |
+| Needs build | No | No |
+| Needs dev server | No | Yes (auto-started) |
+| DOM fidelity | jsdom (good) | Real Chromium (exact) |
+| Use for | Fast iteration on a method | Final verification, CI |
+
+---
+
 ## Running the Full Unit Test Suite
 
 The landing page (`/`) is the unit test suite. It loads from source — no build step needed.
@@ -488,6 +518,8 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 |---------|-------------|
 | `npm run dev` | Start Vite dev server (port written to `.port`) |
 | `cat .port` | Get the port the dev server is running on |
+| `npm test` | Run Vitest unit tests (jsdom, ~1s, no browser) |
+| `npm run test:watch` | Vitest in watch mode — reruns on every save |
 | `npm run build` | Build library to `dist/` |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Run Prettier |
