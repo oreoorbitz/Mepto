@@ -2,20 +2,20 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type MeptoStatic, type PlainObject } from './types';
+import { type MeptoStatic, type PlainObject } from './types'
 
 const mepto: MeptoStatic = (function (): MeptoStatic {
-  let $: MeptoStatic = null as unknown as MeptoStatic;
-  const emptyArray: any[] = [];
+  let $: MeptoStatic = null as unknown as MeptoStatic
+  const emptyArray: any[] = []
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const concat = Array.prototype.concat;
+  const concat = Array.prototype.concat
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const filter = Array.prototype.filter;
+  const filter = Array.prototype.filter
   // eslint-disable-next-line @typescript-eslint/unbound-method
-  const slice = Array.prototype.slice;
-  const document = window.document;
-  const elementDisplay: Record<string, any> = {};
-  const classCache: Record<string, any> = {};
+  const slice = Array.prototype.slice
+  const document = window.document
+  const elementDisplay: Record<string, any> = {}
+  const classCache: Record<string, any> = {}
   const cssNumber: Record<string, number> = {
     'column-count': 1,
     columns: 1,
@@ -24,22 +24,22 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     opacity: 1,
     'z-index': 1,
     zoom: 1,
-  };
-  const fragmentRE = /^\s*<(\w+|!)[^>]*>/;
-  const singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/;
-  const tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi;
-  const rootNodeRE = /^(?:body|html)$/i;
-  const capitalRE = /([A-Z])/g;
-  const doubleColonRE = /::/g;
-  const upperUpperLowerRE = /([A-Z]+)([A-Z][a-z])/g;
-  const lowerDigitUpperRE = /([a-z\d])([A-Z])/g;
-  const underscoreRE = /_/g;
+  }
+  const fragmentRE = /^\s*<(\w+|!)[^>]*>/
+  const singleTagRE = /^<(\w+)\s*\/?>(?:<\/\1>|)$/
+  const tagExpanderRE = /<(?!area|br|col|embed|hr|img|input|link|meta|param)(([\w:]+)[^>]*)\/>/gi
+  const rootNodeRE = /^(?:body|html)$/i
+  const capitalRE = /([A-Z])/g
+  const doubleColonRE = /::/g
+  const upperUpperLowerRE = /([A-Z]+)([A-Z][a-z])/g
+  const lowerDigitUpperRE = /([a-z\d])([A-Z])/g
+  const underscoreRE = /_/g
 
-  const methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset'];
+  const methodAttributes = ['val', 'css', 'html', 'text', 'data', 'width', 'height', 'offset']
 
-  const adjacencyOperators = ['after', 'prepend', 'before', 'append'];
-  const table = document.createElement('table');
-  const tableRow = document.createElement('tr');
+  const adjacencyOperators = ['after', 'prepend', 'before', 'append']
+  const table = document.createElement('table')
+  const tableRow = document.createElement('tr')
   const containers = {
     tr: document.createElement('tbody'),
     tbody: table,
@@ -48,12 +48,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     td: tableRow,
     th: tableRow,
     '*': document.createElement('div'),
-  };
-  const simpleSelectorRE = /^[\w-]*$/;
-  const class2type: Record<string, any> = {};
-  const toString = class2type.toString;
-  const mepto: any = {};
-  let camelize: any;
+  }
+  const simpleSelectorRE = /^[\w-]*$/
+  const toString = Object.prototype.toString
+  const mepto: any = {}
   const propMap: Record<string, string> = {
     tabindex: 'tabIndex',
     readonly: 'readOnly',
@@ -67,21 +65,21 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     usemap: 'useMap',
     frameborder: 'frameBorder',
     contenteditable: 'contentEditable',
-  };
+  }
   const isArray =
     Array.isArray ||
     function (object: any) {
-      return object instanceof Array;
-    };
+      return object instanceof Array
+    }
 
   /**
    * Checks if `element` matches the given CSS `selector`.
    * Uses the standard `Element.matches` API.
    */
   mepto.matches = function (element: Element, selector: string): boolean {
-    if (!selector || !element || element.nodeType !== 1) return false;
-    return element.matches(selector);
-  };
+    if (!selector || !element || element.nodeType !== 1) return false
+    return element.matches(selector)
+  }
 
   /**
    * Returns the internal JavaScript [[Class]] name of `obj` as a lowercase string
@@ -89,22 +87,22 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * Returns `"null"` or `"undefined"` for those respective values.
    */
   function type(obj: unknown): string {
-    return obj == null ? String(obj) : class2type[toString.call(obj)] || 'object';
+    return obj == null ? String(obj) : toString.call(obj).slice(8, -1).toLowerCase()
   }
 
   /** Checks whether `value` is a callable function (including async/generator). */
   function isFunction(value: unknown): value is (...args: unknown[]) => unknown {
-    return typeof value === 'function';
+    return typeof value === 'function'
   }
 
   /** Checks whether `obj` is the `Window` global object. */
   function isWindow(obj: unknown): obj is Window {
-    return obj instanceof Window;
+    return obj instanceof Window
   }
 
   /** Checks whether `obj` is a `Document` node. */
   function isDocument(obj: unknown): obj is Document {
-    return obj instanceof Document;
+    return obj instanceof Document
   }
 
   /**
@@ -112,7 +110,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * Returns `true` for plain objects, class instances, `Window`, `Document`, etc.
    */
   function isObject(obj: unknown): obj is Record<string, unknown> {
-    return typeof obj === 'object' && obj !== null && !Array.isArray(obj);
+    return typeof obj === 'object' && obj !== null && !Array.isArray(obj)
   }
   /**
    * Checks if `obj` is a "plain" object — an object created by `{}` or
@@ -120,9 +118,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * Returns `false` for arrays, `Window`, `Document`, and class instances.
    */
   function isPlainObject(obj: unknown): obj is PlainObject {
-    if (!isObject(obj) || isWindow(obj)) return false;
-    const proto = Object.getPrototypeOf(obj);
-    return proto === null || proto === Object.prototype;
+    if (!isObject(obj) || isWindow(obj)) return false
+    const proto = Object.getPrototypeOf(obj)
+    return proto === null || proto === Object.prototype
   }
 
   /**
@@ -136,24 +134,24 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   function likeArray(obj: unknown): boolean {
     // Falsy values (null, undefined, "", 0, false, NaN) are never array-like
-    if (!obj) return false;
+    if (!obj) return false
 
     // Functions and the Window object are never array-like
-    const objType = type(obj);
-    if (objType === 'function' || isWindow(obj)) return false;
+    const objType = type(obj)
+    if (objType === 'function' || isWindow(obj)) return false
 
     // Actual arrays are always array-like
-    if (objType === 'array') return true;
+    if (objType === 'array') return true
 
     // Only objects can safely use the `in` operator for property checks.
     // Primitives (number, boolean, string) are not array-like.
-    if (typeof obj !== 'object') return false;
+    if (typeof obj !== 'object') return false
 
     // Check for a valid `length` property indicating array-like behavior
-    const length = (obj as any).length;
-    if (length === 0) return true;
+    const length = (obj as any).length
+    if (length === 0) return true
 
-    return typeof length === 'number' && length > 0 && length - 1 in (obj as any);
+    return typeof length === 'number' && length > 0 && length - 1 in (obj as any)
   }
 
   /**
@@ -161,9 +159,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * Uses a type guard to narrow the return type to non-nullable values.
    */
   function compact<T>(array: ArrayLike<T | null | undefined>): T[] {
-    return filter.call(array, function (item: T | null | undefined): item is T {
-      return item != null;
-    });
+    return filter.call(array, (item: T | null | undefined): item is T => item != null)
   }
 
   /**
@@ -171,19 +167,16 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * Returns an empty array for empty or falsy input to ensure a consistent return type.
    */
   function flatten<T>(array: (T | T[])[]): T[] {
-    if (!array || array.length === 0) return [] as T[];
-    return $.fn.concat.apply([], array) as T[];
+    if (!array || array.length === 0) return [] as T[]
+    return $.fn.concat.apply([], array) as T[]
   }
 
   /**
    * Converts a dash-separated string to camelCase.
    * Handles leading, trailing, and consecutive dashes gracefully.
    */
-  camelize = function (str: string): string {
-    return str.replace(/-+(.)?/g, function (match: string, chr: string | undefined): string {
-      return chr ? chr.toUpperCase() : '';
-    });
-  };
+  const camelize = (str: string): string =>
+    str.replace(/-+(.)?/g, (_match: string, chr?: string): string => (chr ? chr.toUpperCase() : ''))
   /**
    * Converts a camelCase or PascalCase string to a dash-separated lowercase
    * string (e.g. `backgroundColor` → `background-color`, `XMLParser` →
@@ -191,13 +184,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * converted to `/`.
    */
   function dasherize(str: string): string {
-    if (!str) return str;
+    if (!str) return str
     return str
       .replace(doubleColonRE, '/') // `::` → `/` (namespace separator)
       .replace(upperUpperLowerRE, '$1_$2') // `XMLParser` → `XML_Parser`
       .replace(lowerDigitUpperRE, '$1_$2') // `fooBar1B` → `foo_Bar1_B`
       .replace(underscoreRE, '-') // `_` → `-`
-      .toLowerCase();
+      .toLowerCase()
   }
   /**
    * Returns a new array with duplicate elements removed, preserving the
@@ -205,14 +198,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * repeated `indexOf` scans (which would be O(n²)).
    */
   const uniq = function <T>(array: ArrayLike<T>): T[] {
-    if (!array || array.length === 0) return [];
-    const seen = new Set<T>();
+    if (!array || array.length === 0) return []
+    const seen = new Set<T>()
     return filter.call(array, (item: T): boolean => {
-      if (seen.has(item)) return false;
-      seen.add(item);
-      return true;
-    }) as T[];
-  };
+      if (seen.has(item)) return false
+      seen.add(item)
+      return true
+    }) as T[]
+  }
 
   /**
    * Builds (and caches) a RegExp that matches a CSS class name as a
@@ -222,10 +215,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param name - The CSS class name to build a regex for.
    */
   function classRE(name: string): RegExp {
-    if (!name) return /(?:)/;
+    if (!name) return /(?:)/
     return name in classCache
       ? classCache[name]
-      : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'));
+      : (classCache[name] = new RegExp('(^|\\s)' + name + '(\\s|$)'))
   }
 
   /**
@@ -237,7 +230,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns The value with "px" appended when appropriate.
    */
   function maybeAddPx(name: string, value: string | number): string | number {
-    return typeof value === 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value;
+    return typeof value === 'number' && !cssNumber[dasherize(name)] ? value + 'px' : value
   }
 
   /**
@@ -249,14 +242,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   function defaultDisplay(nodeName: string): string {
     if (!elementDisplay[nodeName]) {
-      const element = document.createElement(nodeName);
-      document.body.appendChild(element);
-      let display = getComputedStyle(element, '').getPropertyValue('display');
-      element.parentNode!.removeChild(element);
-      if (display === 'none') display = 'block';
-      elementDisplay[nodeName] = display;
+      const element = document.createElement(nodeName)
+      document.body.appendChild(element)
+      let display = getComputedStyle(element, '').getPropertyValue('display')
+      element.parentNode!.removeChild(element)
+      if (display === 'none') display = 'block'
+      elementDisplay[nodeName] = display
     }
-    return elementDisplay[nodeName];
+    return elementDisplay[nodeName]
   }
 
   /**
@@ -271,8 +264,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     return 'children' in element
       ? slice.call((element as Element).children)
       : $.map(element.childNodes, function (node: Node) {
-          if (node.nodeType === 1) return node as Element;
-        });
+          if (node.nodeType === 1) return node as Element
+        })
   }
 
   /**
@@ -284,10 +277,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param selector - The CSS selector string that produced this collection.
    */
   function Z(dom: ArrayLike<Element> | null | undefined, selector: string) {
-    const len = dom ? dom.length : 0;
-    for (let i = 0; i < len; i++) this[i] = dom![i];
-    this.length = len;
-    this.selector = selector || '';
+    const len = dom ? dom.length : 0
+    for (let i = 0; i < len; i++) this[i] = dom![i]
+    this.length = len
+    this.selector = selector || ''
   }
 
   /**
@@ -307,40 +300,40 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     name: string | undefined,
     properties: PlainObject | null | undefined
   ): ArrayLike<Element> {
-    let dom: ArrayLike<Element>;
+    let dom: ArrayLike<Element>
 
     // Fast path: a single empty or self-closing tag like <div>, <br/>
-    const singleMatch = singleTagRE.exec(html);
+    const singleMatch = singleTagRE.exec(html)
     if (singleMatch) {
-      dom = $(document.createElement(singleMatch[1]));
+      dom = $(document.createElement(singleMatch[1]))
     } else {
       // Expand implicit self-closing non-void tags: <foo bar/> → <foo bar></foo>
-      html = html.replace(tagExpanderRE, '<$1></$2>');
+      html = html.replace(tagExpanderRE, '<$1></$2>')
 
       // Determine the right container so the browser parses the HTML correctly.
       // e.g. <tr> must live inside <tbody>, not a bare <div>.
       if (name === undefined) {
-        const fragMatch = fragmentRE.exec(html);
-        name = fragMatch ? fragMatch[1] : undefined;
+        const fragMatch = fragmentRE.exec(html)
+        name = fragMatch ? fragMatch[1] : undefined
       }
-      const containerKey = name !== undefined && name in containers ? name : '*';
-      const container = containers[containerKey];
-      container.innerHTML = html;
+      const containerKey = name !== undefined && name in containers ? name : '*'
+      const container = containers[containerKey]
+      container.innerHTML = html
       dom = $.each(slice.call(container.childNodes), function (this: ChildNode) {
-        container.removeChild(this);
-      });
+        container.removeChild(this)
+      })
     }
 
     if (isPlainObject(properties)) {
-      const nodes = $(dom);
+      const nodes = $(dom)
       $.each(properties, function (key: string, value: unknown) {
-        if (methodAttributes.indexOf(key) > -1) (nodes as any)[key](value);
-        else nodes.attr(key, value as string);
-      });
+        if (methodAttributes.indexOf(key) > -1) (nodes as any)[key](value)
+        else nodes.attr(key, value as string)
+      })
     }
 
-    return dom;
-  };
+    return dom
+  }
 
   /**
    * Creates a new Mepto collection wrapping the given DOM nodes.
@@ -351,8 +344,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A new Mepto collection instance.
    */
   mepto.Z = function (dom: ArrayLike<Element> | null | undefined, selector: string) {
-    return new Z(dom, selector);
-  };
+    return new Z(dom, selector)
+  }
 
   /**
    * Returns `true` if the given object is a Mepto collection instance.
@@ -361,8 +354,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param object - Value to test.
    */
   mepto.isZ = function (object: unknown): boolean {
-    return object instanceof mepto.Z;
-  };
+    return object instanceof mepto.Z
+  }
 
   /**
    * Mepto's selector initializer — counterpart to jQuery's `$.fn.init`.
@@ -376,51 +369,51 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A Mepto collection.
    */
   mepto.init = function (selector: any, context?: any): any {
-    let dom: ArrayLike<Element> | null | undefined;
-    let finalSelector: any = selector;
+    let dom: ArrayLike<Element> | null | undefined
+    let finalSelector: any = selector
 
     if (!selector) {
-      return mepto.Z();
+      return mepto.Z()
     } else if (typeof selector === 'string') {
-      const str = selector.trim();
-      finalSelector = str;
+      const str = selector.trim()
+      finalSelector = str
       // HTML fragment: create nodes from it
       // Note: In both Chrome 21 and Firefox 15, DOM error 12
       // is thrown if the fragment doesn't begin with <
-      const fragMatch = str[0] === '<' ? fragmentRE.exec(str) : null;
+      const fragMatch = str[0] === '<' ? fragmentRE.exec(str) : null
       if (fragMatch) {
-        dom = mepto.fragment(str, fragMatch[1], context);
-        finalSelector = null;
+        dom = mepto.fragment(str, fragMatch[1], context)
+        finalSelector = null
       } else if (context !== undefined) {
-        return $(context).find(str);
+        return $(context).find(str)
       } else {
-        dom = mepto.qsa(document, str);
+        dom = mepto.qsa(document, str)
       }
     } else if (isFunction(selector)) {
-      return $(document).ready(selector);
+      return $(document).ready(selector)
     } else if (mepto.isZ(selector)) {
-      return selector;
+      return selector
     } else {
       if (isArray(selector)) {
-        dom = compact(selector);
+        dom = compact(selector)
       } else if (isObject(selector)) {
-        dom = [selector];
-        finalSelector = null;
+        dom = [selector]
+        finalSelector = null
       } else {
-        const fragMatch = fragmentRE.exec(selector);
+        const fragMatch = fragmentRE.exec(selector)
         if (fragMatch) {
-          dom = mepto.fragment(selector.trim(), fragMatch[1], context);
-          finalSelector = null;
+          dom = mepto.fragment(selector.trim(), fragMatch[1], context)
+          finalSelector = null
         } else if (context !== undefined) {
-          return $(context).find(selector);
+          return $(context).find(selector)
         } else {
-          dom = mepto.qsa(document, selector);
+          dom = mepto.qsa(document, selector)
         }
       }
     }
 
-    return mepto.Z(dom, finalSelector);
-  };
+    return mepto.Z(dom, finalSelector)
+  }
 
   /**
    * The main Mepto factory function. Delegates to `mepto.init` so that
@@ -431,8 +424,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A Mepto collection.
    */
   $ = function (selector: any, context?: any) {
-    return mepto.init(selector, context);
-  };
+    return mepto.init(selector, context)
+  }
 
   /**
    * Recursively merge properties from `source` into `target`.
@@ -442,21 +435,21 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   function extend(target: Record<string, any>, source: Record<string, any>, deep: boolean): void {
     for (const key in source) {
-      if (!Object.prototype.hasOwnProperty.call(source, key)) continue;
+      if (!Object.prototype.hasOwnProperty.call(source, key)) continue
 
-      const sourceValue = source[key];
+      const sourceValue = source[key]
 
       if (deep && (isPlainObject(sourceValue) || isArray(sourceValue))) {
         // Ensure the target has a compatible container before recursing
         if (isPlainObject(sourceValue) && !isPlainObject(target[key])) {
-          target[key] = {};
+          target[key] = {}
         }
         if (isArray(sourceValue) && !isArray(target[key])) {
-          target[key] = [];
+          target[key] = []
         }
-        extend(target[key], sourceValue, deep);
+        extend(target[key], sourceValue, deep)
       } else if (sourceValue !== undefined) {
-        target[key] = sourceValue;
+        target[key] = sourceValue
       }
     }
   }
@@ -471,20 +464,20 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns The modified `target` object.
    */
   $.extend = function (target: any, ...rest: any[]): any {
-    let deep = false;
-    let destination = target;
+    let deep = false
+    let destination = target
 
     if (typeof target === 'boolean') {
-      deep = target;
-      destination = rest.shift();
+      deep = target
+      destination = rest.shift()
     }
 
     rest.forEach(function (arg) {
-      extend(destination, arg, deep);
-    });
+      extend(destination, arg, deep)
+    })
 
-    return destination;
-  };
+    return destination
+  }
 
   /**
    * Mepto's CSS selector engine. Optimises for simple ID (`#foo`),
@@ -499,22 +492,22 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns An array of matched `Element` nodes.
    */
   mepto.qsa = function (element: ParentNode, selector: string): Element[] {
-    const maybeID = selector[0] === '#';
-    const maybeClass = !maybeID && selector[0] === '.';
-    const nameOnly = maybeID || maybeClass ? selector.slice(1) : selector;
-    const isSimple = simpleSelectorRE.test(nameOnly);
+    const maybeID = selector[0] === '#'
+    const maybeClass = !maybeID && selector[0] === '.'
+    const nameOnly = maybeID || maybeClass ? selector.slice(1) : selector
+    const isSimple = simpleSelectorRE.test(nameOnly)
 
     // Fast path: simple ID lookup via getElementById
     // Supported on Document and DocumentFragment (Safari 26.2+); not on Element
     if (maybeID && isSimple && 'getElementById' in element) {
-      const found = (element as Document).getElementById(nameOnly);
-      return found ? [found] : [];
+      const found = (element as Document).getElementById(nameOnly)
+      return found ? [found] : []
     }
 
     // Only Element (1), Document (9), and DocumentFragment (11) support query methods
-    const nodeType = (element as Node).nodeType;
+    const nodeType = (element as Node).nodeType
     if (nodeType !== 1 && nodeType !== 9 && nodeType !== 11) {
-      return [];
+      return []
     }
 
     // Fast path: simple class or tag lookup via getElementsByClassName/TagName
@@ -522,13 +515,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     if (isSimple && !maybeID && 'getElementsByClassName' in element) {
       const results = maybeClass
         ? (element as Document).getElementsByClassName(nameOnly)
-        : (element as Document).getElementsByTagName(selector);
-      return slice.call(results);
+        : (element as Document).getElementsByTagName(selector)
+      return slice.call(results)
     }
 
     // General path: use querySelectorAll for complex selectors
-    return slice.call(element.querySelectorAll(selector));
-  };
+    return slice.call(element.querySelectorAll(selector))
+  }
 
   /**
    * Selects elements by class name, returning a chainable Mepto collection.
@@ -543,10 +536,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * // Mepto:  mepto.getElementsByClassName('my-class', contextElement).hide()
    */
   mepto.getElementsByClassName = function (className: string, context?: ParentNode): any {
-    const root = context || document;
-    const elements = (root as Element).getElementsByClassName(className);
-    return $(slice.call(elements));
-  };
+    const root = context || document
+    const elements = (root as Element).getElementsByClassName(className)
+    return $(slice.call(elements))
+  }
 
   /**
    * Selects elements by tag name, returning a chainable Mepto collection.
@@ -561,10 +554,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * // Mepto:  mepto.getElementsByTagName('li', listElement).remove()
    */
   mepto.getElementsByTagName = function (tagName: string, context?: ParentNode): any {
-    const root = context || document;
-    const elements = (root as Element).getElementsByTagName(tagName);
-    return $(slice.call(elements));
-  };
+    const root = context || document
+    const elements = (root as Element).getElementsByTagName(tagName)
+    return $(slice.call(elements))
+  }
 
   /**
    * Selects a single element by its ID, returning a chainable Mepto collection.
@@ -583,11 +576,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * mepto.getElementById('my-element', iframe.contentDocument).hide()
    */
   mepto.getElementById = function (id: string, context?: ParentNode): any {
-    const root = context || document;
-    if (!('getElementById' in root)) return $();
-    const found = (root as Document).getElementById(id);
-    return found ? $([found]) : $();
-  };
+    const root = context || document
+    if (!('getElementById' in root)) return $()
+    const found = (root as Document).getElementById(id)
+    return found ? $([found]) : $()
+  }
 
   /**
    * Wraps `nodes` in a Mepto collection, optionally filtering by `selector`.
@@ -604,8 +597,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A new Mepto collection containing the (optionally filtered) nodes.
    */
   function filtered(nodes: Element | ArrayLike<Element>, selector?: string | null): any {
-    if (selector == null) return $(nodes);
-    return $(nodes).filter(selector);
+    if (selector == null) return $(nodes)
+    return $(nodes).filter(selector)
   }
 
   /**
@@ -616,8 +609,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param node   - The potential descendant node.
    */
   $.contains = function (parent: Node, node: Node): boolean {
-    return parent !== node && parent.contains(node);
-  };
+    return parent !== node && parent.contains(node)
+  }
 
   /**
    * Sets or removes an attribute on `node`. When `value` is `null` or
@@ -628,7 +621,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param value - The attribute value, or `null`/`undefined` to remove.
    */
   function setAttribute(node: Element, name: string, value: string | null | undefined): void {
-    value == null ? node.removeAttribute(name) : node.setAttribute(name, value);
+    value == null ? node.removeAttribute(name) : node.setAttribute(name, value)
   }
 
   /**
@@ -640,11 +633,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns The current class name string when called as a getter.
    */
   function className(node: Element & { className: any }, value?: string): string | void {
-    const klass = node.className || '';
-    const svg = klass && klass.baseVal !== undefined;
+    const klass = node.className || ''
+    const svg = klass && klass.baseVal !== undefined
 
-    if (value === undefined) return svg ? klass.baseVal : klass;
-    svg ? (klass.baseVal = value) : (node.className = value);
+    if (value === undefined) return svg ? klass.baseVal : klass
+    svg ? (klass.baseVal = value) : (node.className = value)
   }
 
   /**
@@ -658,37 +651,37 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   function deserializeValue(value: string): any {
     // Falsy values (empty string, null, undefined) — return as-is
-    if (!value) return value;
+    if (!value) return value
 
     // Boolean literals
-    if (value === 'true') return true;
-    if (value === 'false') return false;
+    if (value === 'true') return true
+    if (value === 'false') return false
 
     // Null literal
-    if (value === 'null') return null;
+    if (value === 'null') return null
 
     // Numeric strings — round-trip check preserves non-decimal strings like "08"
-    const num = +value;
-    if ('' + num === value) return num;
+    const num = +value
+    if ('' + num === value) return num
 
     // JSON arrays/objects — charAt is cheaper than regex for first-char check
     if (value.charAt(0) === '[' || value.charAt(0) === '{') {
       try {
-        return $.parseJSON(value);
+        return $.parseJSON(value)
       } catch {
-        return value;
+        return value
       }
     }
 
     // Everything else — return as-is
-    return value;
+    return value
   }
 
-  $.type = type;
-  $.isFunction = isFunction;
-  $.isWindow = isWindow;
-  $.isArray = isArray;
-  $.isPlainObject = isPlainObject;
+  $.type = type
+  $.isFunction = isFunction
+  $.isWindow = isWindow
+  $.isArray = isArray
+  $.isPlainObject = isPlainObject
 
   /**
    * Returns `true` if the given object has no own enumerable properties.
@@ -696,9 +689,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param obj - The object to test.
    */
   $.isEmptyObject = function (obj: Record<string, unknown>): boolean {
-    for (const _name in obj) return false;
-    return true;
-  };
+    for (const _name in obj) return false
+    return true
+  }
 
   /**
    * Returns `true` if `val` represents a finite number.
@@ -708,17 +701,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param val - The value to test.
    */
   $.isNumeric = function (val: unknown): boolean {
-    const num = Number(val);
-    const type = typeof val;
+    const num = Number(val)
+    const type = typeof val
     return (
       (val != null &&
-        type != 'boolean' &&
-        (type != 'string' || (val as string).length) &&
+        type !== 'boolean' &&
+        (type !== 'string' || (val as string).length) &&
         !isNaN(num) &&
         isFinite(num)) ||
       false
-    );
-  };
+    )
+  }
 
   /**
    * Returns the index of `elem` in `array`, or `-1` if not found.
@@ -729,10 +722,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param i     - Optional starting index.
    */
   $.inArray = function <T>(elem: T, array: ArrayLike<T>, i?: number): number {
-    return emptyArray.indexOf.call(array, elem, i);
-  };
+    return emptyArray.indexOf.call(array, elem, i)
+  }
 
-  $.camelCase = camelize;
+  $.camelCase = camelize
   /**
    * Trims leading and trailing whitespace from `str`.
    * Returns an empty string for `null`/`undefined`.
@@ -740,14 +733,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param str - The string to trim.
    */
   $.trim = function (str: string | null | undefined): string {
-    return str == null ? '' : String.prototype.trim.call(str);
-  };
+    return str == null ? '' : String.prototype.trim.call(str)
+  }
 
   // plugin compatibility
-  $.uuid = 0;
-  $.support = {};
-  $.expr = {};
-  $.noop = function (): void {};
+  $.uuid = 0
+  $.support = {}
+  $.expr = {}
+  $.noop = function (): void {}
 
   /**
    * Iterates over `elements` (array-like or object), collecting non-null
@@ -764,21 +757,21 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     elements: ArrayLike<T> | Record<string, T>,
     callback: (item: T, index: number | string) => U | null | undefined
   ): U[] {
-    const values: U[] = [];
+    const values: U[] = []
     if (likeArray(elements)) {
-      const arr = elements as ArrayLike<T>;
+      const arr = elements as ArrayLike<T>
       for (let i = 0; i < arr.length; i++) {
-        const value = callback(arr[i], i);
-        if (value != null) values.push(value);
+        const value = callback(arr[i], i)
+        if (value != null) values.push(value)
       }
     } else {
       for (const key in elements as Record<string, T>) {
-        const value = callback((elements as Record<string, T>)[key], key);
-        if (value != null) values.push(value);
+        const value = callback((elements as Record<string, T>)[key], key)
+        if (value != null) values.push(value)
       }
     }
-    return flatten(values);
-  };
+    return flatten(values)
+  }
 
   /**
    * Iterates over `elements` (array-like or object), calling `callback`
@@ -796,9 +789,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     callback: (this: T, index: number | string, item: T) => boolean | void
   ): typeof elements {
     if (likeArray(elements)) {
-      const arr = elements as ArrayLike<T>;
+      const arr = elements as ArrayLike<T>
       for (let i = 0; i < arr.length; i++)
-        if (callback.call(arr[i], i, arr[i]) === false) return elements;
+        if (callback.call(arr[i], i, arr[i]) === false) return elements
     } else {
       for (const key in elements as Record<string, T>)
         if (
@@ -808,10 +801,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             (elements as Record<string, T>)[key]
           ) === false
         )
-          return elements;
+          return elements
     }
-    return elements;
-  };
+    return elements
+  }
 
   /**
    * Filters `elements` using `callback`, returning only items for which
@@ -822,18 +815,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A new array of matching elements.
    */
   $.grep = function (elements, callback) {
-    return filter.call(elements, callback);
-  };
+    return filter.call(elements, callback)
+  }
 
-  if (window.JSON) $.parseJSON = JSON.parse;
-
-  // Populate the class2type map
-  $.each(
-    'Boolean Number String Function Array Date RegExp Object Error'.split(' '),
-    function (i, name) {
-      class2type['[object ' + name + ']'] = name.toLowerCase();
-    }
-  );
+  if (window.JSON) $.parseJSON = JSON.parse
 
   // Define methods that will be available on all
   // mepto collections
@@ -852,12 +837,12 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     concat: function () {
       let i,
         value,
-        args = [];
+        args = []
       for (i = 0; i < arguments.length; i++) {
-        value = arguments[i];
-        args[i] = mepto.isZ(value) ? value.toArray() : value;
+        value = arguments[i]
+        args[i] = mepto.isZ(value) ? value.toArray() : value
       }
-      return concat.apply(mepto.isZ(this) ? this.toArray() : this, args);
+      return concat.apply(mepto.isZ(this) ? this.toArray() : this, args)
     },
 
     // `map` and `slice` in the jQuery API work differently
@@ -865,15 +850,15 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     map: function <U>(
       fn: (this: Element, index: number, element: Element) => U | null | undefined
     ) {
-      const values: U[] = [];
+      const values: U[] = []
       for (let i = 0, len = this.length; i < len; i++) {
-        const value = fn.call(this[i], i, this[i]);
-        if (value != null) values.push(value);
+        const value = fn.call(this[i], i, this[i])
+        if (value != null) values.push(value)
       }
-      return $(flatten(values));
+      return $(flatten(values))
     },
     slice: function (start?, end?) {
-      return $(slice.call(this, start, end));
+      return $(slice.call(this, start, end))
     },
 
     /**
@@ -885,11 +870,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      */
     ready: function (callback: (mepto: any) => void) {
       if (document.readyState !== 'loading') {
-        setTimeout(() => callback($), 0);
+        setTimeout(() => callback($), 0)
       } else {
-        document.addEventListener('DOMContentLoaded', () => callback($), { once: true });
+        document.addEventListener('DOMContentLoaded', () => callback($), { once: true })
       }
-      return this;
+      return this
     },
     /**
      * Retrieves an element by index, or the entire collection as an array.
@@ -899,18 +884,18 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns A single DOM element, or an array of all elements.
      */
     get: function (idx?: number) {
-      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length];
+      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
     },
     toArray: function () {
-      return this.get();
+      return this.get()
     },
     size: function () {
-      return this.length;
+      return this.length
     },
     remove: function () {
       return this.each(function () {
-        if (this.parentNode != null) this.parentNode.removeChild(this);
-      });
+        if (this.parentNode != null) this.parentNode.removeChild(this)
+      })
     },
     /**
      * Iterates over the collection, calling `callback` for each element.
@@ -921,9 +906,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      */
     each: function (callback: (this: Element, index: number, element: Element) => boolean | void) {
       for (let i = 0, len = this.length; i < len; i++) {
-        if (callback.call(this[i], i, this[i]) === false) break;
+        if (callback.call(this[i], i, this[i]) === false) break
       }
-      return this;
+      return this
     },
     /**
      * Filters the collection by a CSS selector or predicate function.
@@ -940,24 +925,24 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         // O(n*m) and created two intermediate collections.
         return $(
           filter.call(this, function (element: Element, index: number) {
-            return selector.call(element, index, element);
+            return selector.call(element, index, element)
           })
-        );
+        )
       }
 
       // Short-circuit on nullish selector — avoids iterating when no element
       // can possibly match. mepto.matches already guards against this, but we
       // skip the loop entirely.
-      if (selector == null) return $();
+      if (selector == null) return $()
 
       return $(
         filter.call(this, function (element: Element) {
-          return mepto.matches(element, selector as string);
+          return mepto.matches(element, selector as string)
         })
-      );
+      )
     },
     add: function (selector: any, context?: any) {
-      return $(uniq(this.concat($(selector, context))));
+      return $(uniq(this.concat($(selector, context))))
     },
     /**
      * Checks whether the first element matches the given CSS selector,
@@ -969,7 +954,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     is: function (selector: string | { selector: string }): boolean {
       return typeof selector == 'string'
         ? this.length > 0 && mepto.matches(this[0], selector)
-        : !!(selector && this.selector == (selector as { selector: string }).selector);
+        : !!(selector && this.selector == (selector as { selector: string }).selector)
     },
     /**
      * Returns a new collection excluding elements matched by the selector,
@@ -981,23 +966,23 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     not: function (
       selector: string | Element | ArrayLike<Element> | ((this: Element, index: number) => boolean)
     ) {
-      const nodes: Element[] = [];
+      const nodes: Element[] = []
       if (isFunction(selector))
         this.each(function (idx) {
-          if (!(selector as Function).call(this, idx)) nodes.push(this as Element);
-        });
+          if (!(selector as Function).call(this, idx)) nodes.push(this as Element)
+        })
       else {
         const excludes =
           typeof selector == 'string'
             ? this.filter(selector)
             : likeArray(selector) && isFunction((selector as any).item)
               ? slice.call(selector)
-              : $(selector);
+              : $(selector)
         this.forEach(function (el: Element) {
-          if (excludes.indexOf(el) < 0) nodes.push(el);
-        });
+          if (excludes.indexOf(el) < 0) nodes.push(el)
+        })
       }
-      return $(nodes);
+      return $(nodes)
     },
     /**
      * Filters elements to those that contain a descendant matching the
@@ -1010,8 +995,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.filter(function (this: HTMLElement) {
         return isObject(selector)
           ? $.contains(this, selector as Node)
-          : $(this).find(selector as string).length > 0;
-      });
+          : $(this).find(selector as string).length > 0
+      })
     },
     /**
      * Returns the element at the given index as a Mepto collection.
@@ -1021,15 +1006,15 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns A new Mepto collection containing the single element.
      */
     eq: function (idx: number) {
-      return idx === -1 ? this.slice(idx) : this.slice(idx, +idx + 1);
+      return idx === -1 ? this.slice(idx) : this.slice(idx, +idx + 1)
     },
     first: function () {
-      const el = this[0];
-      return el && !isObject(el) ? el : $(el);
+      const el = this[0]
+      return el && !isObject(el) ? el : $(el)
     },
     last: function () {
-      const el = this[this.length - 1];
-      return el && !isObject(el) ? el : $(el);
+      const el = this[this.length - 1]
+      return el && !isObject(el) ? el : $(el)
     },
     /**
      * Finds descendant elements matching the given CSS selector,
@@ -1039,34 +1024,34 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns A new Mepto collection of matched descendants.
      */
     find: function (selector: string | Element | ArrayLike<Element>) {
-      if (!selector) return $();
+      if (!selector) return $()
 
       if (typeof selector == 'object') {
-        const nodes = $(selector);
-        const result: Element[] = [];
-        const parents = this;
+        const nodes = $(selector)
+        const result: Element[] = []
+        const parents = this
         for (let i = 0, nlen = nodes.length; i < nlen; i++) {
           for (let j = 0, plen = parents.length; j < plen; j++) {
             if ($.contains(parents[j], nodes[i])) {
-              result.push(nodes[i]);
-              break;
+              result.push(nodes[i])
+              break
             }
           }
         }
-        return $(result);
+        return $(result)
       }
 
-      if (this.length == 1) return $(mepto.qsa(this[0], selector));
+      if (this.length == 1) return $(mepto.qsa(this[0], selector))
 
       return $(
         uniq(
           flatten(
             $.map(this, function (el: Element) {
-              return mepto.qsa(el, selector as string);
+              return mepto.qsa(el, selector as string)
             })
           )
         )
-      );
+      )
     },
     /**
      * Traverses ancestors of each element, returning the first that matches
@@ -1080,16 +1065,16 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       selector: string | Element | ArrayLike<Element>,
       context?: Element | Document
     ) {
-      const nodes: Element[] = [];
-      const collection = typeof selector == 'object' && $(selector);
-      const matchers: Set<Element> | null = collection ? new Set() : null;
-      const seen = new Set<Element>();
+      const nodes: Element[] = []
+      const collection = typeof selector == 'object' && $(selector)
+      const matchers: Set<Element> | null = collection ? new Set() : null
+      const seen = new Set<Element>()
 
       if (matchers && collection)
-        for (let i = 0, len = collection.length; i < len; i++) matchers.add(collection[i]);
+        for (let i = 0, len = collection.length; i < len; i++) matchers.add(collection[i])
 
       for (let i = 0, len = this.length; i < len; i++) {
-        let node: Node | null = this[i];
+        let node: Node | null = this[i]
         while (node) {
           if (
             matchers
@@ -1097,83 +1082,83 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
               : mepto.matches(node as Element, selector as string)
           ) {
             if (!seen.has(node as Element)) {
-              seen.add(node as Element);
-              nodes.push(node as Element);
+              seen.add(node as Element)
+              nodes.push(node as Element)
             }
-            break;
+            break
           }
-          if (node === context || isDocument(node)) break;
-          node = node.parentNode;
+          if (node === context || isDocument(node)) break
+          node = node.parentNode
         }
       }
 
-      return $(nodes);
+      return $(nodes)
     },
     parents: function (selector?: string) {
-      const ancestors: Element[] = [];
-      let nodes: ArrayLike<Element> = this;
+      const ancestors: Element[] = []
+      let nodes: ArrayLike<Element> = this
       while (nodes.length > 0)
         nodes = $.map(nodes, function (node: any) {
-          node = node.parentNode;
+          node = node.parentNode
           if (node && !isDocument(node) && ancestors.indexOf(node) < 0) {
-            ancestors.push(node);
-            return node;
+            ancestors.push(node)
+            return node
           }
-        });
-      return filtered(ancestors, selector);
+        })
+      return filtered(ancestors, selector)
     },
     parent: function (selector?: string) {
-      const parents: Element[] = [];
-      const seen = new Set<Node>();
+      const parents: Element[] = []
+      const seen = new Set<Node>()
       for (let i = 0, len = this.length; i < len; i++) {
-        const parent = this[i].parentNode;
+        const parent = this[i].parentNode
         if (parent && !seen.has(parent)) {
-          seen.add(parent);
-          parents.push(parent as Element);
+          seen.add(parent)
+          parents.push(parent as Element)
         }
       }
-      return filtered(parents, selector);
+      return filtered(parents, selector)
     },
     children: function (selector?: string) {
       return filtered(
         this.map(function () {
-          return children(this);
+          return children(this)
         }),
         selector
-      );
+      )
     },
     contents: function () {
       return this.map(function () {
-        return this.contentDocument || slice.call(this.childNodes);
-      });
+        return this.contentDocument || slice.call(this.childNodes)
+      })
     },
     siblings: function (selector?: string) {
       return filtered(
         this.map(function (i: number, el: Element) {
           return filter.call(children(el.parentNode!), function (child: Element) {
-            return child !== el;
-          });
+            return child !== el
+          })
         }),
         selector
-      );
+      )
     },
     empty: function () {
       return this.each(function () {
-        this.innerHTML = '';
-      });
+        this.innerHTML = ''
+      })
     },
     // `pluck` is borrowed from Prototype.js
     pluck: function (property: string) {
       return $.map(this, function (el: any) {
-        return el[property];
-      });
+        return el[property]
+      })
     },
     show: function () {
       return this.each(function () {
-        this.style.display == 'none' && (this.style.display = '');
+        this.style.display == 'none' && (this.style.display = '')
         if (getComputedStyle(this, '').getPropertyValue('display') == 'none')
-          this.style.display = defaultDisplay(this.nodeName);
-      });
+          this.style.display = defaultDisplay(this.nodeName)
+      })
     },
     /**
      * Replaces each element in the collection with `newContent`.
@@ -1182,7 +1167,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns The original (now detached) collection.
      */
     replaceWith: function (newContent: any) {
-      return this.before(newContent).remove();
+      return this.before(newContent).remove()
     },
     /**
      * Wraps `structure` around each element in the collection.
@@ -1193,13 +1178,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns The original collection for chaining.
      */
     wrap: function (structure: string | Element | ((index: number) => string | Element)) {
-      const isCallable = isFunction(structure);
-      let wrapperElement: Element | undefined;
-      let shouldClone = false;
+      const isCallable = isFunction(structure)
+      let wrapperElement: Element | undefined
+      let shouldClone = false
 
       if (this[0] && !isCallable) {
-        wrapperElement = $(structure).get(0);
-        shouldClone = !!wrapperElement && (!!wrapperElement.parentNode || this.length > 1);
+        wrapperElement = $(structure).get(0)
+        shouldClone = !!wrapperElement && (!!wrapperElement.parentNode || this.length > 1)
       }
 
       return this.each(function (index) {
@@ -1207,9 +1192,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
           ? (structure as Function).call(this, index)
           : shouldClone
             ? wrapperElement!.cloneNode(true)
-            : wrapperElement;
-        $(this).wrapAll(wrapper);
-      });
+            : wrapperElement
+        $(this).wrapAll(wrapper)
+      })
     },
     /**
      * Wraps `structure` around the entire collection as a single group,
@@ -1219,20 +1204,20 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns The original collection for chaining.
      */
     wrapAll: function (structure: string | Element | ArrayLike<Element>) {
-      if (!this[0]) return this;
+      if (!this[0]) return this
 
-      const wrapper = $(structure);
-      $(this[0]).before(wrapper);
+      const wrapper = $(structure)
+      $(this[0]).before(wrapper)
 
-      let innermost = wrapper;
-      let kids = innermost.children();
+      let innermost = wrapper
+      let kids = innermost.children()
       while (kids.length) {
-        innermost = kids.first();
-        kids = innermost.children();
+        innermost = kids.first()
+        kids = innermost.children()
       }
 
-      $(innermost).append(this);
-      return this;
+      $(innermost).append(this)
+      return this
     },
     /**
      * Wraps the inner contents of each element with `structure`.
@@ -1244,46 +1229,46 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     wrapInner: function (
       structure: string | Element | ((index: number) => string | Element) | null
     ) {
-      if (structure == null) return this;
+      if (structure == null) return this
 
-      const isCallable = isFunction(structure);
+      const isCallable = isFunction(structure)
       return this.each(function (index) {
-        const self = $(this);
-        const contents = self.contents();
-        const wrappingContent = isCallable ? (structure as Function).call(this, index) : structure;
+        const self = $(this)
+        const contents = self.contents()
+        const wrappingContent = isCallable ? (structure as Function).call(this, index) : structure
 
         if (contents.length) {
-          contents.wrapAll(wrappingContent);
+          contents.wrapAll(wrappingContent)
         } else {
-          self.append(wrappingContent);
+          self.append(wrappingContent)
         }
-      });
+      })
     },
     unwrap: function () {
       this.parent().each(function () {
-        $(this).replaceWith($(this).children());
-      });
-      return this;
+        $(this).replaceWith($(this).children())
+      })
+      return this
     },
     clone: function () {
       return this.map(function () {
-        return this.cloneNode(true);
-      });
+        return this.cloneNode(true)
+      })
     },
     hide: function () {
-      return this.css('display', 'none');
+      return this.css('display', 'none')
     },
     toggle: function (setting?: boolean) {
       return this.each(function () {
-        const el = $(this);
-        (setting === undefined ? el.css('display') == 'none' : setting) ? el.show() : el.hide();
-      });
+        const el = $(this)
+        ;(setting === undefined ? el.css('display') == 'none' : setting) ? el.show() : el.hide()
+      })
     },
     prev: function (selector?: string) {
-      return $(this.pluck('previousElementSibling')).filter(selector || '*');
+      return $(this.pluck('previousElementSibling')).filter(selector || '*')
     },
     next: function (selector?: string) {
-      return $(this.pluck('nextElementSibling')).filter(selector || '*');
+      return $(this.pluck('nextElementSibling')).filter(selector || '*')
     },
     /**
      * Gets or sets the `innerHTML` of elements.
@@ -1296,14 +1281,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     html: function (html?: string | ((idx: number, currentHtml: string) => string)) {
       return 0 in arguments
         ? this.each(function (idx) {
-            const originHtml = this.innerHTML;
+            const originHtml = this.innerHTML
             $(this)
               .empty()
-              .append(isFunction(html) ? (html as Function).call(this, idx, originHtml) : html);
+              .append(isFunction(html) ? (html as Function).call(this, idx, originHtml) : html)
           })
         : 0 in this
           ? this[0].innerHTML
-          : null;
+          : null
     },
     /**
      * Gets or sets the `textContent` of elements.
@@ -1320,12 +1305,12 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         ? this.each(function (idx) {
             const newText = isFunction(text)
               ? (text as Function).call(this, idx, this.textContent)
-              : text;
-            this.textContent = newText == null ? '' : '' + newText;
+              : text
+            this.textContent = newText == null ? '' : '' + newText
           })
         : 0 in this
           ? this.pluck('textContent').join('')
-          : null;
+          : null
     },
     /**
      * Gets or sets HTML attributes on elements.
@@ -1345,19 +1330,19 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       // Getter
       if (typeof name == 'string' && arguments.length < 2) {
         if (this.length > 0 && this[0].nodeType === 1) {
-          const result = this[0].getAttribute(name);
-          return result != null ? result : undefined;
+          const result = this[0].getAttribute(name)
+          return result != null ? result : undefined
         }
-        return undefined;
+        return undefined
       }
 
       // Setter
       for (let i = 0, len = this.length; i < len; i++) {
-        const el = this[i];
-        if (el.nodeType !== 1) continue;
+        const el = this[i]
+        if (el.nodeType !== 1) continue
         if (isObject(name)) {
           for (const k in name as Record<string, string | null>)
-            setAttribute(el, k, (name as Record<string, string | null>)[k]);
+            setAttribute(el, k, (name as Record<string, string | null>)[k])
         } else {
           setAttribute(
             el,
@@ -1365,10 +1350,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             isFunction(value)
               ? (value as Function).call(el, i, el.getAttribute(name as string))
               : (value as string | null)
-          );
+          )
         }
       }
-      return this;
+      return this
     },
     /**
      * Removes one or more space-separated attributes from every element.
@@ -1380,9 +1365,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.each(function () {
         this.nodeType === 1 &&
           name.split(' ').forEach(function (attribute) {
-            setAttribute(this as any, attribute);
-          }, this);
-      });
+            setAttribute(this as any, attribute)
+          }, this)
+      })
     },
     /**
      * Gets or sets DOM properties on elements. Normalises property names
@@ -1398,19 +1383,19 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      */
     prop: function (name: string | Record<string, any>, value?: any) {
       const resolvedName: string | Record<string, any> =
-        typeof name === 'string' ? propMap[name] || name : name;
+        typeof name === 'string' ? propMap[name] || name : name
       return typeof resolvedName == 'string' && !(1 in arguments)
         ? this[0] && (this[0] as any)[resolvedName]
         : this.each(function (idx) {
             if (isObject(resolvedName)) {
               for (const k in resolvedName as Record<string, any>)
-                (this as any)[propMap[k] || k] = (resolvedName as Record<string, any>)[k];
+                (this as any)[propMap[k] || k] = (resolvedName as Record<string, any>)[k]
             } else {
-              (this as any)[resolvedName as string] = isFunction(value)
+              ;(this as any)[resolvedName as string] = isFunction(value)
                 ? value.call(this, idx, (this as any)[resolvedName as string])
-                : value;
+                : value
             }
-          });
+          })
     },
     /**
      * Deletes a DOM property from every element. Normalises via `propMap`.
@@ -1419,10 +1404,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns The collection for chaining.
      */
     removeProp: function (name: string) {
-      const resolvedName = propMap[name] || name;
+      const resolvedName = propMap[name] || name
       return this.each(function () {
-        delete (this as any)[resolvedName];
-      });
+        delete (this as any)[resolvedName]
+      })
     },
     /**
      * Reads or writes a `data-*` attribute. The attribute name is
@@ -1434,14 +1419,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns Deserialized value (getter) or the collection (setter).
      */
     data: function (name: string, value?: any) {
-      const attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase();
+      const attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase()
 
       if (arguments.length > 1) {
-        return this.attr(attrName, value);
+        return this.attr(attrName, value)
       }
 
-      const data = this.attr(attrName);
-      return data !== undefined ? deserializeValue(data) : undefined;
+      const data = this.attr(attrName)
+      return data !== undefined ? deserializeValue(data) : undefined
     },
     /**
      * Gets or sets the value of form elements.
@@ -1454,27 +1439,27 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     val: function (value?: string | string[] | ((idx: number, current: string) => string)) {
       // Setter
       if (arguments.length > 0) {
-        const v = value == null ? '' : value;
+        const v = value == null ? '' : value
         for (let i = 0, len = this.length; i < len; i++) {
-          const el = this[i] as any;
-          el.value = isFunction(v) ? (v as Function).call(el, i, el.value) : v;
+          const el = this[i] as any
+          el.value = isFunction(v) ? (v as Function).call(el, i, el.value) : v
         }
-        return this;
+        return this
       }
 
       // Getter
-      const el = this[0] as any;
-      if (!el) return undefined;
+      const el = this[0] as any
+      if (!el) return undefined
 
       if (el.multiple) {
-        const result: string[] = [];
+        const result: string[] = []
         for (let i = 0, len = el.selectedOptions.length; i < len; i++) {
-          result.push(el.selectedOptions[i].value);
+          result.push(el.selectedOptions[i].value)
         }
-        return result;
+        return result
       }
 
-      return el.value;
+      return el.value
     },
     /**
      * Gets or sets the position of the first element relative to the document.
@@ -1491,28 +1476,28 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     ) {
       if (coordinates)
         return this.each(function (index) {
-          const $this = $(this);
+          const $this = $(this)
           const coords = isFunction(coordinates)
             ? (coordinates as Function).call(this, index, $this.offset())
-            : (coordinates as { top: number; left: number });
-          const parentOffset = $this.offsetParent().offset();
+            : (coordinates as { top: number; left: number })
+          const parentOffset = $this.offsetParent().offset()
           const props: Record<string, string | number> = {
             top: coords.top - parentOffset.top,
             left: coords.left - parentOffset.left,
-          };
-          if ($this.css('position') == 'static') props['position'] = 'relative';
-          $this.css(props);
-        });
-      if (!this.length) return null;
+          }
+          if ($this.css('position') == 'static') props['position'] = 'relative'
+          $this.css(props)
+        })
+      if (!this.length) return null
       if (document.documentElement !== this[0] && !$.contains(document.documentElement, this[0]))
-        return { top: 0, left: 0 };
-      const obj = this[0].getBoundingClientRect();
+        return { top: 0, left: 0 }
+      const obj = this[0].getBoundingClientRect()
       return {
         left: obj.left + window.pageXOffset,
         top: obj.top + window.pageYOffset,
         width: Math.round(obj.width),
         height: Math.round(obj.height),
-      };
+      }
     },
     /**
      * Gets or sets CSS properties on elements.
@@ -1530,36 +1515,36 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       value?: string | number | null
     ) {
       if (arguments.length < 2) {
-        const element = this[0] as HTMLElement | undefined;
+        const element = this[0] as HTMLElement | undefined
         if (typeof property == 'string') {
-          if (!element) return;
+          if (!element) return
           return (
             (element.style as any)[camelize(property as string)] ||
             getComputedStyle(element, '').getPropertyValue(property as string)
-          );
+          )
         } else if (isArray(property)) {
-          if (!element) return;
-          const props: Record<string, string> = {};
-          const computedStyle = getComputedStyle(element, '');
+          if (!element) return
+          const props: Record<string, string> = {}
+          const computedStyle = getComputedStyle(element, '')
           $.each(property as string[], function (_: number, prop: string) {
             props[prop] =
-              (element.style as any)[camelize(prop)] || computedStyle.getPropertyValue(prop);
-          });
-          return props;
+              (element.style as any)[camelize(prop)] || computedStyle.getPropertyValue(prop)
+          })
+          return props
         }
       }
 
-      let css = '';
+      let css = ''
       if (type(property) == 'string') {
         if (!value && value !== 0)
           this.each(function () {
-            (this as HTMLElement).style.removeProperty(dasherize(property as string));
-          });
+            ;(this as HTMLElement).style.removeProperty(dasherize(property as string))
+          })
         else
           css =
             dasherize(property as string) +
             ':' +
-            maybeAddPx(property as string, value as string | number);
+            maybeAddPx(property as string, value as string | number)
       } else {
         for (const key in property as Record<string, any>) {
           if (
@@ -1567,17 +1552,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             (property as Record<string, any>)[key] !== 0
           )
             this.each(function () {
-              (this as HTMLElement).style.removeProperty(dasherize(key));
-            });
+              ;(this as HTMLElement).style.removeProperty(dasherize(key))
+            })
           else
             css +=
-              dasherize(key) + ':' + maybeAddPx(key, (property as Record<string, any>)[key]) + ';';
+              dasherize(key) + ':' + maybeAddPx(key, (property as Record<string, any>)[key]) + ';'
         }
       }
 
       return this.each(function () {
-        (this as HTMLElement).style.cssText += ';' + css;
-      });
+        ;(this as HTMLElement).style.cssText += ';' + css
+      })
     },
     /**
      * Returns the index of the first element among its siblings,
@@ -1587,7 +1572,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns Zero-based index.
      */
     index: function (element?: string | Element | ArrayLike<Element>): number {
-      return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0]);
+      return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0])
     },
     /**
      * Checks whether any element in the collection has the given CSS class.
@@ -1596,14 +1581,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns `true` if at least one element has the class.
      */
     hasClass: function (name: string): boolean {
-      if (!name) return false;
+      if (!name) return false
       return emptyArray.some.call(
         this,
         function (this: RegExp, el: Element) {
-          return this.test(className(el as any));
+          return this.test(className(el as any))
         },
         classRE(name)
-      );
+      )
     },
     /**
      * Adds one or more CSS classes to every element. Duplicates are skipped.
@@ -1613,19 +1598,19 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns The collection for chaining.
      */
     addClass: function (name: string | ((index: number, currentClass: string) => string)) {
-      if (!name) return this;
+      if (!name) return this
       return this.each(function (idx) {
-        if (!('className' in this)) return;
-        const cls = className(this as any) as string;
+        if (!('className' in this)) return
+        const cls = className(this as any) as string
         const newName = isFunction(name)
           ? (name as Function).call(this, idx, cls)
-          : (name as string);
-        const toAdd: string[] = [];
+          : (name as string)
+        const toAdd: string[] = []
         newName.split(/\s+/g).forEach(function (klass) {
-          if (!classRE(klass).test(cls)) toAdd.push(klass);
-        });
-        if (toAdd.length) className(this as any, cls + (cls ? ' ' : '') + toAdd.join(' '));
-      });
+          if (!classRE(klass).test(cls)) toAdd.push(klass)
+        })
+        if (toAdd.length) className(this as any, cls + (cls ? ' ' : '') + toAdd.join(' '))
+      })
     },
     /**
      * Removes one or more CSS classes from every element.
@@ -1637,17 +1622,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      */
     removeClass: function (name?: string | ((index: number, currentClass: string) => string)) {
       return this.each(function (idx) {
-        if (!('className' in this)) return;
-        if (name === undefined) return className(this as any, '');
-        let cls = className(this as any) as string;
+        if (!('className' in this)) return
+        if (name === undefined) return className(this as any, '')
+        let cls = className(this as any) as string
         const resolved = isFunction(name)
           ? (name as Function).call(this, idx, cls)
-          : (name as string);
+          : (name as string)
         resolved.split(/\s+/g).forEach(function (klass) {
-          cls = cls.replace(classRE(klass), ' ');
-        });
-        className(this as any, cls.trim());
-      });
+          cls = cls.replace(classRE(klass), ' ')
+        })
+        className(this as any, cls.trim())
+      })
     },
     /**
      * Toggles one or more CSS classes on every element.
@@ -1662,18 +1647,18 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       name: string | ((index: number, currentClass: string) => string),
       when?: boolean
     ) {
-      if (!name) return this;
+      if (!name) return this
       return this.each(function (idx) {
-        const $this = $(this);
+        const $this = $(this)
         const names = isFunction(name)
           ? (name as Function).call(this, idx, className(this as any))
-          : (name as string);
+          : (name as string)
         names.split(/\s+/g).forEach(function (klass) {
-          (when === undefined ? !$this.hasClass(klass) : when)
+          ;(when === undefined ? !$this.hasClass(klass) : when)
             ? $this.addClass(klass)
-            : $this.removeClass(klass);
-        });
-      });
+            : $this.removeClass(klass)
+        })
+      })
     },
     /**
      * Gets or sets the vertical scroll position of the first element.
@@ -1682,19 +1667,19 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns Current scroll position (getter) or the collection (setter).
      */
     scrollTop: function (value?: number) {
-      if (!this.length) return;
-      const hasScrollTop = 'scrollTop' in this[0];
+      if (!this.length) return
+      const hasScrollTop = 'scrollTop' in this[0]
       if (value === undefined)
-        return hasScrollTop ? (this[0] as any).scrollTop : (this[0] as any).pageYOffset;
+        return hasScrollTop ? (this[0] as any).scrollTop : (this[0] as any).pageYOffset
       return this.each(
         hasScrollTop
           ? function () {
-              (this as any).scrollTop = value;
+              ;(this as any).scrollTop = value
             }
           : function () {
-              (this as any).scrollTo((this as any).scrollX, value);
+              ;(this as any).scrollTo((this as any).scrollX, value)
             }
-      );
+      )
     },
     /**
      * Gets or sets the horizontal scroll position of the first element.
@@ -1703,57 +1688,57 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @returns Current scroll position (getter) or the collection (setter).
      */
     scrollLeft: function (value?: number) {
-      if (!this.length) return;
-      const hasScrollLeft = 'scrollLeft' in this[0];
+      if (!this.length) return
+      const hasScrollLeft = 'scrollLeft' in this[0]
       if (value === undefined)
-        return hasScrollLeft ? (this[0] as any).scrollLeft : (this[0] as any).pageXOffset;
+        return hasScrollLeft ? (this[0] as any).scrollLeft : (this[0] as any).pageXOffset
       return this.each(
         hasScrollLeft
           ? function () {
-              (this as any).scrollLeft = value;
+              ;(this as any).scrollLeft = value
             }
           : function () {
-              (this as any).scrollTo(value, (this as any).scrollY);
+              ;(this as any).scrollTo(value, (this as any).scrollY)
             }
-      );
+      )
     },
     position: function () {
-      if (!this.length) return;
+      if (!this.length) return
 
-      const elem = this[0];
-      const offsetParent = this.offsetParent();
-      const offset = this.offset();
+      const elem = this[0]
+      const offsetParent = this.offsetParent()
+      const offset = this.offset()
       const parentOffset = rootNodeRE.test(offsetParent[0].nodeName)
         ? { top: 0, left: 0 }
-        : offsetParent.offset();
+        : offsetParent.offset()
 
       // Subtract element margins
       // note: when an element has margin: auto the offsetLeft and marginLeft
       // are the same in Safari causing offset.left to incorrectly be 0
-      offset.top -= parseFloat($(elem).css('margin-top')) || 0;
-      offset.left -= parseFloat($(elem).css('margin-left')) || 0;
+      offset.top -= parseFloat($(elem).css('margin-top')) || 0
+      offset.left -= parseFloat($(elem).css('margin-left')) || 0
 
       // Add offsetParent borders
-      parentOffset.top += parseFloat($(offsetParent[0]).css('border-top-width')) || 0;
-      parentOffset.left += parseFloat($(offsetParent[0]).css('border-left-width')) || 0;
+      parentOffset.top += parseFloat($(offsetParent[0]).css('border-top-width')) || 0
+      parentOffset.left += parseFloat($(offsetParent[0]).css('border-left-width')) || 0
 
       return {
         top: offset.top - parentOffset.top,
         left: offset.left - parentOffset.left,
-      };
+      }
     },
     offsetParent: function () {
       return this.map(function () {
-        let parent = this.offsetParent || document.body;
+        let parent = this.offsetParent || document.body
         while (parent && !rootNodeRE.test(parent.nodeName) && $(parent).css('position') == 'static')
-          parent = parent.offsetParent;
-        return parent;
-      });
+          parent = parent.offsetParent
+        return parent
+      })
     },
-  };
+  }
 
   // for now
-  $.fn.detach = $.fn.remove;
+  $.fn.detach = $.fn.remove
 
   /**
    * Provides a `classList`-compatible API on Mepto collections, mirroring
@@ -1773,92 +1758,92 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   Object.defineProperty($.fn, 'classList', {
     get: function () {
-      const collection = this;
+      const collection = this
       return {
         add: function (...tokens: string[]) {
           return collection.each(function () {
-            this.classList.add(...tokens);
-          });
+            this.classList.add(...tokens)
+          })
         },
         remove: function (...tokens: string[]) {
           return collection.each(function () {
-            this.classList.remove(...tokens);
-          });
+            this.classList.remove(...tokens)
+          })
         },
         toggle: function (token: string, force?: boolean) {
           return collection.each(function () {
-            this.classList.toggle(token, force);
-          });
+            this.classList.toggle(token, force)
+          })
         },
         contains: function (token: string): boolean {
-          return collection.length > 0 && collection[0].classList.contains(token);
+          return collection.length > 0 && collection[0].classList.contains(token)
         },
         replace: function (oldToken: string, newToken: string) {
           return collection.each(function () {
-            this.classList.replace(oldToken, newToken);
-          });
+            this.classList.replace(oldToken, newToken)
+          })
         },
         entries: function () {
           return collection.length > 0
             ? collection[0].classList.entries()
-            : ([] as string[])[Symbol.iterator]();
+            : ([] as string[])[Symbol.iterator]()
         },
         forEach: function (callback: (value: string, key: number, list: DOMTokenList) => void) {
-          if (collection.length > 0) collection[0].classList.forEach(callback);
+          if (collection.length > 0) collection[0].classList.forEach(callback)
         },
         item: function (index: number): string | null {
-          return collection.length > 0 ? collection[0].classList.item(index) : null;
+          return collection.length > 0 ? collection[0].classList.item(index) : null
         },
         keys: function () {
           return collection.length > 0
             ? collection[0].classList.keys()
-            : ([] as string[])[Symbol.iterator]();
+            : ([] as string[])[Symbol.iterator]()
         },
         values: function () {
           return collection.length > 0
             ? collection[0].classList.values()
-            : ([] as string[])[Symbol.iterator]();
+            : ([] as string[])[Symbol.iterator]()
         },
         toString: function (): string {
-          return collection.length > 0 ? collection[0].classList.toString() : '';
+          return collection.length > 0 ? collection[0].classList.toString() : ''
         },
         get length(): number {
-          return collection.length > 0 ? collection[0].classList.length : 0;
+          return collection.length > 0 ? collection[0].classList.length : 0
         },
         get value(): string {
-          return collection.length > 0 ? collection[0].classList.value : '';
+          return collection.length > 0 ? collection[0].classList.value : ''
         },
         set value(val: string) {
           collection.each(function () {
-            this.classList.value = val;
-          });
+            this.classList.value = val
+          })
         },
-      };
+      }
     },
-  });
+  })
 
   // Generate the `width` and `height` functions
-  ['width', 'height'].forEach(function (dimension) {
+  ;['width', 'height'].forEach(function (dimension) {
     const dimensionProperty = dimension.replace(/./, function (m) {
-      return m[0].toUpperCase();
-    });
+      return m[0].toUpperCase()
+    })
 
     $.fn[dimension] = function (value) {
       let offset,
-        el = this[0];
+        el = this[0]
       if (value === undefined)
         return isWindow(el)
           ? el['inner' + dimensionProperty]
           : isDocument(el)
             ? el.documentElement['scroll' + dimensionProperty]
-            : (offset = this.offset()) && offset[dimension];
+            : (offset = this.offset()) && offset[dimension]
       else
         return this.each(function (idx) {
-          el = $(this);
-          el.css(dimension, isFunction(value) ? value.call(this, idx, el[dimension]()) : value);
-        });
-    };
-  });
+          el = $(this)
+          el.css(dimension, isFunction(value) ? value.call(this, idx, el[dimension]()) : value)
+        })
+    }
+  })
 
   /**
    * Recursively visits `node` and all its descendants, calling
@@ -1869,41 +1854,41 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param callback - Function called for each node in the subtree.
    */
   function traverseNode(node: Node, callback: (node: any) => void): void {
-    if (!node) return;
-    callback(node);
-    const children = node.childNodes;
+    if (!node) return
+    callback(node)
+    const children = node.childNodes
     for (let i = 0, len = children.length; i < len; i++) {
-      traverseNode(children[i], callback);
+      traverseNode(children[i], callback)
     }
   }
 
   // Generate the `after`, `prepend`, `before`, `append`,
   // `insertAfter`, `insertBefore`, `appendTo`, and `prependTo` methods.
   adjacencyOperators.forEach(function (operator, operatorIndex) {
-    const inside = operatorIndex % 2;
+    const inside = operatorIndex % 2
 
     $.fn[operator] = function () {
       // arguments can be nodes, arrays of nodes, mepto objects and HTML strings
       let argType,
         nodes = $.map(arguments, function (arg) {
-          let arr = [];
-          argType = type(arg);
+          let arr = []
+          argType = type(arg)
           if (argType == 'array') {
             arg.forEach(function (el) {
-              if (el.nodeType !== undefined) return arr.push(el);
-              else if ($.mepto.isZ(el)) return (arr = arr.concat(el.get()));
-              arr = arr.concat(mepto.fragment(el));
-            });
-            return arr;
+              if (el.nodeType !== undefined) return arr.push(el)
+              else if ($.mepto.isZ(el)) return (arr = arr.concat(el.get()))
+              arr = arr.concat(mepto.fragment(el))
+            })
+            return arr
           }
-          return argType == 'object' || arg == null ? arg : mepto.fragment(arg);
+          return argType == 'object' || arg == null ? arg : mepto.fragment(arg)
         }),
         parent,
-        copyByClone = this.length > 1;
-      if (nodes.length < 1) return this;
+        copyByClone = this.length > 1
+      if (nodes.length < 1) return this
 
       return this.each(function (_, target) {
-        parent = inside ? target : target.parentNode;
+        parent = inside ? target : target.parentNode
 
         // convert all methods to a "before" operation
         target =
@@ -1913,15 +1898,15 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
               ? target.firstChild
               : operatorIndex == 2
                 ? target
-                : null;
+                : null
 
-        const parentInDocument = $.contains(document.documentElement, parent);
+        const parentInDocument = $.contains(document.documentElement, parent)
 
         nodes.forEach(function (node) {
-          if (copyByClone) node = node.cloneNode(true);
-          else if (!parent) return $(node).remove();
+          if (copyByClone) node = node.cloneNode(true)
+          else if (!parent) return $(node).remove()
 
-          parent.insertBefore(node, target);
+          parent.insertBefore(node, target)
           if (parentInDocument)
             traverseNode(node, function (el) {
               if (
@@ -1930,13 +1915,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
                 (!el.type || el.type === 'text/javascript') &&
                 !el.src
               ) {
-                const target = el.ownerDocument ? el.ownerDocument.defaultView : window;
-                target['eval'].call(target, el.innerHTML);
+                const target = el.ownerDocument ? el.ownerDocument.defaultView : window
+                target['eval'].call(target, el.innerHTML)
               }
-            });
-        });
-      });
-    };
+            })
+        })
+      })
+    }
 
     // after    => insertAfter
     // prepend  => prependTo
@@ -1945,21 +1930,21 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     $.fn[inside ? operator + 'To' : 'insert' + (operatorIndex ? 'Before' : 'After')] = function (
       html
     ) {
-      $(html)[operator](this);
-      return this;
-    };
-  });
+      $(html)[operator](this)
+      return this
+    }
+  })
 
-  mepto.Z.prototype = Z.prototype = $.fn;
+  mepto.Z.prototype = Z.prototype = $.fn
 
   // Export internal API functions in the `$.mepto` namespace
-  mepto.uniq = uniq;
-  mepto.deserializeValue = deserializeValue;
-  $.mepto = mepto;
+  mepto.uniq = uniq
+  mepto.deserializeValue = deserializeValue
+  $.mepto = mepto
 
-  return $;
-})();
+  return $
+})()
 
 // If `$` is not yet defined, point it to `mepto`
-window.mepto = mepto;
-window.$ === undefined && (window.$ = mepto);
+window.mepto = mepto
+window.$ === undefined && (window.$ = mepto)
