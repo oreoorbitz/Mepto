@@ -42,7 +42,7 @@
 
     // Code style
     "eqeqeq": ["error", "always", { "null": "ignore" }],
-    "curly": ["error", "multi-line"],
+    "curly": "off",
     "no-throw-literal": "error"
   },
   "overrides": [
