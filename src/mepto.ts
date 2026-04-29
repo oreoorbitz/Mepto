@@ -1256,12 +1256,12 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       })
     },
     // `pluck` is borrowed from Prototype.js
-    pluck: function (property: string) {
+    pluck(property: string) {
       return $.map(this, function (el: any) {
         return el[property]
       })
     },
-    show: function () {
+    show() {
       return this.each(function () {
         this.style.display == 'none' && (this.style.display = '')
         if (getComputedStyle(this, '').getPropertyValue('display') == 'none')
@@ -1274,7 +1274,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param newContent - HTML string, element, or Mepto collection to insert.
      * @returns The original (now detached) collection.
      */
-    replaceWith: function (newContent: any) {
+    replaceWith(newContent: any) {
       return this.before(newContent).remove()
     },
     /**
@@ -1285,7 +1285,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param structure - Wrapper element, HTML string, or function.
      * @returns The original collection for chaining.
      */
-    wrap: function (structure: string | Element | ((index: number) => string | Element)) {
+    wrap(structure: string | Element | ((index: number) => string | Element)) {
       const isCallable = isFunction(structure)
       let wrapperElement: Element | undefined
       let shouldClone = false
@@ -1311,7 +1311,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param structure - Wrapper element, HTML string, or Mepto collection.
      * @returns The original collection for chaining.
      */
-    wrapAll: function (structure: string | Element | ArrayLike<Element>) {
+    wrapAll(structure: string | Element | ArrayLike<Element>) {
       if (!this[0]) return this
 
       const wrapper = $(structure)
@@ -1334,7 +1334,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param structure - Wrapper element, HTML string, or function returning one.
      * @returns The original collection for chaining.
      */
-    wrapInner: function (
+    wrapInner(
       structure: string | Element | ((index: number) => string | Element) | null
     ) {
       if (structure == null) return this
@@ -1406,7 +1406,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param text - Text string, number, or function returning text.
      * @returns Text string (getter) or the collection (setter).
      */
-    text: function (
+    text(
       text?: string | number | null | ((idx: number, current: string | null) => string | null)
     ) {
       return 0 in arguments
@@ -1431,7 +1431,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Attribute value, function, or `null` to remove.
      * @returns Attribute value (getter) or the collection (setter).
      */
-    attr: function (
+    attr(
       name: string | Record<string, string | null | undefined>,
       value?: string | null | ((i: number, old: string | null) => string | null)
     ) {
@@ -1469,7 +1469,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Space-separated attribute names to remove.
      * @returns The collection for chaining.
      */
-    removeAttr: function (name: string) {
+    removeAttr(name: string) {
       return this.each(function () {
         this.nodeType === 1 &&
           name.split(' ').forEach(function (attribute) {
@@ -1489,7 +1489,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Property value or function receiving `(index, oldValue)`.
      * @returns Property value (getter) or the collection (setter).
      */
-    prop: function (name: string | Record<string, any>, value?: any) {
+    prop(name: string | Record<string, any>, value?: any) {
       const resolvedName: string | Record<string, any> =
         typeof name === 'string' ? propMap[name] || name : name
       return typeof resolvedName == 'string' && !(1 in arguments)
@@ -1511,7 +1511,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Property name to delete.
      * @returns The collection for chaining.
      */
-    removeProp: function (name: string) {
+    removeProp(name: string) {
       const resolvedName = propMap[name] || name
       return this.each(function () {
         delete (this as any)[resolvedName]
@@ -1526,7 +1526,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Value to set (omitted for getter).
      * @returns Deserialized value (getter) or the collection (setter).
      */
-    data: function (name: string, value?: any) {
+    data(name: string, value?: any) {
       const attrName = 'data-' + name.replace(capitalRE, '-$1').toLowerCase()
 
       if (arguments.length > 1) {
@@ -1544,7 +1544,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Value string, array, or function.
      * @returns Value (getter) or the collection (setter).
      */
-    val: function (value?: string | string[] | ((idx: number, current: string) => string)) {
+    val(value?: string | string[] | ((idx: number, current: string) => string)) {
       // Setter
       if (arguments.length > 0) {
         const v = value == null ? '' : value
@@ -1577,7 +1577,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param coordinates - `{ top, left }` object or function returning one.
      * @returns Object with `top`, `left`, `width`, `height` (getter) or the collection (setter).
      */
-    offset: function (
+    offset(
       coordinates?:
         | { top: number; left: number }
         | ((index: number, current: { top: number; left: number }) => { top: number; left: number })
@@ -1618,7 +1618,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value    - CSS value, or omitted/`null` to remove the property.
      * @returns CSS value (getter) or the collection (setter).
      */
-    css: function (
+    css(
       property: string | string[] | Record<string, string | number | null | undefined>,
       value?: string | number | null
     ) {
@@ -1679,7 +1679,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param element - Optional selector or element to locate.
      * @returns Zero-based index.
      */
-    index: function (element?: string | Element | ArrayLike<Element>): number {
+    index(element?: string | Element | ArrayLike<Element>): number {
       return element ? this.indexOf($(element)[0]) : this.parent().children().indexOf(this[0])
     },
     /**
@@ -1688,7 +1688,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - CSS class name to check for.
      * @returns `true` if at least one element has the class.
      */
-    hasClass: function (name: string): boolean {
+    hasClass(name: string): boolean {
       if (!name) return false
       return emptyArray.some.call(
         this,
@@ -1705,7 +1705,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Space-separated class names, or function returning them.
      * @returns The collection for chaining.
      */
-    addClass: function (name: string | ((index: number, currentClass: string) => string)) {
+    addClass(name: string | ((index: number, currentClass: string) => string)) {
       if (!name) return this
       return this.each(function (idx) {
         if (!('className' in this)) return
@@ -1728,7 +1728,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Space-separated class names, or function returning them.
      * @returns The collection for chaining.
      */
-    removeClass: function (name?: string | ((index: number, currentClass: string) => string)) {
+    removeClass(name?: string | ((index: number, currentClass: string) => string)) {
       return this.each(function (idx) {
         if (!('className' in this)) return
         if (name === undefined) return className(this as any, '')
@@ -1751,7 +1751,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param when - `true` to add, `false` to remove; omit to toggle.
      * @returns The collection for chaining.
      */
-    toggleClass: function (
+    toggleClass(
       name: string | ((index: number, currentClass: string) => string),
       when?: boolean
     ) {
@@ -1774,7 +1774,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Scroll position in pixels (omit to get).
      * @returns Current scroll position (getter) or the collection (setter).
      */
-    scrollTop: function (value?: number) {
+    scrollTop(value?: number) {
       if (!this.length) return
       const hasScrollTop = 'scrollTop' in this[0]
       if (value === undefined)
@@ -1795,7 +1795,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Scroll position in pixels (omit to get).
      * @returns Current scroll position (getter) or the collection (setter).
      */
-    scrollLeft: function (value?: number) {
+    scrollLeft(value?: number) {
       if (!this.length) return
       const hasScrollLeft = 'scrollLeft' in this[0]
       if (value === undefined)
@@ -1810,7 +1810,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             }
       )
     },
-    position: function () {
+    position() {
       if (!this.length) return
 
       const elem = this[0]
@@ -1835,7 +1835,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         left: offset.left - parentOffset.left,
       }
     },
-    offsetParent: function () {
+    offsetParent() {
       return this.map(function () {
         let parent = this.offsetParent || document.body
         while (parent && !rootNodeRE.test(parent.nodeName) && $(parent).css('position') == 'static')
@@ -1865,54 +1865,54 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    *   $('.item').classList.toString()            // → "foo bar baz"
    */
   Object.defineProperty($.fn, 'classList', {
-    get: function () {
+    get() {
       const collection = this
       return {
-        add: function (...tokens: string[]) {
+        add(...tokens: string[]) {
           return collection.each(function () {
             this.classList.add(...tokens)
           })
         },
-        remove: function (...tokens: string[]) {
+        remove(...tokens: string[]) {
           return collection.each(function () {
             this.classList.remove(...tokens)
           })
         },
-        toggle: function (token: string, force?: boolean) {
+        toggle(token: string, force?: boolean) {
           return collection.each(function () {
             this.classList.toggle(token, force)
           })
         },
-        contains: function (token: string): boolean {
+        contains(token: string): boolean {
           return collection.length > 0 && collection[0].classList.contains(token)
         },
-        replace: function (oldToken: string, newToken: string) {
+        replace(oldToken: string, newToken: string) {
           return collection.each(function () {
             this.classList.replace(oldToken, newToken)
           })
         },
-        entries: function () {
+        entries() {
           return collection.length > 0
             ? collection[0].classList.entries()
             : ([] as string[])[Symbol.iterator]()
         },
-        forEach: function (callback: (value: string, key: number, list: DOMTokenList) => void) {
+        forEach(callback: (value: string, key: number, list: DOMTokenList) => void) {
           if (collection.length > 0) collection[0].classList.forEach(callback)
         },
-        item: function (index: number): string | null {
+        item(index: number): string | null {
           return collection.length > 0 ? collection[0].classList.item(index) : null
         },
-        keys: function () {
+        keys() {
           return collection.length > 0
             ? collection[0].classList.keys()
             : ([] as string[])[Symbol.iterator]()
         },
-        values: function () {
+        values() {
           return collection.length > 0
             ? collection[0].classList.values()
             : ([] as string[])[Symbol.iterator]()
         },
-        toString: function (): string {
+        toString(): string {
           return collection.length > 0 ? collection[0].classList.toString() : ''
         },
         get length(): number {
