@@ -542,7 +542,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     }
 
     // Only Element (1), Document (9), and DocumentFragment (11) support query methods
-    const nodeType = (element as Node).nodeType
+    const nodeType = element.nodeType
     if (nodeType !== 1 && nodeType !== 9 && nodeType !== 11) {
       return []
     }
@@ -972,7 +972,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         const element = this[i]
         if (callback.call(element, i, element) === false) break
       }
-      return this as unknown as MeptoCollection
+      return this
     },
     /**
      * Filters the collection by a CSS selector or predicate function.
@@ -1002,7 +1002,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     is(selector: string | { selector: string }): boolean {
       return typeof selector == 'string'
         ? this.length > 0 && mepto.matches(this[0], selector)
-        : !!(selector && this.selector == (selector as { selector: string }).selector)
+        : !!(selector && this.selector == selector.selector)
     },
     /**
      * Returns a new collection excluding elements matched by the selector,
@@ -1054,8 +1054,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     has(selector: string | Node): MeptoCollection {
       return this.filter(function (this: HTMLElement) {
         return isObject(selector)
-          ? $.contains(this, selector as Node)
-          : $(this).find(selector as string).length > 0
+          ? $.contains(this, selector)
+          : $(this).find(selector).length > 0
       }) as unknown as MeptoCollection
     },
     /**
@@ -1106,7 +1106,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return $(
         uniq(
           flatten(
-            $.map(this, (el: Element) => mepto.qsa(el, selector as string))
+            $.map(this, (el: Element) => mepto.qsa(el, selector))
           )
         )
       ) as unknown as MeptoCollection
@@ -1140,7 +1140,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
           if (
             matchers
               ? matchers.has(node as Element)
-              : mepto.matches(node as Element, selector as string)
+              : mepto.matches(node as Element, selector)
           ) {
             if (!seen.has(node as Element)) {
               seen.add(node as Element)
@@ -1190,7 +1190,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         matchers.add(collection[i] as unknown as Element)
       }
 
-      let node: Node | null = firstEl as Node
+      let node: Node | null = firstEl
       while (node) {
         if (matchers.has(node as Element)) {
           return $(node as Element) as unknown as MeptoCollection
@@ -1230,14 +1230,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     children(selector?: string): MeptoCollection {
       return filtered(
         this.map(function () {
-          return children(this as unknown as Node)
+          return children(this)
         }),
         selector
       ) as unknown as MeptoCollection
     },
     contents(): MeptoCollection {
       return this.map(function () {
-        return (this as any).contentDocument || slice.call((this as unknown as Node).childNodes)
+        return (this as any).contentDocument || slice.call(this.childNodes)
       }) as unknown as MeptoCollection
     },
     siblings(selector?: string): MeptoCollection {
@@ -1297,7 +1297,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
 
       return this.each(function (index) {
         const wrapper = isCallable
-          ? (structure as Function).call(this, index)
+          ? structure.call(this, index)
           : shouldClone
             ? wrapperElement!.cloneNode(true)
             : wrapperElement
@@ -1343,7 +1343,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.each(function (index) {
         const self = $(this)
         const contents = self.contents()
-        const wrappingContent = isCallable ? (structure as Function).call(this, index) : structure
+        const wrappingContent = isCallable ? structure.call(this, index) : structure
 
         if (contents.length) {
           contents.wrapAll(wrappingContent)
@@ -1412,7 +1412,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return 0 in arguments
         ? this.each(function (idx) {
             const newText = isFunction(text)
-              ? (text as Function).call(this, idx, this.textContent)
+              ? text.call(this, idx, this.textContent)
               : text
             this.textContent = newText == null ? '' : '' + newText
           })
@@ -1454,10 +1454,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         } else {
           setAttribute(
             el,
-            name as string,
+            name,
             isFunction(value)
-              ? (value as Function).call(el, i, el.getAttribute(name as string))
-              : (value as string | null)
+              ? value.call(el, i, el.getAttribute(name))
+              : value
           )
         }
       }
@@ -1473,7 +1473,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.each(function () {
         this.nodeType === 1 &&
           name.split(' ').forEach(function (attribute) {
-            setAttribute(this as any, attribute)
+            setAttribute(this, attribute)
           }, this)
       })
     },
@@ -1496,11 +1496,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         ? this[0] && (this[0] as any)[resolvedName]
         : this.each(function (idx) {
             if (isObject(resolvedName)) {
-              for (const k in resolvedName as Record<string, any>)
-                (this as any)[propMap[k] || k] = (resolvedName as Record<string, any>)[k]
+              for (const k in resolvedName)
+                (this as any)[propMap[k] || k] = resolvedName[k]
             } else {
-              ;(this as any)[resolvedName as string] = isFunction(value)
-                ? value.call(this, idx, (this as any)[resolvedName as string])
+              ;(this as any)[resolvedName] = isFunction(value)
+                ? value.call(this, idx, (this as any)[resolvedName])
                 : value
             }
           })
@@ -1550,7 +1550,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         const v = value == null ? '' : value
         for (let i = 0, len = this.length; i < len; i++) {
           const el = this[i] as any
-          el.value = isFunction(v) ? (v as Function).call(el, i, el.value) : v
+          el.value = isFunction(v) ? v.call(el, i, el.value) : v
         }
         return this
       }
@@ -1586,8 +1586,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         return this.each(function (index) {
           const $this = $(this)
           const coords = isFunction(coordinates)
-            ? (coordinates as Function).call(this, index, $this.offset())
-            : (coordinates as { top: number; left: number })
+            ? coordinates.call(this, index, $this.offset())
+            : coordinates
           const parentOffset = $this.offsetParent().offset()
           const props: Record<string, string | number> = {
             top: coords.top - parentOffset.top,
@@ -1711,8 +1711,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         if (!('className' in this)) return
         const cls = className(this as any) as string
         const newName = isFunction(name)
-          ? (name as Function).call(this, idx, cls)
-          : (name as string)
+          ? name.call(this, idx, cls)
+          : name
         const toAdd: string[] = []
         newName.split(/\s+/g).forEach((klass) => {
           if (!classRE(klass).test(cls)) toAdd.push(klass)
@@ -1734,8 +1734,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         if (name === undefined) return className(this as any, '')
         let cls = className(this as any) as string
         const resolved = isFunction(name)
-          ? (name as Function).call(this, idx, cls)
-          : (name as string)
+          ? name.call(this, idx, cls)
+          : name
         resolved.split(/\s+/g).forEach((klass) => {
           cls = cls.replace(classRE(klass), ' ')
         })
@@ -1759,8 +1759,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.each(function (idx) {
         const $this = $(this)
         const names = isFunction(name)
-          ? (name as Function).call(this, idx, className(this as any))
-          : (name as string)
+          ? name.call(this, idx, className(this as any))
+          : name
         names.split(/\s+/g).forEach((klass) => {
           ;(when === undefined ? !$this.hasClass(klass) : when)
             ? $this.addClass(klass)
