@@ -380,7 +380,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param selector - The CSS selector string that produced this collection.
    * @returns A new Mepto collection instance.
    */
-  mepto.Z = function (dom: ArrayLike<Element> | null | undefined, selector: string) {
+  mepto.Z = function (dom: ArrayLike<Element> | null | undefined, selector: string): any {
     return new Z(dom, selector)
   }
 
@@ -460,7 +460,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param context  - Optional root element to scope the query.
    * @returns A Mepto collection.
    */
-  $ = function (selector: any, context?: any) {
+  $ = function (selector: any, context?: any): any {
     return mepto.init(selector, context)
   }
 
@@ -851,7 +851,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param callback - Predicate function called with `(item, index)`.
    * @returns A new array of matching elements.
    */
-  $.grep = function (elements, callback) {
+  $.grep = function (elements: ArrayLike<any>, callback: (item: any, index: number) => boolean): any[] {
     return filter.call(elements, callback)
   }
 
@@ -1936,7 +1936,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return m[0].toUpperCase()
     })
 
-    $.fn[dimension] = function (value) {
+    $.fn[dimension] = function (value: any): any { // TO-DO: return type is number | MeptoCollection
       let offset,
         el = this[0]
       if (value === undefined)
@@ -1975,7 +1975,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   adjacencyOperators.forEach(function (operator, operatorIndex) {
     const inside = operatorIndex % 2
 
-    $.fn[operator] = function () {
+    $.fn[operator] = function (): any { // TO-DO: narrow return type (returns this.each() or this)
       // arguments can be nodes, arrays of nodes, mepto objects and HTML strings
       let argType,
         nodes = $.map(arguments, function (arg) {
@@ -2036,8 +2036,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     // before   => insertBefore
     // append   => appendTo
     $.fn[inside ? operator + 'To' : 'insert' + (operatorIndex ? 'Before' : 'After')] = function (
-      html
-    ) {
+      html: any
+    ): any { // TO-DO: narrow return type (returns this)
       $(html)[operator](this)
       return this
     }
