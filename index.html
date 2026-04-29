@@ -296,6 +296,12 @@
     assert('.closest self',           $('#fix-child1').closest('.child')[0] === document.getElementById('fix-child1'));
     assert('.closest ancestor',       $('#fix-deep').closest('#fix-ancestor')[0] === document.getElementById('fix-ancestor'));
     eq('.closest no match',           $('#fix-deep').closest('.nonexistent').length, 0);
+    assert('.singleClosest self',     $('#fix-child1').singleClosest('.child')[0] === document.getElementById('fix-child1'));
+    assert('.singleClosest ancestor', $('#fix-deep').singleClosest('#fix-ancestor')[0] === document.getElementById('fix-ancestor'));
+    eq('.singleClosest no match',     $('#fix-deep').singleClosest('.nonexistent').length, 0);
+    eq('.singleClosest from empty',   $().singleClosest('.anything').length, 0);
+    eq('.singleClosest one result from multi', $('.child').singleClosest('div').length, 1);
+    assert('.singleClosest first only', $('.child').singleClosest('div')[0] === document.getElementById('fix-child1'));
     assert('.parent',                 $('#fix-child1').parent()[0] === document.getElementById('fix-parent'));
     assert('.parent with filter',     $('#fix-child1').parent('.parent-el')[0] === document.getElementById('fix-parent'));
     eq('.parent no filter match',     $('#fix-child1').parent('.nonexistent').length, 0);

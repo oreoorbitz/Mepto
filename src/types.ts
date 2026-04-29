@@ -219,6 +219,7 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   // Traversal
   find(selector: string): MeptoCollection<Element>;
   closest(selector: string, context?: Element): MeptoCollection<Element>;
+  singleClosest(selector: string, context?: Element): MeptoCollection<Element>;
   parents(selector?: string): MeptoCollection<Element>;
   parent(selector?: string): MeptoCollection<Element>;
   children(selector?: string): MeptoCollection<Element>;

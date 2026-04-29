@@ -7,7 +7,7 @@ interface TestResults {
   results: { name: string; pass: boolean }[];
 }
 
-test('228 unit tests pass', async ({ page }) => {
+test('234 unit tests pass', async ({ page }) => {
   await page.goto('/');
 
   // #summary gets class "pass" or "fail" when the suite finishes
@@ -19,5 +19,5 @@ test('228 unit tests pass', async ({ page }) => {
 
   const failures = data.results.filter((r) => !r.pass).map((r) => r.name);
   expect(failures, `Failed tests:\n${failures.join('\n')}`).toHaveLength(0);
-  expect(data.passed).toBe(228);
+  expect(data.passed).toBe(234);
 });
