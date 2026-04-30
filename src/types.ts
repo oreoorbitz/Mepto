@@ -326,7 +326,7 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
 // Static Mepto interface
 export interface MeptoStatic {
   // Core
-  (selector: Selector, context?: Document | Element): MeptoCollection;
+  (selector?: Selector, context?: Document | Element): MeptoCollection;
   fn: MeptoCollection;
 
   // Utilities
@@ -342,9 +342,9 @@ export interface MeptoStatic {
   type(obj: unknown): string;
   isArray(obj: unknown): obj is unknown[];
   isFunction(obj: unknown): obj is (...args: unknown[]) => unknown;
-  isWindow(obj: unknown): boolean;
-  isDocument(obj: unknown): boolean;
-  isObject(obj: unknown): boolean;
+  isWindow(obj: unknown): obj is Window;
+  isDocument(obj: unknown): obj is Document;
+  isObject(obj: unknown): obj is Record<string, unknown>;
   isPlainObject(obj: unknown): obj is PlainObject;
   isEmptyObject(obj: Record<string, unknown>): boolean;
   isNumeric(obj: unknown): boolean;
@@ -463,5 +463,14 @@ export interface MeptoStatic {
 }
 
 export interface Mepto {
- matches: Function
+  matches(element: Element, selector: string): boolean;
+  fragment(html: string, name?: string, properties?: PlainObject | null): ArrayLike<Element>;
+  Z(dom: ArrayLike<Element> | null | undefined, selector: string): MeptoCollection;
+  isZ(object: unknown): boolean;
+  qsa(element: ParentNode, selector: string): Element[];
+  getElementsByClassName(className: string, context?: ParentNode): MeptoCollection;
+  getElementsByTagName(tagName: string, context?: Document | Element): MeptoCollection;
+  getElementById(id: string, context?: ParentNode): MeptoCollection;
+  uniq<T>(array: ArrayLike<T>): T[];
+  deserializeValue(value: string): unknown;
 }
