@@ -8,7 +8,7 @@ interface TestResults {
 }
 
 test('event tests pass', async ({ page }) => {
-  await page.goto('/test/e2e/event-tests.html', { waitUntil: 'domcontentloaded' });
+  await page.goto('/test/e2e/event-tests.html');
 
   // #summary gets class "pass" or "fail" when the suite finishes
   await page.locator('#summary.pass, #summary.fail').waitFor({ timeout: 15000 });
