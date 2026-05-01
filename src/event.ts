@@ -2,7 +2,7 @@
 //     (c) 2010-2016 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type MeptoStatic } from './types'
+import { type MeptoStatic, type MeptoCollection, type MeptoElement } from './types'
 
 declare const mepto: MeptoStatic
 ;(function ($: MeptoStatic) {
@@ -92,29 +92,33 @@ declare const mepto: MeptoStatic
   ): void {
     const id = zid(element as Element & ZidTarget)
     const set = handlers[id] || (handlers[id] = [])
-    events.split(/\s/).forEach(function (event) {
-      if (event == 'ready') return $(document).ready(fn as unknown as () => void)
+    ;(events.match(/\S+/g) || []).forEach((event: string): void => {
+      if (event == 'ready') {
+        $(document).ready(fn as unknown as () => void)
+        return
+      }
       const parsed = parse(event)
       const handler: Handler = {
         e: parsed.e,
         ns: parsed.ns,
-        fn: fn,
+        fn,
         sel: selector,
         del: undefined,
-        proxy: function () {},
+        proxy: (): void => {},
         i: set.length,
       }
       // emulate mouseenter, mouseleave
       let callback = fn
       if (handler.e in hover)
-        callback = function (e: Event) {
-          const related = (e as MouseEvent).relatedTarget
-          if (!related || (related !== this && !$.contains(this as Element, related as Element)))
-            return handler.fn.apply(this, arguments)
+        callback = function (this: Element, ...args: unknown[]) {
+          const e = args[0] as MouseEvent
+          const related = e.relatedTarget
+          if (!related || (related !== this && !$.contains(this, related as Element)))
+            return handler.fn.apply(this, args)
         }
       handler.del = delegator
       const cb = delegator || callback
-      handler.proxy = function (e: Event) {
+      handler.proxy = (e: Event): unknown => {
         e = compatible(e)
         if (
           (
@@ -152,12 +156,7 @@ declare const mepto: MeptoStatic
     const eventNames = (events || '').match(/\S+/g) || ['']
 
     eventNames.forEach(event => {
-      findHandlers(
-        target,
-        event,
-        fnTarget,
-        selector
-      ).forEach(handler => {
+      findHandlers(target, event, fnTarget, selector).forEach(handler => {
         delete handlers[id][handler.i]
         element.removeEventListener(
           realEvent(handler.e),
@@ -349,14 +348,15 @@ declare const mepto: MeptoStatic
     })
   }
   ;($.fn as unknown as Record<string, any>).off = function (
+    this: MeptoCollection,
     event: any,
     selector: any,
     callback: any
-  ) {
+  ): MeptoCollection {
     const $this = this
     if (event && !isString(event)) {
-      $.each(event as Record<string, (...args: unknown[]) => unknown>, function (type, fn) {
-        $this.off(type, selector, fn)
+      $.each(event as Record<string, (...args: unknown[]) => unknown>, (type: string, fn: unknown): void => {
+        $this.off(type, selector as string, fn as (...args: unknown[]) => unknown)
       })
       return $this
     }
@@ -396,15 +396,19 @@ declare const mepto: MeptoStatic
 
   // triggers event handlers on current element just as if an event occurred,
   // doesn't trigger an actual event, doesn't bubble
-  ;($.fn as unknown as Record<string, any>).triggerHandler = function (event: any, args: any) {
-    let e, result
-    this.each(function (_: number, element: Element) {
+  ;($.fn as unknown as Record<string, any>).triggerHandler = function (
+    this: { each: (callback: (index: number, element: Element) => void) => void },
+    event: Event | string,
+    args?: unknown[]
+  ): unknown {
+    let e: Event, result: unknown
+    this.each((_: number, element: Element): void => {
       e = createProxy(isString(event) ? $.Event(event) : (event as Event))
       ;(e as Event & { _args?: unknown[] })._args = args
       ;(e as Event & { target?: EventTarget }).target = element
       $.each(
         findHandlers(element, (event as Event).type || (event as string)),
-        function (_: number, handler: Handler) {
+        (_: number, handler: Handler): boolean | void => {
           result = handler.proxy(e)
           if (
             (
@@ -437,14 +441,17 @@ declare const mepto: MeptoStatic
         return args.length > 0 ? this.bind(event, args[0]) : this.trigger(event)
       }
     })
-  ;($.Event as unknown as (type: any, props?: any) => Event) = function (type: any, props?: any) {
+  ;($.Event as unknown as (type: any, props?: any) => Event) = function (
+    type: any,
+    props?: any
+  ): Event {
     if (!isString(type))
       ((props = type as Record<string, unknown>), (type = (props as Record<string, string>).type))
     const event = document.createEvent(specialEvents[type as string] || 'Events')
     let bubbles = true
     if (props)
       for (const name in props)
-        name == 'bubbles'
+        name === 'bubbles'
           ? (bubbles = !!props[name])
           : ((event as unknown as Record<string, unknown>)[name] = props[name])
     event.initEvent(type as string, bubbles, true)
