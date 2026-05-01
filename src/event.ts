@@ -47,17 +47,21 @@ declare const mepto: MeptoStatic
     fn?: ((...args: unknown[]) => unknown) & ZidTarget,
     selector?: string
   ): Handler[] {
+    const elementHandlers = handlers[zid(element)]
+    if (!elementHandlers || elementHandlers.length === 0) return []
+
     const parsed = parse(event)
     const matcher = parsed.ns ? matcherFor(parsed.ns) : null
-    return (handlers[zid(element)] || []).filter(function (handler) {
-      return (
+    const fnZid = fn ? zid(fn) : null
+
+    return elementHandlers.filter(
+      handler =>
         handler &&
-        (!parsed.e || handler.e == parsed.e) &&
+        (!parsed.e || handler.e === parsed.e) &&
         (!parsed.ns || matcher!.test(handler.ns)) &&
-        (!fn || zid(handler.fn as unknown as ZidTarget) === zid(fn)) &&
-        (!selector || handler.sel == selector)
-      )
-    })
+        (!fn || zid(handler.fn as unknown as ZidTarget) === fnZid) &&
+        (!selector || handler.sel === selector)
+    )
   }
 
   function parse(event: string): { e: string; ns: string } {
@@ -141,21 +145,25 @@ declare const mepto: MeptoStatic
     selector?: string,
     capture?: boolean
   ): void {
-    const id = zid(element as Element & ZidTarget)
-    ;(events || '').split(/\s/).forEach(function (event) {
+    const target = element as Element & ZidTarget
+    const id = zid(target)
+    const fnTarget = fn as ((...args: unknown[]) => unknown) & ZidTarget
+
+    const eventNames = (events || '').match(/\S+/g) || ['']
+
+    eventNames.forEach(event => {
       findHandlers(
-        element as Element & ZidTarget,
+        target,
         event,
-        fn as ((...args: unknown[]) => unknown) & ZidTarget,
+        fnTarget,
         selector
-      ).forEach(function (handler) {
+      ).forEach(handler => {
         delete handlers[id][handler.i]
-        if ('removeEventListener' in element)
-          element.removeEventListener(
-            realEvent(handler.e),
-            handler.proxy,
-            eventCapture(handler, capture)
-          )
+        element.removeEventListener(
+          realEvent(handler.e),
+          handler.proxy,
+          eventCapture(handler, capture)
+        )
       })
     })
   }
@@ -225,12 +233,12 @@ declare const mepto: MeptoStatic
     if (source || !(evt as Event & { isDefaultPrevented?: () => boolean }).isDefaultPrevented) {
       source || (source = event)
 
-      $.each(eventMethods, function (name, predicate) {
+      $.each(eventMethods, (name: string, predicate: string): void => {
         const src = source as unknown as Record<string, (...args: unknown[]) => unknown>
         const sourceMethod = src[name]
-        evt[name] = function () {
-          ;(this as Record<string, () => boolean>)[predicate] = returnTrue
-          return sourceMethod && sourceMethod.apply(source, arguments)
+        evt[name] = function (this: Record<string, () => boolean>, ...args: unknown[]): unknown {
+          this[predicate] = returnTrue
+          return sourceMethod ? sourceMethod.apply(source, args) : undefined
         }
         ;(evt as Record<string, () => boolean>)[predicate] = returnFalse
       })
@@ -367,7 +375,7 @@ declare const mepto: MeptoStatic
       )
     })
   }
-  ;($.fn as unknown as Record<string, any>).trigger = function (event: any, args: any) {
+  ;($.fn as unknown as Record<string, any>).trigger = function (event: any, args: any): void {
     const evt =
       isString(event) || $.isPlainObject(event)
         ? $.Event(event as string)
@@ -376,13 +384,13 @@ declare const mepto: MeptoStatic
     return this.each(function () {
       // handle focus(), blur() by calling them directly
       if (
-        (evt as Event).type in focus &&
-        typeof (this as unknown as Record<string, unknown>)[(evt as Event).type] == 'function'
+        evt.type in focus &&
+        typeof (this as unknown as Record<string, unknown>)[evt.type] === 'function'
       )
-        (this as unknown as Record<string, () => void>)[(evt as Event).type]()
+        (this as unknown as Record<string, () => void>)[evt.type]()
       // items in the collection might not be DOM elements
-      else if ('dispatchEvent' in this) (this as EventTarget).dispatchEvent(evt as Event)
-      else $(this).triggerHandler(evt as Event, args)
+      else if ('dispatchEvent' in this) (this as EventTarget).dispatchEvent(evt)
+      else $(this).triggerHandler(evt, args)
     })
   }
 
@@ -417,13 +425,16 @@ declare const mepto: MeptoStatic
     'change select keydown keypress keyup error'
   )
     .split(' ')
-    .forEach(function (event: string) {
+    .forEach((event: string): void => {
       const $fn = $.fn as unknown as Record<
         string,
         (callback?: (...args: unknown[]) => unknown) => unknown
       >
-      $fn[event] = function (callback) {
-        return 0 in arguments ? this.bind(event, callback) : this.trigger(event)
+      $fn[event] = function (
+        this: { bind: (e: string, cb: unknown) => unknown; trigger: (e: string) => unknown },
+        ...args: [((...args: unknown[]) => unknown)?]
+      ): unknown {
+        return args.length > 0 ? this.bind(event, args[0]) : this.trigger(event)
       }
     })
   ;($.Event as unknown as (type: any, props?: any) => Event) = function (type: any, props?: any) {
