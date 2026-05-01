@@ -1905,8 +1905,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       if (!this.length) return
       const first = this[0] as HTMLElement | Window
       const hasScrollLeft = 'scrollLeft' in first
-      if (value === undefined)
-        return hasScrollLeft ? (first as HTMLElement).scrollLeft : (first as Window).pageXOffset
+      if (value === undefined) return hasScrollLeft ? first.scrollLeft : first.pageXOffset
       return this.each(
         hasScrollLeft
           ? function () {

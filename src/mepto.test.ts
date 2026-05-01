@@ -523,6 +523,195 @@ describe('events', () => {
     d.find('.item').eq(0).trigger('click');
     expect(count).toBe(1);
   });
+
+  it('namespaced .on / .off', () => {
+    const d = $('<div>').appendTo(fixture);
+    let count = 0;
+    d.on('click.foo', () => { count++; });
+    d.trigger('click');
+    expect(count).toBe(1);
+    d.off('click.foo');
+    d.trigger('click');
+    expect(count).toBe(1);
+  });
+
+  it('multiple handlers fire independently', () => {
+    const d = $('<div>').appendTo(fixture);
+    let count = 0;
+    d.on('click', () => { count++; });
+    d.on('click', () => { count++; });
+    d.trigger('click');
+    expect(count).toBe(2);
+    d.off('click');
+    d.trigger('click');
+    expect(count).toBe(2);
+  });
+
+  it('.bind() / .unbind()', () => {
+    const d = $('<div>').appendTo(fixture);
+    let count = 0;
+    d.bind('click', () => { count++; });
+    d.trigger('click');
+    expect(count).toBe(1);
+    d.unbind('click');
+    d.trigger('click');
+    expect(count).toBe(1);
+  });
+
+  it('.delegate() / .undelegate()', () => {
+    const parent = $('<div><span class="item"></span></div>').appendTo(fixture);
+    let count = 0;
+    parent.delegate('.item', 'click', () => { count++; });
+    parent.find('.item').trigger('click');
+    expect(count).toBe(1);
+    parent.undelegate('.item', 'click');
+    parent.find('.item').trigger('click');
+    expect(count).toBe(1);
+  });
+
+  it('.triggerHandler() returns value and does not bubble', () => {
+    const d = $('<div>').appendTo(fixture);
+    const child = $('<span>').appendTo(d);
+    let bubbled = false;
+    d.on('custom', () => { bubbled = true; });
+    child.on('custom', () => { return 'retval'; });
+    const ret = child.triggerHandler('custom');
+    expect(ret).toBe('retval');
+    expect(bubbled).toBe(false);
+  });
+
+  it('.trigger() passes extra arguments', () => {
+    const d = $('<div>').appendTo(fixture);
+    let received: unknown[] | null = null;
+    d.on('custom', (_e: Event, a: unknown, b: unknown) => { received = [a, b]; });
+    d.trigger('custom', ['x', 'y']);
+    expect(received).toEqual(['x', 'y']);
+  });
+
+  it('event map object', () => {
+    const d = $('<div>').appendTo(fixture);
+    let clicks = 0, keys = 0;
+    d.on({ click: () => { clicks++; }, keydown: () => { keys++; } });
+    d.trigger('click');
+    d.trigger('keydown');
+    expect(clicks).toBe(1);
+    expect(keys).toBe(1);
+  });
+
+  it('$.proxy binds context and preset args', () => {
+    const ctx = { val: 42 };
+    function fn(this: { val: number }) { return this.val; }
+    const proxied = $.proxy(fn, ctx);
+    expect(proxied()).toBe(42);
+  });
+
+  it('$.proxy with preset args', () => {
+    function fn(a: number, b: number) { return a + b; }
+    const proxied = $.proxy(fn, null, 5);
+    expect(proxied(3)).toBe(8);
+  });
+
+  it('$.proxy string method', () => {
+    const obj = { val: 10, getVal() { return this.val; } };
+    const proxied = $.proxy(obj, 'getVal');
+    expect(proxied()).toBe(10);
+  });
+
+  it('$.proxy throws on non-function', () => {
+    expect(() => $.proxy(null as unknown as () => void, {})).toThrow();
+  });
+
+  it('$.Event creates event with type and properties', () => {
+    const e = $.Event('click');
+    expect(e instanceof Event).toBe(true);
+    expect(e.type).toBe('click');
+    expect(e.bubbles).toBe(true);
+  });
+
+  it('$.Event with bubbles false', () => {
+    const e = $.Event('custom', { bubbles: false });
+    expect(e.bubbles).toBe(false);
+  });
+
+  it('$.Event with custom property', () => {
+    const e = $.Event('custom', { detail: 42 } as Record<string, unknown>);
+    expect((e as Event & { detail: number }).detail).toBe(42);
+  });
+
+  it('preventDefault + isDefaultPrevented', () => {
+    const d = $('<div>').appendTo(fixture);
+    let prevented = false;
+    d.on('click', (e: Event) => { e.preventDefault(); prevented = (e as Event & { isDefaultPrevented(): boolean }).isDefaultPrevented(); });
+    d.trigger('click');
+    expect(prevented).toBe(true);
+  });
+
+  it('stopPropagation + isPropagationStopped', () => {
+    const d = $('<div>').appendTo(fixture);
+    let stopped = false;
+    d.on('click', (e: Event) => { e.stopPropagation(); stopped = (e as Event & { isPropagationStopped(): boolean }).isPropagationStopped(); });
+    d.trigger('click');
+    expect(stopped).toBe(true);
+  });
+
+  it('stopImmediatePropagation + isImmediatePropagationStopped', () => {
+    const d = $('<div>').appendTo(fixture);
+    let stopped = false;
+    d.on('click', (e: Event) => { e.stopImmediatePropagation(); stopped = (e as Event & { isImmediatePropagationStopped(): boolean }).isImmediatePropagationStopped(); });
+    d.trigger('click');
+    expect(stopped).toBe(true);
+  });
+
+  it('stopImmediatePropagation prevents other handlers', () => {
+    const d = $('<div>').appendTo(fixture);
+    let count = 0;
+    d.on('click', (e: Event) => { e.stopImmediatePropagation(); count++; });
+    d.on('click', () => { count++; });
+    d.trigger('click');
+    expect(count).toBe(1);
+  });
+
+  it('handler returning false prevents default and stops propagation', () => {
+    const d = $('<div>').appendTo(fixture);
+    let prevented = false, stopped = false;
+    d.on('click', () => { return false; });
+    d.on('click', (e: Event) => {
+      prevented = (e as Event & { isDefaultPrevented(): boolean }).isDefaultPrevented();
+      stopped = (e as Event & { isPropagationStopped(): boolean }).isPropagationStopped();
+    });
+    d.trigger('click');
+    expect(prevented).toBe(true);
+    expect(stopped).toBe(true);
+  });
+
+  it('mouseenter / mouseleave emulation', () => {
+    const d = $('<div>').appendTo(fixture);
+    let fired = false;
+    d.on('mouseenter', () => { fired = true; });
+    d.trigger('mouseover');
+    expect(fired).toBe(true);
+  });
+
+  it('shortcut .click() binds and triggers', () => {
+    const d = $('<div>').appendTo(fixture);
+    let fired = false;
+    d.click(() => { fired = true; });
+    d.click();
+    expect(fired).toBe(true);
+  });
+
+  it('shortcut .dblclick() binds and triggers', () => {
+    const d = $('<div>').appendTo(fixture);
+    let fired = false;
+    d.dblclick(() => { fired = true; });
+    d.dblclick();
+    expect(fired).toBe(true);
+  });
+
+  it('$.event.add and $.event.remove exist', () => {
+    expect(typeof $.event.add).toBe('function');
+    expect(typeof $.event.remove).toBe('function');
+  });
 });
 
 // ─── Forms ───────────────────────────────────────────────────────────────────

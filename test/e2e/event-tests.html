@@ -629,6 +629,45 @@
       assert('$.event.remove exists', typeof $.event.remove === 'function');
     })();
 
+    // ─── Edge cases ─────────────────────────────────────────────────────────
+    section('Edge cases');
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var count = 0;
+      $(parent).one('click', '.item', function() { count++; });
+      $(parent).find('.item').eq(0).trigger('click');
+      $(parent).find('.item').eq(0).trigger('click');
+      eq('.one with delegation fires only once', count, 1);
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).on('custom', function() { fired = true; });
+      var e = $.Event('custom');
+      $(d).trigger(e);
+      assert('.trigger with $.Event instance', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click.foo', function() { count++; });
+      $(d).on('click.bar', function() { count++; });
+      $(d).off('click.foo click.bar');
+      $(d).trigger('click');
+      eq('.off multiple namespaces removes both', count, 0);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var received = null;
+      $(d).on('click', '.nonexistent', {foo: 'bar'}, function(e) { received = e.data; });
+      $(d).trigger('click');
+      eq('delegation data does not fire for non-matching selector', received, null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
     // ─── Summary ────────────────────────────────────────────────────────────
     var summary = document.getElementById('summary');
     var msg = T.passed + ' passed, ' + T.failed + ' failed out of ' + T.total + ' tests';
