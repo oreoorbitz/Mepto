@@ -13,6 +13,7 @@ import {
   BatchCase,
   BatchResult,
   BatchCaseResult,
+  CompareResult,
 } from './runner'
 import { sanitize } from './security/sanitizer'
 
@@ -275,6 +276,43 @@ export class LLMTestHarness {
   }
 
   /**
+   * Run each case against BOTH Mepto and jQuery (each as `$`) and diff.
+   * Shares the single browser+server session across all cases. jQuery is
+   * injected from the harness's bundled copy; throws if not installed.
+   */
+  async runCompare(cases: BatchCase[], options: BatchHarnessOptions = {}): Promise<CompareResult> {
+    const shouldStartServer = options.startServer !== false && options.waitForServer !== false
+
+    try {
+      if (shouldStartServer) {
+        const existing = await detectRunningServer()
+        if (existing !== null) {
+          console.log(`Reusing Mepto dev server on port ${existing}`)
+          this.actualPort = existing
+        } else {
+          await this.startServer()
+          this.serverOwned = true
+        }
+      }
+
+      await this.runner.init(options.headless)
+
+      return await this.runner.runCompare(cases, {
+        port: this.actualPort,
+        width: options.width,
+        height: options.height,
+        timeout: options.timeout,
+      })
+    } finally {
+      await this.runner.close()
+      if (this.serverOwned) {
+        await this.stopServer()
+        this.serverOwned = false
+      }
+    }
+  }
+
+  /**
    * Validate code without executing
    */
   validate(code: string): ReturnType<typeof sanitize> {
@@ -297,5 +335,13 @@ export async function quickTest(
   })
 }
 
-export { TestRunner, TestOptions, TestResult, BatchCase, BatchResult, BatchCaseResult }
+export {
+  TestRunner,
+  TestOptions,
+  TestResult,
+  BatchCase,
+  BatchResult,
+  BatchCaseResult,
+  CompareResult,
+}
 export { sanitize, wrapInContext } from './security/sanitizer'

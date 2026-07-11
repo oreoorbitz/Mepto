@@ -178,7 +178,6 @@ Add `MeptoStatic` to the module's IIFE parameter. If the file has no import yet,
 
 ```typescript
 import { type MeptoStatic } from './types'
-
 ;(function ($: MeptoStatic) {
   // ...
 })(mepto)
@@ -500,6 +499,23 @@ node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --json
 
 Exit code is 0 only when every case passes. JSON carries
 `summary: { total, passed, failed, errored, duration }` and `results[]`.
+
+#### Compare Mepto vs jQuery
+
+Add `--compare` to a `--batch` run: each case runs against **both** Mepto and
+jQuery (each exposed as `$`) and return values are diffed. Surfaces behavioral
+mismatches against the jQuery-compatibility target. jQuery is bundled with the
+harness (no network needed).
+
+```bash
+node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --compare --json
+```
+
+Output carries `summary: { total, matched, differed, duration }` and `results[]`
+where each entry has `mepto` and `jquery` sub-results plus a `match` flag. Exit 0
+only when every case matches. Compares _return values_ — to catch DOM side-effect
+differences, have the case return observable state (e.g.
+`return $('div')[0].outerHTML`).
 
 #### Interactive Mode (Visible Browser)
 

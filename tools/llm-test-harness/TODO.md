@@ -59,9 +59,17 @@ Check items off as completed. See `AGENTS.md` for harness goals and usage.
   carries a `summary: { total, passed, failed, errored, duration }`. Measured
   ~2.2× faster than N single runs for 6 cases; the gap widens with N. Exit
   code is 0 only when all cases pass.
-- ☐ **Add a diff/compare primitive.** The most common harness question is
-  "does X match jQuery / match before my change?" A `--compare` that runs the
-  same code against two builds and diffs results beats another security regex.
+- ☒ **Add a diff/compare primitive (Mepto vs jQuery).** `--compare` (with
+  `--batch`) runs each case against both Mepto and jQuery — each exposed as `$`
+  — and diffs the return values. jQuery is bundled as a harness devDependency
+  and injected via `page.addScriptTag({ path })` (filesystem, bypasses request
+  interception). Each case: Mepto runs first (already on `window.$`), then
+  jQuery is injected, `window.$` reassigned, fixture HTML re-injected for clean
+  DOM, same code runs again. Results compared via deep-equal; `match: true`
+  when both libs produce the same result/error. Output shows side-by-side
+  values with `=`/`!` markers; exit 0 only when all cases match. Scope: compares
+  _return values_; DOM side-effect diffs require the case to return observable
+  state (e.g. `return el.outerHTML`).
 
 ## Medium — agent ergonomics & reliability
 

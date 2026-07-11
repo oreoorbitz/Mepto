@@ -39,6 +39,7 @@ program
   .option('--width <px>', 'Browser viewport width', '1280')
   .option('--height <px>', 'Browser viewport height', '720')
   .option('-j, --json', 'Output results as JSON')
+  .option('--compare', 'With --batch: run each case against both Mepto and jQuery, diff results')
   .option('-v, --validate', 'Only validate code, do not execute')
   .option('--no-server', 'Do not start Vite server (assume running)')
   .option('--wait-for-server', 'Wait for server to be ready', true)
@@ -84,6 +85,54 @@ async function main() {
     }
 
     const harness = new LLMTestHarness(parseInt(options.port))
+
+    // --compare: run each case against Mepto AND jQuery, diff results.
+    if (options.compare) {
+      try {
+        const result = await harness.runCompare(cases, {
+          timeout: parseInt(options.timeout),
+          headless: options.headless,
+          width: parseInt(options.width),
+          height: parseInt(options.height),
+          startServer: options.server,
+          waitForServer: options.waitForServer,
+          serverTimeout: 30000,
+        })
+
+        if (options.json) {
+          console.log(JSON.stringify(result, null, 2))
+        } else {
+          const s = result.summary
+          console.log('\n=== Compare Results (Mepto vs jQuery) ===\n')
+          console.log(
+            `Total: ${s.total}   Matched: ${s.matched}   Differed: ${s.differed}   Duration: ${s.duration}ms\n`
+          )
+          for (const r of result.results) {
+            const mark = r.match ? '=' : '!'
+            const fmt = v => {
+              if (v.error) return `ERR(${v.error})`
+              if (r.mepto.assertions && v.assertions && v.assertions.passed !== undefined) {
+                return (
+                  JSON.stringify(v.result) +
+                  (v.assertions.failed ? ` [${v.assertions.failed} assert-fail]` : '')
+                )
+              }
+              return JSON.stringify(v.result)
+            }
+            console.log(`  ${mark} ${r.name}`)
+            console.log(`      mepto:  ${fmt(r.mepto)}`)
+            console.log(`      jquery: ${fmt(r.jquery)}`)
+          }
+        }
+
+        // Exit 0 only when every case matched.
+        process.exit(result.summary.matched === result.summary.total ? 0 : 1)
+      } catch (e) {
+        console.error('Fatal error:', e.message)
+        process.exit(1)
+      }
+    }
+
     try {
       const result = await harness.runBatch(cases, {
         timeout: parseInt(options.timeout),

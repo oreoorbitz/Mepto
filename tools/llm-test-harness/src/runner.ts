@@ -64,6 +64,28 @@ export interface BatchCaseResult {
   console: ConsoleEntry[]
 }
 
+/** Outcome of running one case under BOTH Mepto and jQuery, with a diff flag. */
+export interface ComparisonCaseResult {
+  name: string
+  mepto: BatchCaseResult
+  jquery: BatchCaseResult
+  /** True iff both libs produced the same `result` (deep-equal) and the same
+   *  error/no-error. Assertion tallies are reported but do not gate `match` —
+   *  assertions describe the test's expectations, not library behavior. */
+  match: boolean
+}
+
+/** Roll-up of a compare run. */
+export interface CompareResult {
+  results: ComparisonCaseResult[]
+  summary: {
+    total: number
+    matched: number
+    differed: number
+    duration: number
+  }
+}
+
 export interface AssertionTally {
   passed: number
   failed: number
@@ -111,6 +133,42 @@ export interface ConsoleEntry {
 
 const DEFAULT_TIMEOUT = 5000
 const DEFAULT_VIEWPORT = { width: 1280, height: 720 }
+
+/**
+ * Resolve the on-disk path to the bundled jQuery build, used by the compare
+ * feature to inject jQuery as `$` via page.addScriptTag. Returns null if
+ * jQuery isn't installed (compare unavailable).
+ */
+function jqueryPath(): string | null {
+  for (const candidate of [
+    path.join(__dirname, '..', 'node_modules', 'jquery', 'dist', 'jquery.js'),
+    path.join(__dirname, '..', '..', '..', 'node_modules', 'jquery', 'dist', 'jquery.js'),
+  ]) {
+    if (fs.existsSync(candidate)) return candidate
+  }
+  return null
+}
+
+/**
+ * Structural deep-equal for comparing Mepto vs jQuery results. Handles
+ * primitives, plain objects, and arrays. DOM nodes and functions compare by
+ * reference (effectively unequal across libs) — tests that care should return
+ * serializable values.
+ */
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true
+  if (a === null || b === null || typeof a !== 'object' || typeof b !== 'object') return false
+  if (Array.isArray(a) || Array.isArray(b)) {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false
+    return a.every((v, i) => deepEqual(v, (b as unknown[])[i]))
+  }
+  const ak = Object.keys(a as object)
+  const bk = Object.keys(b as object)
+  if (ak.length !== bk.length) return false
+  return ak.every(k =>
+    deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k])
+  )
+}
 
 export class TestRunner {
   private browser: Browser | null = null
@@ -386,7 +444,6 @@ export class TestRunner {
     await this.page.evaluate(() => {
       const tally = { passed: 0, failed: 0, failures: [] as string[] }
       ;(window as any).__meptoAssertions__ = tally
-
       ;(window as any).assert = (cond: any, msg?: string) => {
         const label = msg ?? String(cond)
         if (cond) {
@@ -397,7 +454,6 @@ export class TestRunner {
         }
         return !!cond
       }
-
       ;(window as any).expect = (actual: any) => {
         const record = (cond: boolean, negated: boolean, label: string) => {
           const ok = negated ? !cond : cond
@@ -705,6 +761,146 @@ export class TestRunner {
         errored,
         duration: Date.now() - batchStart,
       },
+    }
+  }
+
+  /**
+   * Run each case against BOTH Mepto and jQuery (each exposed as `$`) and diff
+   * the results. Mepto runs first (it's already on `window.$` from blank.html);
+   * then jQuery is injected via addScriptTag and `window.$` is reassigned, the
+   * fixture HTML is re-injected so both libs see identical clean DOM, and the
+   * same code runs again. Browser launches once; each case gets a fresh page.
+   *
+   * Throws up front if jQuery isn't installed.
+   */
+  async runCompare(
+    cases: BatchCase[],
+    defaults: { port?: number; width?: number; height?: number; timeout?: number }
+  ): Promise<CompareResult> {
+    const jqPath = jqueryPath()
+    if (!jqPath) {
+      throw new Error(
+        'jQuery not found. Install it in tools/llm-test-harness: `npm install jquery`'
+      )
+    }
+
+    const results: ComparisonCaseResult[] = []
+    const compareStart = Date.now()
+    const port = defaults.port || 3000
+    const timeout = defaults.timeout ?? DEFAULT_TIMEOUT
+
+    for (const c of cases) {
+      try {
+        // --- Mepto run ---
+        if (this.page) {
+          await this.page.close().catch(() => {})
+          this.page = null
+        }
+        await this.createPage(c.width ?? defaults.width, c.height ?? defaults.height)
+        await this.loadHTML(c.html ?? '', port)
+        const sanitization = sanitize(c.code)
+        const meptoResult: BatchCaseResult = !sanitization.safe
+          ? {
+              name: c.name,
+              success: false,
+              passed: false,
+              assertions: null,
+              error: sanitization.error ?? 'Security violations detected',
+              console: [...this.consoleEntries],
+            }
+          : await this.runOne(c.name, sanitization.code!, timeout)
+
+        // --- jQuery run (same page, swap the $ binding) ---
+        // Clear Mepto's globals so jQuery's UMD factory doesn't interleave,
+        // inject jQuery, then reassign $ to it. Re-inject fixture HTML so both
+        // libs operate on identical clean DOM.
+        await this.page!.addScriptTag({ path: jqPath })
+        await this.page!.evaluate(fixtureHtml => {
+          // jQuery's UMD binds window.jQuery and window.$. Re-point $ at jQuery
+          // explicitly (Mepto's $ is already shadowed by jQuery's, but be
+          // explicit to avoid ordering ambiguity).
+          ;(window as any).$ = (window as any).jQuery
+          // Reset the fixture container so jQuery sees the same starting DOM.
+          const container = document.getElementById('test-container')
+          if (container) container.innerHTML = fixtureHtml
+          else {
+            const div = document.createElement('div')
+            div.innerHTML = fixtureHtml
+            document.body.appendChild(div)
+          }
+          // Reset the assertion tally so jQuery's run starts clean.
+          ;(window as any).__meptoAssertions__ = { passed: 0, failed: 0, failures: [] }
+        }, c.html ?? '')
+
+        const jqueryResult: BatchCaseResult = !sanitization.safe
+          ? {
+              name: c.name,
+              success: false,
+              passed: false,
+              assertions: null,
+              error: sanitization.error ?? 'Security violations detected',
+              console: [...this.consoleEntries],
+            }
+          : await this.runOne(c.name, sanitization.code!, timeout)
+
+        const match =
+          meptoResult.success === jqueryResult.success &&
+          !!meptoResult.error === !!jqueryResult.error &&
+          (!meptoResult.error || meptoResult.error === jqueryResult.error) &&
+          deepEqual(meptoResult.result, jqueryResult.result)
+
+        results.push({ name: c.name, mepto: meptoResult, jquery: jqueryResult, match })
+      } catch (e) {
+        // Harness plumbing failure — record both as errored, no match.
+        const err: BatchCaseResult = {
+          name: c.name,
+          success: false,
+          passed: false,
+          assertions: null,
+          error: (e as Error).message,
+          stack: (e as Error).stack,
+          console: [],
+        }
+        results.push({ name: c.name, mepto: err, jquery: err, match: false })
+      }
+    }
+
+    const matched = results.filter(r => r.match).length
+    return {
+      results,
+      summary: {
+        total: results.length,
+        matched,
+        differed: results.length - matched,
+        duration: Date.now() - compareStart,
+      },
+    }
+  }
+
+  /**
+   * Execute sanitized code and wrap the outcome as a BatchCaseResult. Shared by
+   * runBatch and runCompare so both paths produce the same result shape.
+   */
+  private async runOne(name: string, code: string, timeout: number): Promise<BatchCaseResult> {
+    const executionPromise = this.execute(code, timeout)
+    const timeoutPromise = new Promise<ExecutionResult>((_, reject) => {
+      setTimeout(() => reject(new Error('Execution timeout')), timeout)
+    })
+    const execution: ExecutionResult = await Promise.race([executionPromise, timeoutPromise]).catch(
+      e => ({ error: (e as Error).message })
+    )
+
+    const assertions = execution.assertions ?? null
+    const noFailedAssertions = !assertions || assertions.failed === 0
+    return {
+      name,
+      success: !execution.error,
+      passed: !execution.error && noFailedAssertions,
+      result: execution.result,
+      assertions,
+      error: execution.error,
+      stack: execution.stack,
+      console: [...this.consoleEntries],
     }
   }
 
