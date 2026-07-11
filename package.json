@@ -38,8 +38,11 @@
     "test:all": "npm run killports && npm test && npx playwright test test/e2e/unit-suite.spec.ts --project=chromium",
     "lint": "eslint . --ext .ts,.js",
     "lint:fix": "eslint . --ext .ts,.js --fix",
-    "format": "prettier --write \"src/**/*.ts\" \"tools/**/*.ts\"",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:file": "prettier --write",
     "typecheck": "tsc --noEmit",
+    "prepare": "husky install",
     "size": "npm run build && size-limit",
     "prepublishOnly": "npm run build && npm test",
     "killports": "kill-port $(seq -s ' ' 3000 3099)"
@@ -104,8 +107,7 @@
     }
   ],
   "lint-staged": {
-    "*.{ts,js}": [
-      "eslint --fix",
+    "*.{ts,js,json,md,css,html}": [
       "prettier --write"
     ]
   },

@@ -290,19 +290,22 @@ declare const mepto: MeptoStatic
     return this.off(event, selector, callback)
   }
   ;($.fn as unknown as Record<string, any>).on = function (
+    this: MeptoCollection,
     event: any,
     selector: any,
     data: any,
     callback: any,
     one: any
-  ) {
-    let autoRemove, delegator
+  ): MeptoCollection {
     const $this = this
     if (event && !isString(event)) {
-      $.each(event as Record<string, (...args: unknown[]) => unknown>, function (type, fn) {
-        $this.on(type, selector, data, fn, one)
-      })
-      return $this
+      $.each(
+        event as Record<string, (...args: unknown[]) => unknown>,
+        (type: string, fn: unknown): void => {
+          ;(this as any).on(type, selector, data, fn, one)
+        }
+      )
+      return this
     }
 
     if (!isString(selector) && !isFunction(callback) && callback !== false)
@@ -315,25 +318,29 @@ declare const mepto: MeptoStatic
 
     if (callback === false) callback = returnFalse as (...args: unknown[]) => unknown
 
-    return $this.each(function (_: number, element: Element) {
+    return $this.each((_: number, element: Element): void => {
+      let autoRemove: ((...args: unknown[]) => unknown) | undefined,
+        delegator: ((...args: unknown[]) => unknown) | undefined
+
       if (one)
-        autoRemove = function (e: Event) {
+        autoRemove = function (this: Element, ...args: unknown[]) {
+          const e = args[0] as Event
           remove(element, e.type, callback)
-          return (callback as (...args: unknown[]) => unknown).apply(this, arguments)
+          return (callback as (...args: unknown[]) => unknown).apply(this, args)
         }
 
       if (selector)
-        delegator = function (e: Event) {
-          let evt,
-            match = $(e.target as Element)
-              .closest(selector as string, element)
-              .get(0)
+        delegator = function (this: Element, ...args: unknown[]) {
+          const e = args[0] as Event
+          const match = $(e.target as Element)
+            .closest(selector as string, element)
+            .get(0)
           if (match && match !== element) {
-            evt = $.extend(createProxy(e), {
+            const evt = $.extend(createProxy(e), {
               currentTarget: match,
               liveFired: element,
             })
-            return (autoRemove || callback).apply(match, [evt].concat(slice.call(arguments, 1)))
+            return (autoRemove || callback).apply(match, [evt, ...args.slice(1)])
           }
         }
 
@@ -355,9 +362,12 @@ declare const mepto: MeptoStatic
   ): MeptoCollection {
     const $this = this
     if (event && !isString(event)) {
-      $.each(event as Record<string, (...args: unknown[]) => unknown>, (type: string, fn: unknown): void => {
-        $this.off(type, selector as string, fn as (...args: unknown[]) => unknown)
-      })
+      $.each(
+        event as Record<string, (...args: unknown[]) => unknown>,
+        (type: string, fn: unknown): void => {
+          $this.off(type, selector as string, fn as (...args: unknown[]) => unknown)
+        }
+      )
       return $this
     }
 
