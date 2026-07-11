@@ -45,11 +45,11 @@ npx playwright test ...               # Playwright will auto-start a fresh dev s
 
 ### The three test commands, ranked by speed
 
-| Command | Time | Tests | What it checks |
-|---------|------|-------|----------------|
-| `npm test` | ~1s | 73 | Vitest in jsdom — fast unit tests |
-| `npx playwright test ... --project=chromium` | ~2s | 228 | Full suite in real Chromium |
-| `npm run test:e2e` | ~5s | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
+| Command                                      | Time | Tests                | What it checks                                      |
+| -------------------------------------------- | ---- | -------------------- | --------------------------------------------------- |
+| `npm test`                                   | ~1s  | 73                   | Vitest in jsdom — fast unit tests                   |
+| `npx playwright test ... --project=chromium` | ~2s  | 228                  | Full suite in real Chromium                         |
+| `npm run test:e2e`                           | ~5s  | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
 
 Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final verification.
 
@@ -94,25 +94,25 @@ Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix rem
 
 ### Per-File Status
 
-| File | Lines | Typing | Key Issues |
-|------|-------|--------|------------|
-| `types.ts` | 466 | **Done** | `Mepto.matches` typed as bare `Function` — should get a proper signature |
-| `meptos.ts` | 55 | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false |
-| `mepto.ts` | ~1430 | **Partial** | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type` |
-| `data.ts` | 92 | **Done** | `WeakMap` cache, `Symbol` expando, typed params |
-| `callbacks.ts` | 122 | **Done** | Typed closure state and all methods |
-| `deferred.ts` | 118 | **Done** | Typed tuples, deferred/promise objects |
-| `form.ts` | 40 | **Done** | All params and return values typed |
-| `event.ts` | ~270 | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
-| `ajax.ts` | 381 | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)` |
-| `fx.ts` | 123 | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect |
-| `fx_methods.ts` | 71 | **Not started** | All `var`, zero annotations |
-| `selector.ts` | 85 | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg` |
-| `assets.ts` | 21 | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID |
-| `detect.ts` | 72 | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context |
-| `stack.ts` | 22 | **Not started** | All `var`, zero annotations |
-| `gesture.ts` | 35 | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout` |
-| `touch.ts` | ~190 | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed) |
+| File            | Lines | Typing          | Key Issues                                                                                                                                                 |
+| --------------- | ----- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `types.ts`      | 466   | **Done**        | `Mepto.matches` typed as bare `Function` — should get a proper signature                                                                                   |
+| `meptos.ts`     | 55    | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false                                                                                                |
+| `mepto.ts`      | ~1430 | **Partial**     | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type`        |
+| `data.ts`       | 92    | **Done**        | `WeakMap` cache, `Symbol` expando, typed params                                                                                                            |
+| `callbacks.ts`  | 122   | **Done**        | Typed closure state and all methods                                                                                                                        |
+| `deferred.ts`   | 118   | **Done**        | Typed tuples, deferred/promise objects                                                                                                                     |
+| `form.ts`       | 40    | **Done**        | All params and return values typed                                                                                                                         |
+| `event.ts`      | ~270  | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
+| `ajax.ts`       | 381   | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)`                          |
+| `fx.ts`         | 123   | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect                                          |
+| `fx_methods.ts` | 71    | **Not started** | All `var`, zero annotations                                                                                                                                |
+| `selector.ts`   | 85    | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg`                                                     |
+| `assets.ts`     | 21    | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID                                                                                 |
+| `detect.ts`     | 72    | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context                                                                                  |
+| `stack.ts`      | 22    | **Not started** | All `var`, zero annotations                                                                                                                                |
+| `gesture.ts`    | 35    | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout`                                                                          |
+| `touch.ts`      | ~190  | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed)                                                         |
 
 ### Recommended Next Steps
 
@@ -133,16 +133,17 @@ This is the step-by-step process for converting a module. Follow it in order. Do
 
 The naming is confusing because the word "mepto" is reused. Before touching any module, internalize this:
 
-| Name | What it is |
-|------|-----------|
-| Outer `mepto` (in `meptos.ts`) | The exported `MeptoStatic` object — same as `window.$` and `window.mepto` |
+| Name                                   | What it is                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| Outer `mepto` (in `meptos.ts`)         | The exported `MeptoStatic` object — same as `window.$` and `window.mepto`             |
 | Inner `mepto` (inside `mepto.ts` IIFE) | The private implementation namespace: `mepto.init`, `mepto.Z`, `mepto.fragment`, etc. |
-| `$.mepto` | The inner `mepto` object exposed for plugins and other modules |
-| `$` inside each module's IIFE | The outer `mepto` — i.e., the full `MeptoStatic` public API |
+| `$.mepto`                              | The inner `mepto` object exposed for plugins and other modules                        |
+| `$` inside each module's IIFE          | The outer `mepto` — i.e., the full `MeptoStatic` public API                           |
 
 Every unconverted module is wrapped in:
+
 ```typescript
-;(function($: MeptoStatic) {
+;(function ($: MeptoStatic) {
   // $ === window.$ === window.mepto === MeptoStatic
   // Collection methods go on $.fn
   // Static utilities go directly on $
@@ -150,6 +151,7 @@ Every unconverted module is wrapped in:
 ```
 
 Reference completed conversions to see these patterns in practice:
+
 - **`src/callbacks.ts`** — typed closure state, all method signatures typed
 - **`src/data.ts`** — WeakMap for element-associated state, typed expando Symbol
 - **`src/form.ts`** — short and clean, best first read
@@ -175,9 +177,9 @@ A clean baseline looks like: `1 passed` (the single Playwright test, which inter
 Add `MeptoStatic` to the module's IIFE parameter. If the file has no import yet, add one.
 
 ```typescript
-import { type MeptoStatic } from './types';
+import { type MeptoStatic } from './types'
 
-;(function($: MeptoStatic) {
+;(function ($: MeptoStatic) {
   // ...
 })(mepto)
 ```
@@ -225,13 +227,13 @@ Go function by function. Add types to every parameter and add return types where
 
 Address these as you encounter them inside the module being converted. Do not fix them in other files.
 
-| Antipattern | Fix |
-|-------------|-----|
-| `let x` where `x` is never reassigned | → `const x` |
-| Parameter mutation (`arg = newValue`) | → introduce a local copy: `let local = arg; local = newValue` |
-| `var` in function scope | → `const`/`let` as above |
-| Callback `function` expressions that don't use `this` | → arrow function |
-| `fn` property monkey-patched inside a helper (e.g. hover emulation) | → keep but type `fn` explicitly |
+| Antipattern                                                         | Fix                                                           |
+| ------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `let x` where `x` is never reassigned                               | → `const x`                                                   |
+| Parameter mutation (`arg = newValue`)                               | → introduce a local copy: `let local = arg; local = newValue` |
+| `var` in function scope                                             | → `const`/`let` as above                                      |
+| Callback `function` expressions that don't use `this`               | → arrow function                                              |
+| `fn` property monkey-patched inside a helper (e.g. hover emulation) | → keep but type `fn` explicitly                               |
 
 ---
 
@@ -260,15 +262,15 @@ Every API decision should minimize live DOM touches. The browser's layout engine
 
 ### Patterns to Prefer
 
-| Prefer | Over |
-|--------|------|
-| `DocumentFragment` + single `appendChild` | Repeated per-element `appendChild` in a loop |
-| `element.classList` or batch `cssText` | Many individual `element.style.prop = value` sets |
+| Prefer                                     | Over                                                         |
+| ------------------------------------------ | ------------------------------------------------------------ |
+| `DocumentFragment` + single `appendChild`  | Repeated per-element `appendChild` in a loop                 |
+| `element.classList` or batch `cssText`     | Many individual `element.style.prop = value` sets            |
 | Cache `querySelector` result before a loop | Repeated `querySelector` for the same selector inside a loop |
-| `WeakMap` for element-associated data | Expanding properties directly onto DOM nodes |
-| `<template>` clone + insert | Many `createElement` + `setAttribute` calls |
-| CSS `transform`/`opacity` for animation | JS-driven `style.top`/`style.left` updates |
-| Modify existing elements in-place | Remove + recreate cycles |
+| `WeakMap` for element-associated data      | Expanding properties directly onto DOM nodes                 |
+| `<template>` clone + insert                | Many `createElement` + `setAttribute` calls                  |
+| CSS `transform`/`opacity` for animation    | JS-driven `style.top`/`style.left` updates                   |
+| Modify existing elements in-place          | Remove + recreate cycles                                     |
 
 ### Patterns to Avoid
 
@@ -280,6 +282,7 @@ Every API decision should minimize live DOM touches. The browser's layout engine
 ### Measurement
 
 Profile with Chrome DevTools **Performance** tab on realistic scenarios (large lists, frequent updates, mobile). Focus on:
+
 - Reflow/repaint count and long tasks
 - Heap growth over time
 - Direct comparison against jQuery equivalents
@@ -295,14 +298,17 @@ In hot internal helper functions, prefer consistent object shapes (fixed propert
 ## Quick Start
 
 ### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
 ### 2. Start Development Server
+
 ```bash
 npm run dev &
 ```
+
 The dev server scans ports 3000–3099 and binds to the first available one. The chosen port is written to `.port` the moment the server is ready.
 
 ```bash
@@ -337,6 +343,7 @@ curl -s -o /dev/null -w "%{http_code}" \
 Do not use `curl ... && <next command>` without the retry flags — if the server is still starting, `&&` short-circuits and produces blank output, which is ambiguous.
 
 ### 4. Build the Library
+
 ```bash
 npm run build
 ```
@@ -348,12 +355,14 @@ npm run build
 We have built a secure Puppeteer-based testing harness at `tools/llm-test-harness/` that allows safe execution of JavaScript/TypeScript code.
 
 ### Why Use the Harness?
+
 - **Security**: Runs code in an isolated browser sandbox
 - **Safety**: Detects and blocks prompt injection attempts
 - **Convenience**: Single command starts both Vite and Puppeteer
 - **Console Access**: Captures all console output for debugging
 
 ### Installation
+
 ```bash
 # Install harness dependencies
 cd tools/llm-test-harness && npm install
@@ -374,6 +383,7 @@ npm run test:watch    # re-runs on every file save
 ```
 
 Output on success:
+
 ```
 ✓ src/mepto.test.ts  (73 tests)
 Tests  73 passed
@@ -409,6 +419,7 @@ Playwright navigates to `/`, waits for `#summary` to get class `pass` or `fail`,
 ### Harness Usage Examples
 
 #### Test Mepto DOM Manipulation
+
 ```bash
 # Test adding a class (use `return` for expression values)
 node tools/llm-test-harness/bin/mepto-test.js \
@@ -436,6 +447,7 @@ node tools/llm-test-harness/bin/mepto-test.js \
 > Multi-statement code runs in a function body so `return` is always valid.
 
 #### Validate Code Before Execution
+
 ```bash
 # Check if code is safe (doesn't execute)
 node tools/llm-test-harness/bin/mepto-test.js \
@@ -444,6 +456,7 @@ node tools/llm-test-harness/bin/mepto-test.js \
 ```
 
 #### Run From File
+
 ```bash
 # Execute code from file
 node tools/llm-test-harness/bin/mepto-test.js \
@@ -451,7 +464,45 @@ node tools/llm-test-harness/bin/mepto-test.js \
   --html-file=./fixture.html
 ```
 
+#### Assertions
+
+`assert(cond, msg?)` and `expect(actual)` (with `.toBe`/`.toEqual`/`.toBeTruthy`/`.toBeFalsy`
+and `.not`) are available in every run. Prefer them over returning a boolean:
+
+```bash
+node tools/llm-test-harness/bin/mepto-test.js \
+  --code="assert($('.x').addClass('a').hasClass('a')); expect(2+2).toEqual(4)" \
+  --html="<div class='x'></div>" --json
+```
+
+#### Run a Batch of Cases
+
+One browser session for many cases (~2× faster than N cold starts; each case
+gets a fresh page so DOM/listeners don't bleed). `cases.json`:
+
+```json
+{
+  "cases": [
+    {
+      "name": "addClass",
+      "code": "return $('.x').addClass('a').hasClass('a')",
+      "html": "<div class='x'></div>"
+    },
+    { "name": "count", "code": "return $('div').length", "html": "<div>a</div><div>b</div>" },
+    { "name": "async", "code": "return await Promise.resolve('ok')" }
+  ]
+}
+```
+
+```bash
+node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --json
+```
+
+Exit code is 0 only when every case passes. JSON carries
+`summary: { total, passed, failed, errored, duration }` and `results[]`.
+
 #### Interactive Mode (Visible Browser)
+
 ```bash
 # See the browser while testing
 node tools/llm-test-harness/bin/mepto-test.js \
@@ -462,14 +513,17 @@ node tools/llm-test-harness/bin/mepto-test.js \
 
 ### Output Format
 
-The harness returns JSON:
+The harness returns JSON. `success` = code executed without throwing;
+`passed` = success AND no assertion failed (equals `success` when no
+assertions are used):
+
 ```json
 {
   "success": true,
+  "passed": true,
   "result": true,
-  "console": [
-    {"type": "log", "message": "Mepto loaded", "timestamp": "2024-01-01T00:00:00Z"}
-  ],
+  "assertions": { "passed": 2, "failed": 0, "failures": [] },
+  "console": [{ "type": "log", "message": "Mepto loaded", "timestamp": "2024-01-01T00:00:00Z" }],
   "timing": {
     "duration": 523
   },
@@ -481,14 +535,21 @@ The harness returns JSON:
 }
 ```
 
-### Security Features
+### Security Model
 
-The harness automatically blocks:
-- `eval()` and `Function()` constructor
-- Dynamic imports and external network requests
-- Access to `process`, `require`, filesystem
-- Prompt injection patterns (system/user/assistant markers)
-- Script injection attempts
+Two tiers (see `tools/llm-test-harness/src/security/sanitizer.ts`):
+
+- **Hard-block** (rejects the run): dynamic code execution (`eval`/`Function`/
+  string-arg timers), prototype pollution (`__proto__`, `constructor.prototype`),
+  unambiguous Node-only identifiers (`child_process`, `require('fs')`).
+- **Advisory** (warns only, enforced at runtime): storage, network, navigation,
+  `document.write`, markup/`on*=` handlers. The Puppeteer page neuters these
+  via `evaluateOnNewDocument` — e.g. `localStorage`/`document.cookie`/`window.open`
+  throw `[<name>] is disabled in the test sandbox`.
+
+The regex patterns are a first-pass gate, not the boundary — the real isolation
+is the browser page itself (no Node surface, request interception blocks
+non-local network).
 
 ---
 
@@ -521,14 +582,17 @@ mepto/
 ## Development Workflow
 
 ### 1. Make Changes to Source Files
+
 Edit files in `src/` — all files are TypeScript (`.ts`).
 
 ### 2. Build the Library
+
 ```bash
 npm run build
 ```
 
 ### 3. Run the Full Test Suite
+
 ```bash
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
@@ -541,15 +605,13 @@ Write a short spec in `test/e2e/` and run it directly:
 
 ```ts
 // test/e2e/scratch.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test('addClass works', async ({ page }) => {
-  await page.goto('/');
-  const result = await page.evaluate(() =>
-    $('.test').addClass('active').hasClass('active')
-  );
-  expect(result).toBe(true);
-});
+  await page.goto('/')
+  const result = await page.evaluate(() => $('.test').addClass('active').hasClass('active'))
+  expect(result).toBe(true)
+})
 ```
 
 ```bash
@@ -559,6 +621,7 @@ npx playwright test test/e2e/scratch.spec.ts --project=chromium
 Playwright handles waiting automatically — no manual `setTimeout` or retry loops needed.
 
 ### 5. Run Linting
+
 ```bash
 npm run lint
 ```
@@ -568,6 +631,7 @@ npm run lint
 ## TypeScript Configuration
 
 The project uses relaxed TypeScript settings (`tsconfig.json`):
+
 - `strict: false` - Allows gradual typing
 - `allowJs: true` - Can import JavaScript
 - `noImplicitAny: false` - No errors on implicit any
@@ -580,25 +644,25 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 ## Key Commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server (port written to `.port`) |
-| `cat .port` | Get the port the dev server is running on |
-| `npm test` | Run Vitest unit tests (jsdom, ~1s, no browser) |
-| `npm run test:watch` | Vitest in watch mode — reruns on every save |
-| `npm run build` | Build library to `dist/` |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Run Prettier |
-| `npm run typecheck` | Check TypeScript |
+| Command              | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `npm run dev`        | Start Vite dev server (port written to `.port`) |
+| `cat .port`          | Get the port the dev server is running on       |
+| `npm test`           | Run Vitest unit tests (jsdom, ~1s, no browser)  |
+| `npm run test:watch` | Vitest in watch mode — reruns on every save     |
+| `npm run build`      | Build library to `dist/`                        |
+| `npm run lint`       | Run ESLint                                      |
+| `npm run format`     | Run Prettier                                    |
+| `npm run typecheck`  | Check TypeScript                                |
 
 ### Playwright Commands
 
-| Command | Description |
-|---------|-------------|
-| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite |
-| `npx playwright test test/e2e/scratch.spec.ts --project=chromium` | Run a scratch spec |
-| `npx playwright test --project=chromium` | Run all e2e specs in Chromium |
-| `npx playwright test --headed` | Run with visible browser window |
+| Command                                                              | Description                     |
+| -------------------------------------------------------------------- | ------------------------------- |
+| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite     |
+| `npx playwright test test/e2e/scratch.spec.ts --project=chromium`    | Run a scratch spec              |
+| `npx playwright test --project=chromium`                             | Run all e2e specs in Chromium   |
+| `npx playwright test --headed`                                       | Run with visible browser window |
 
 ---
 

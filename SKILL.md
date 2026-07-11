@@ -21,11 +21,11 @@ npm run test:all
 
 ### Three test commands, ranked by speed
 
-| Command | Time | Tests | What it checks |
-|---------|------|-------|----------------|
-| `npm test` | ~1s | 73 | Vitest in jsdom — fast unit tests |
-| `npx playwright test ... --project=chromium` | ~2s | 228 | Full suite in real Chromium |
-| `npm run test:e2e` | ~5s | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
+| Command                                      | Time | Tests                | What it checks                                      |
+| -------------------------------------------- | ---- | -------------------- | --------------------------------------------------- |
+| `npm test`                                   | ~1s  | 73                   | Vitest in jsdom — fast unit tests                   |
+| `npx playwright test ... --project=chromium` | ~2s  | 228                  | Full suite in real Chromium                         |
+| `npm run test:e2e`                           | ~5s  | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
 
 Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final verification.
 
@@ -56,17 +56,17 @@ Step-by-step process for converting a JS-style module to typed TS. Follow in ord
 
 The word "mepto" is overloaded. Before touching any module, internalize this:
 
-| Name | What it is |
-|------|-----------|
-| Outer `mepto` (in `meptos.ts`) | The exported `MeptoStatic` — same as `window.$` and `window.mepto` |
+| Name                                   | What it is                                                                            |
+| -------------------------------------- | ------------------------------------------------------------------------------------- |
+| Outer `mepto` (in `meptos.ts`)         | The exported `MeptoStatic` — same as `window.$` and `window.mepto`                    |
 | Inner `mepto` (inside `mepto.ts` IIFE) | The private implementation namespace: `mepto.init`, `mepto.Z`, `mepto.fragment`, etc. |
-| `$.mepto` | The inner `mepto` exposed for plugins/other modules |
-| `$` inside each module's IIFE | The outer `mepto` — the full `MeptoStatic` public API |
+| `$.mepto`                              | The inner `mepto` exposed for plugins/other modules                                   |
+| `$` inside each module's IIFE          | The outer `mepto` — the full `MeptoStatic` public API                                 |
 
 Every unconverted module is wrapped in:
 
 ```typescript
-;(function($: MeptoStatic) {
+;(function ($: MeptoStatic) {
   // $ === window.$ === window.mepto === MeptoStatic
   // Collection methods go on $.fn
   // Static utilities go directly on $
@@ -74,6 +74,7 @@ Every unconverted module is wrapped in:
 ```
 
 Reference completed conversions for patterns in practice:
+
 - `src/callbacks.ts` — typed closure state, all method signatures typed
 - `src/data.ts` — WeakMap for element-associated state, typed expando Symbol
 - `src/form.ts` — short and clean, best first read
@@ -91,9 +92,9 @@ Clean baseline: `1 passed` (the single Playwright test internally asserts 228 pa
 ### Step 1 — Type the IIFE parameter
 
 ```typescript
-import { type MeptoStatic } from './types';
+import { type MeptoStatic } from './types'
 
-;(function($: MeptoStatic) {
+;(function ($: MeptoStatic) {
   // ...
 })(mepto)
 ```
@@ -131,13 +132,13 @@ Function by function. Type every parameter; add return types where the inferred 
 
 Address these inside the module being converted only. Do not fix them in other files.
 
-| Antipattern | Fix |
-|-------------|-----|
-| `let x` where `x` is never reassigned | → `const x` |
-| Parameter mutation (`arg = newValue`) | → introduce a local: `let local = arg; local = newValue` |
-| `var` in function scope | → `const`/`let` as above |
-| Callback `function` expressions that don't use `this` | → arrow function |
-| `fn` property monkey-patched inside a helper (e.g. hover emulation) | → keep but type `fn` explicitly |
+| Antipattern                                                         | Fix                                                      |
+| ------------------------------------------------------------------- | -------------------------------------------------------- |
+| `let x` where `x` is never reassigned                               | → `const x`                                              |
+| Parameter mutation (`arg = newValue`)                               | → introduce a local: `let local = arg; local = newValue` |
+| `var` in function scope                                             | → `const`/`let` as above                                 |
+| Callback `function` expressions that don't use `this`               | → arrow function                                         |
+| `fn` property monkey-patched inside a helper (e.g. hover emulation) | → keep but type `fn` explicitly                          |
 
 ### Step 6 — Build and verify
 
@@ -188,15 +189,13 @@ Editing a `.ts` file and refreshing re-runs the suite. No `npm run build` needed
 
 ```ts
 // test/e2e/scratch.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test('addClass works', async ({ page }) => {
-  await page.goto('/');
-  const result = await page.evaluate(() =>
-    $('.test').addClass('active').hasClass('active')
-  );
-  expect(result).toBe(true);
-});
+  await page.goto('/')
+  const result = await page.evaluate(() => $('.test').addClass('active').hasClass('active'))
+  expect(result).toBe(true)
+})
 ```
 
 ```bash
@@ -271,44 +270,96 @@ node tools/llm-test-harness/bin/mepto-test.js \
   --no-headless
 ```
 
+### Assertions
+
+`assert(cond, msg?)` and `expect(actual)` (with `.toBe`/`.toEqual`/`.toBeTruthy`/`.toBeFalsy`
+and `.not`) are injected into the page before each run. Use them in place of
+eyeballing a returned boolean:
+
+```bash
+node tools/llm-test-harness/bin/mepto-test.js \
+  --code="assert($('.x').addClass('a').hasClass('a'), 'addClass'); expect(2+2).toEqual(4)" \
+  --html="<div class='x'></div>" --json
+```
+
+### Run a batch of cases in one session
+
+When you have several checks, run them as a batch — one browser launch instead
+of N cold starts (~2× faster for 6 cases, more for more). Each case runs in a
+fresh page so DOM/listeners don't bleed between cases.
+
+`cases.json`:
+
+```json
+{
+  "cases": [
+    {
+      "name": "addClass",
+      "code": "return $('.x').addClass('a').hasClass('a')",
+      "html": "<div class='x'></div>"
+    },
+    { "name": "count", "code": "return $('div').length", "html": "<div>a</div><div>b</div>" },
+    { "name": "async", "code": "return await Promise.resolve('ok')" },
+    {
+      "name": "checks",
+      "code": "assert($('p').text()==='hi'); expect(1).toBe(1)",
+      "html": "<p>hi</p>"
+    }
+  ]
+}
+```
+
+```bash
+node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --json
+```
+
+Exit code is 0 only when every case passes. The JSON carries
+`summary: { total, passed, failed, errored, duration }` and a `results[]`
+array with one entry per case.
+
 ### Output shape
+
+Single run:
 
 ```json
 {
   "success": true,
+  "passed": true,
   "result": true,
-  "console": [
-    {"type": "log", "message": "Mepto loaded", "timestamp": "2024-01-01T00:00:00Z"}
-  ],
+  "assertions": { "passed": 2, "failed": 0, "failures": [] },
+  "console": [{ "type": "log", "message": "Mepto loaded", "timestamp": "2024-01-01T00:00:00Z" }],
   "timing": { "duration": 523 },
   "security": { "safe": true, "violations": [], "warnings": [] }
 }
 ```
 
+`success` = code executed without throwing; `passed` = success AND no assertion
+failed (or no assertions used). With no assertions, `passed === success`.
+
 ---
 
 ## Key commands
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start Vite dev server (port written to `.port`) |
-| `cat .port` | Get the port the dev server is running on |
-| `npm test` | Run Vitest unit tests (jsdom, ~1s, no browser) |
-| `npm run test:watch` | Vitest in watch mode — reruns on every save |
-| `npm run build` | Build library to `dist/` |
-| `npm run lint` | Run ESLint |
-| `npm run format` | Run Prettier |
-| `npm run typecheck` | Check TypeScript |
-| `npm run killports` | Kill any dev servers on 3000–3099 |
+| Command              | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `npm run dev`        | Start Vite dev server (port written to `.port`) |
+| `cat .port`          | Get the port the dev server is running on       |
+| `npm test`           | Run Vitest unit tests (jsdom, ~1s, no browser)  |
+| `npm run test:watch` | Vitest in watch mode — reruns on every save     |
+| `npm run build`      | Build library to `dist/`                        |
+| `npm run lint`       | Run ESLint                                      |
+| `npm run format`     | Run Prettier                                    |
+| `npm run typecheck`  | Check TypeScript                                |
+| `npm run killports`  | Kill any dev servers on 3000–3099               |
 
 ### Playwright
 
-| Command | Description |
-|---------|-------------|
-| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite |
-| `npx playwright test test/e2e/scratch.spec.ts --project=chromium` | Run a scratch spec |
-| `npx playwright test --project=chromium` | All e2e specs in Chromium |
-| `npx playwright test --headed` | Run with visible browser window |
+| Command                                                              | Description                     |
+| -------------------------------------------------------------------- | ------------------------------- |
+| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite     |
+| `npx playwright test test/e2e/scratch.spec.ts --project=chromium`    | Run a scratch spec              |
+| `npx playwright test --project=chromium`                             | All e2e specs in Chromium       |
+| `npx playwright test --headed`                                       | Run with visible browser window |
 
 ---
 
