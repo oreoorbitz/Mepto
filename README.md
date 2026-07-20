@@ -180,7 +180,7 @@ mepto modules are individual files in the "src/" directory.
 Please read our [contribution guidelines](https://github.com/madrobby/mepto/blob/master/CONTRIBUTING.md)
 for information on how to contribute.
 
-Get in touch:
+### Documentation
 
 * @[meptojs](http://twitter.com/meptojs)
 
@@ -203,13 +203,25 @@ This will submit a pull request to us that we can review.
 
 ### Running tests
 
-You will need to install [PhantomJS][phantomjs]. On OS X, that's easy:
+You will need to install [PhantomJS][phantomjs]. Note that PhantomJS is no
+longer maintained (development was suspended in 2018) and is not available
+via Homebrew anymore; download it from its website instead.
+
+To set up the development environment (installs npm dependencies and checks
+for PhantomJS):
 
 ~~~ sh
-$ brew install phantomjs
+$ script/bootstrap
 ~~~
 
-To run the automated tests:
+To run the automated tests (lints the source, then runs the suite in
+PhantomJS against a local test server on port 3999):
+
+~~~ sh
+$ script/test
+~~~
+
+Alternatively, run just the test suite without linting:
 
 ~~~ sh
 $ npm test
