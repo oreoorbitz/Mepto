@@ -1,25 +1,22 @@
-# Zepto.js – a minimalist JavaScript library
+# Mepto – a minimalist JavaScript library
 
-Zepto is a minimalist JavaScript library for modern browsers with a
-largely jQuery-compatible API. If you use jQuery, you already know how to use Zepto.
+Mepto is a fork of [Zepto.js][upstream], a minimalist JavaScript library for
+modern browsers with a largely jQuery-compatible API. If you use jQuery, you
+already know how to use Mepto.
 
-See [zeptojs.com][] for an extended introduction, downloads
-and documentation.
+The code currently mirrors [madrobby/zepto][upstream] v1.2.0. See
+[zeptojs.com][] for the (frozen, but still available) documentation of the
+original library.
 
-Zepto.js is licensed under the terms of the MIT License.
-
-Want to give us money or a tip? Don't.
-Instead please donate to [charity: water](http://charitywater.org/).
+Mepto is licensed under the terms of the MIT License, like Zepto itself.
 
 ## Building
 
-[![Build Status](https://secure.travis-ci.org/madrobby/zepto.svg?branch=master)](http://travis-ci.org/madrobby/zepto)
-
-The official site offers a download of the default distribution of Zepto. This
+The official Zepto site offers a download of the default distribution. This
 is good for starting out. However, at some point you might want to add some
-optional modules and remove some of the default ones you don't need, to keep the
-size at a minimum. That's when you need to check out Zepto's source code and use
-the build commands.
+optional modules and remove some of the default ones you don't need, to keep
+the size at a minimum. That's when you need to check out the source code and
+use the build commands.
 
 You will need Node.js installed on your system.
 
@@ -31,14 +28,15 @@ $ npm run-script dist
 $ MODULES="zepto event data" npm run-script dist
 
 # on Windows
-c:\zepto> SET MODULES=zepto event data
-c:\zepto> npm run-script dist
+c:\mepto> SET MODULES=zepto event data
+c:\mepto> npm run-script dist
 ~~~
 
 The resulting files are:
 
 1. `dist/zepto.js`
 2. `dist/zepto.min.js`
+3. `dist/zepto.min.gz`
 
 If you install CoffeeScript globally, you can run `make` directly:
 
@@ -50,13 +48,13 @@ $ coffee make dist
 $ MODULES="zepto event data ..." ./make dist
 
 # on Windows
-c:\zepto> SET MODULES=zepto event data
-c:\zepto> coffee make dist
+c:\mepto> SET MODULES=zepto event data
+c:\mepto> coffee make dist
 ~~~
 
-## Zepto modules
+## Mepto modules
 
-Zepto modules are individual files in the "src/" directory.
+Mepto modules are individual files in the "src/" directory.
 
 <table>
 <thead><tr>
@@ -177,22 +175,15 @@ Zepto modules are individual files in the "src/" directory.
 
 ## Contributing
 
-Please read our [contribution guidelines](https://github.com/madrobby/zepto/blob/master/CONTRIBUTING.md)
+Please read the [contribution guidelines](CONTRIBUTING.md)
 for information on how to contribute.
 
-Get in touch:
+### Documentation
 
-* @[zeptojs](http://twitter.com/zeptojs)
-
-### Write documentation
-
-Zepto docs are written in Markdown and live in the ["gh-pages" branch][docs].
-They are published on [zeptojs.com][zeptojs.com].
-
-You can use GitHub's web interface to make quick changes to documentation for
-specific Zepto features
-([example: ajaxSettings](https://github.com/madrobby/zepto/blob/gh-pages/ajax/_posts/1900-01-01-Z-ajaxSettings.md)).
-This will submit a pull request to us that we can review.
+The API documentation lives upstream: it is maintained in the
+["gh-pages" branch][docs] of [madrobby/zepto][upstream] and published on
+[zeptojs.com][]. Note that it has not been updated since 2018 and covers
+Zepto v1.2.0.
 
 ### Report a bug
 
@@ -203,13 +194,25 @@ This will submit a pull request to us that we can review.
 
 ### Running tests
 
-You will need to install [PhantomJS][phantomjs]. On OS X, that's easy:
+You will need to install [PhantomJS][phantomjs]. Note that PhantomJS is no
+longer maintained (development was suspended in 2018) and is not available
+via Homebrew anymore; download it from its website instead.
+
+To set up the development environment (installs npm dependencies and checks
+for PhantomJS):
 
 ~~~ sh
-$ brew install phantomjs
+$ script/bootstrap
 ~~~
 
-To run the automated tests:
+To run the automated tests (lints the source, then runs the suite in
+PhantomJS against a local test server on port 3999):
+
+~~~ sh
+$ script/test
+~~~
+
+Alternatively, run just the test suite without linting:
 
 ~~~ sh
 $ npm test
@@ -226,9 +229,9 @@ instructions. For your convenience test failures and exceptions will be
 reported to the the console you started the test server in (as well as
 the browser console if available).
 
-  [zeptojs.com]: http://zeptojs.com
-  [issues]: https://github.com/madrobby/zepto/issues
+  [upstream]: https://github.com/madrobby/zepto
+  [zeptojs.com]: https://zeptojs.com
+  [issues]: https://github.com/oreoorbitz/Mepto/issues
   [docs]: https://github.com/madrobby/zepto/tree/gh-pages#readme
-  [mkd]: https://help.github.com/articles/creating-and-highlighting-code-blocks/
-  [evidence.js]: https://github.com/tobie/Evidence
-  [phantomjs]: http://phantomjs.org/download.html
+  [mkd]: https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks
+  [phantomjs]: https://phantomjs.org/download.html
