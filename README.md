@@ -1,246 +1,141 @@
-# mepto.js – a minimalist JavaScript library
+# Mepto – a modern TypeScript jQuery alternative
 
-mepto is a minimalist JavaScript library for modern browsers with a
-largely jQuery-compatible API. If you use jQuery, you already know how to use mepto.
+Mepto is a lightweight, jQuery-compatible library for modern browsers, and a
+TypeScript rewrite of [Zepto.js][zepto]. If you use jQuery, you already know
+how to use Mepto.
 
-See [meptojs.com][] for an extended introduction, downloads
-and documentation.
+The package is published as **`meptos`**; the browser globals are `$` and
+`mepto`.
 
-mepto.js is licensed under the terms of the MIT License.
+> **Status: transition in progress.** This branch (`ts-transition`) is an
+> active rewrite of the original Zepto codebase into TypeScript with modern
+> tooling (Vite, Vitest, Playwright). Some modules are fully typed and
+> modernized, others are still close to the original source. `npm run
+> typecheck` and the declaration step of `npm run build` print known type
+> errors from the unconverted modules — this is expected; the build still
+> exits 0 and produces working bundles.
 
-Want to give us money or a tip? Don't.
-Instead please donate to [charity: water](http://charitywater.org/).
+Mepto is licensed under the terms of the MIT License, like Zepto itself.
 
-## Building
+## Browser support
 
-[![Build Status](https://secure.travis-ci.org/madrobby/mepto.svg?branch=master)](http://travis-ci.org/madrobby/mepto)
+Evergreen browsers only: the last 3 versions of Chrome, Firefox, Safari, and
+Edge. There is no IE or legacy compatibility code — no polyfills, no legacy
+feature detection. Requires Node.js >= 18 for development.
 
-The official site offers a download of the default distribution of mepto. This
-is good for starting out. However, at some point you might want to add some
-optional modules and remove some of the default ones you don't need, to keep the
-size at a minimum. That's when you need to check out mepto's source code and use
-the build commands.
-
-You will need Node.js installed on your system.
+## Getting started
 
 ~~~ sh
 $ npm install
-$ npm run-script dist
-
-# do a custom build
-$ MODULES="mepto event data" npm run-script dist
-
-# on Windows
-c:\mepto> SET MODULES=mepto event data
-c:\mepto> npm run-script dist
+$ npm run dev        # Vite dev server (auto-picks a port in 3000–3099, opens the browser)
 ~~~
 
-The resulting files are:
-
-1. `dist/mepto.js`
-2. `dist/mepto.min.js`
-
-If you install CoffeeScript globally, you can run `make` directly:
+### Building
 
 ~~~ sh
-# one-time operation
-$ npm install coffee-script --global
-
-$ coffee make dist
-$ MODULES="mepto event data ..." ./make dist
-
-# on Windows
-c:\mepto> SET MODULES=mepto event data
-c:\mepto> coffee make dist
+$ npm run build
 ~~~
 
-## mepto modules
+This bundles everything from the single entry point `src/meptos.ts` and
+produces:
 
-mepto modules are individual files in the "src/" directory.
+1. `dist/meptos.js` – ES module
+2. `dist/meptos.umd.cjs` – UMD build (exposes `window.$` / `window.mepto`)
+3. `dist/meptos.d.ts` – TypeScript declarations
 
-<table>
-<thead><tr>
-  <th>module</th> <th>default</th> <th>description</th>
-</tr></thead>
-<tbody>
-  <tr>
-    <th><a href="src/mepto.js#files">mepto</a></th>
-    <td>✔</td>
-    <td>Core module; contains most methods</td>
-  </tr>
-  <tr>
-    <th><a href="src/event.js#files">event</a></th>
-    <td>✔</td>
-    <td>Event handling via <code>on()</code> &amp; <code>off()</code></td>
-  </tr>
-  <tr>
-    <th><a href="src/ajax.js#files">ajax</a></th>
-    <td>✔</td>
-    <td>XMLHttpRequest and JSONP functionality</td>
-  </tr>
-  <tr>
-    <th><a href="src/form.js#files">form</a></th>
-    <td>✔</td>
-    <td>Serialize &amp; submit web forms</td>
-  </tr>
-  <tr>
-    <th><a href="src/ie.js#files">ie</a></th>
-    <td>✔</td>
-    <td>Support for Internet Explorer 10+ on the desktop and Windows Phone 8</td>
-  </tr>
-  <tr>
-    <th><a href="src/detect.js#files">detect</a></th>
-    <td></td>
-    <td>Provides <code>$.os</code> and <code>$.browser</code> information</td>
-  </tr>
-  <tr>
-    <th><a href="src/fx.js#files">fx</a></th>
-    <td></td>
-    <td>The <code>animate()</code> method</td>
-  </tr>
-  <tr>
-    <th><a href="src/fx_methods.js#files">fx_methods</a></th>
-    <td></td>
-    <td>
-      Animated <code>show</code>, <code>hide</code>, <code>toggle</code>,
-      and <code>fade*()</code> methods.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/assets.js#files">assets</a></th>
-    <td></td>
-    <td>
-      Experimental support for cleaning up iOS memory after removing
-      image elements from the DOM.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/data.js#files">data</a></th>
-    <td></td>
-    <td>
-      A full-blown <code>data()</code> method, capable of storing arbitrary
-      objects in memory.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/deferred.js#files">deferred</a></th>
-    <td></td>
-    <td>
-      Provides <code>$.Deferred</code> promises API.
-      Depends on the "callbacks" module.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/callbacks.js#files">callbacks</a></th>
-    <td></td>
-    <td>
-      Provides <code>$.Callbacks</code> for use in "deferred" module.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/selector.js#files">selector</a></th>
-    <td></td>
-    <td>
-      Experimental <a href="http://api.jquery.com/category/selectors/jquery-selector-extensions/">jQuery
-      CSS extensions</a> support for functionality such as <code>$('div:first')</code> and
-      <code>el.is(':visible')</code>.
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/touch.js#files">touch</a></th>
-    <td></td>
-    <td>
-      Fires tap– and swipe–related events on touch devices. This works with both
-      `touch` (iOS, Android) and `pointer` events (Windows Phone).
-    </td>
-  </tr>
-  <tr>
-    <th><a href="src/gesture.js#files">gesture</a></th>
-    <td></td>
-    <td>Fires pinch gesture events on touch devices</td>
-  </tr>
-  <tr>
-    <th><a href="src/stack.js#files">stack</a></th>
-    <td></td>
-    <td>Provides <code>andSelf</code> &amp; <code>end()</code> chaining methods</td>
-  </tr>
-  <tr>
-    <th><a href="src/ios3.js#files">ios3</a></th>
-    <td></td>
-    <td>
-      String.prototype.trim and Array.prototype.reduce methods
-      (if they are missing) for compatibility with iOS 3.x.
-    </td>
-  </tr>
-</tbody>
-</table>
+plus sourcemaps. The output is currently unminified; `npm run size` enforces
+a 15 KB budget on each bundle via size-limit.
+
+~~~ ts
+import { $ } from 'meptos'
+
+$('#app').addClass('ready').on('click', handler)
+~~~
+
+> Note: the old Zepto custom-build mechanism (`MODULES="zepto event data"
+> npm run-script dist`, CoffeeScript `make`) no longer exists. All modules
+> are bundled unconditionally; the legacy `make` file and `script/`
+> directory still in the repo are stale and slated for removal.
+
+## Modules
+
+The source lives in `src/` as TypeScript modules:
+
+| module | description |
+|---|---|
+| `mepto` | Core module; contains most methods (`mepto.ts`) |
+| `event` | Event handling via `on()` & `off()` |
+| `ajax` | XMLHttpRequest and JSONP functionality |
+| `form` | Serialize & submit web forms |
+| `detect` | Provides `$.os` and `$.browser` information |
+| `fx` | The `animate()` method |
+| `fx_methods` | Animated `show`, `hide`, `toggle`, and `fade*()` methods |
+| `data` | Full-blown `data()` method, storing arbitrary objects (WeakMap-based) |
+| `selector` | jQuery CSS extensions such as `$('div:first')` and `el.is(':visible')` |
+| `stack` | Provides `andSelf` & `end()` chaining methods |
+| `touch` | Tap– and swipe–related events on touch devices |
+| `gesture` | Pinch gesture events on touch devices |
+| `callbacks` | `$.Callbacks` (used by `deferred`) |
+| `deferred` | `$.Deferred` promises API |
+| `assets` | Experimental iOS memory cleanup for removed image elements |
+
+The Zepto-era `ie` and `ios3` modules were dropped along with all legacy
+browser support. `types.ts` holds the shared type definitions.
+
+## Migration tooling
+
+Mepto doubles as a bridge for progressively migrating from jQuery-style code
+to vanilla JS, including LLM-assisted migration. It exposes bridge APIs with
+native-DOM signatures (`mepto.getElementById`, `mepto.getElementsByClassName`,
+`mepto.getElementsByTagName`) and a `classList` bridge on collections. See
+[docs-stub.md](docs-stub.md) for the migration guide.
+
+## Running tests
+
+Unit tests (Vitest + jsdom):
+
+~~~ sh
+$ npm test           # or: npm run test:watch
+~~~
+
+End-to-end tests in real browsers (Playwright; runs the suite in
+`index.html`, which imports the library straight from source — no build
+needed):
+
+~~~ sh
+$ npm run test:e2e   # chromium, firefox, webkit, Mobile Chrome, Mobile Safari
+~~~
+
+Everything at once:
+
+~~~ sh
+$ npm run test:all
+~~~
+
+`test/functional/` contains manual test pages for touch, gestures, and
+effects. Other useful checks: `npm run lint`, `npm run format:check`,
+`npm run typecheck`, `npm run size`.
+
+### LLM test harness
+
+`tools/llm-test-harness/` is a secure, sandboxed Puppeteer runner that lets
+LLM agents execute JavaScript snippets against Mepto loaded from source,
+with prompt-injection detection and network isolation:
+
+~~~ sh
+$ cd tools/llm-test-harness && npm install && npm run build
+$ node bin/mepto-test.js --code "return $('div').length"
+$ node bin/mepto-test.js --batch=cases.json --compare   # diff against jQuery 3.7
+~~~
+
+See `tools/llm-test-harness/TODO.md` and `plans/llm-test-harness.md` for
+details.
 
 ## Contributing
 
-Please read our [contribution guidelines](https://github.com/madrobby/mepto/blob/master/CONTRIBUTING.md)
-for information on how to contribute.
+See [AGENTS.md](AGENTS.md) for the coding conventions, performance
+philosophy, and transition status that contributors are expected to follow.
+Bugs go to the [issue tracker][issues].
 
-### Documentation
-
-* @[meptojs](http://twitter.com/meptojs)
-
-### Write documentation
-
-mepto docs are written in Markdown and live in the ["gh-pages" branch][docs].
-They are published on [meptojs.com][meptojs.com].
-
-You can use GitHub's web interface to make quick changes to documentation for
-specific mepto features
-([example: ajaxSettings](https://github.com/madrobby/mepto/blob/gh-pages/ajax/_posts/1900-01-01-Z-ajaxSettings.md)).
-This will submit a pull request to us that we can review.
-
-### Report a bug
-
-1. Check if the bug is already fixed in the master branch since the last release.
-2. Check [existing issues][issues]. Open a new one, including exact browser &
-   platform information. For better formatting of your report, see
-   [GitHub-flavored Markdown][mkd].
-
-### Running tests
-
-You will need to install [PhantomJS][phantomjs]. Note that PhantomJS is no
-longer maintained (development was suspended in 2018) and is not available
-via Homebrew anymore; download it from its website instead.
-
-To set up the development environment (installs npm dependencies and checks
-for PhantomJS):
-
-~~~ sh
-$ script/bootstrap
-~~~
-
-To run the automated tests (lints the source, then runs the suite in
-PhantomJS against a local test server on port 3999):
-
-~~~ sh
-$ script/test
-~~~
-
-Alternatively, run just the test suite without linting:
-
-~~~ sh
-$ npm test
-~~~
-
-To run a test server, which you can hit with your browsers and devices:
-
-~~~ sh
-$ npm start
-~~~
-
-Go to `http://your-ip-address:3000/` on your browser and follow the
-instructions. For your convenience test failures and exceptions will be
-reported to the the console you started the test server in (as well as
-the browser console if available).
-
-  [meptojs.com]: http://meptojs.com
-  [issues]: https://github.com/madrobby/mepto/issues
-  [docs]: https://github.com/madrobby/mepto/tree/gh-pages#readme
-  [mkd]: https://help.github.com/articles/creating-and-highlighting-code-blocks/
-  [evidence.js]: https://github.com/tobie/Evidence
-  [phantomjs]: http://phantomjs.org/download.html
+  [zepto]: https://github.com/madrobby/zepto
+  [issues]: https://github.com/oreoorbitz/Mepto/issues

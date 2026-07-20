@@ -14,7 +14,7 @@ When making changes to this codebase, follow this routine to avoid common pitfal
 
 ```bash
 npm test                              # Vitest: 73 tests in jsdom, ~1s
-npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # Playwright: 228 tests in real browser, ~2s
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # Playwright: 234 tests in real browser, ~2s
 ```
 
 **The root `index.html` loads Mepto from source via ES module imports.** No build step is required for testing. Both Vitest and Playwright work directly against source.
@@ -36,7 +36,7 @@ npx playwright test ...               # Playwright will auto-start a fresh dev s
 
 ### About `npm run build`
 
-**The build will print TypeScript errors.** This is expected. The project is ~30% through a TypeScript transition — 10 of 17 modules are unconverted and contain type errors. These errors come from `vite-plugin-dts` (type declaration generator), not from esbuild (which strips types and produces working JS).
+**The build will print TypeScript errors.** This is expected. The project is ~40% through a TypeScript transition — 9 of 17 modules are unconverted and contain type errors. These errors come from `vite-plugin-dts` (type declaration generator), not from esbuild (which strips types and produces working JS).
 
 - The build **succeeds** (exit code 0) despite the errors
 - `dist/meptos.umd.cjs` and `dist/meptos.js` are produced correctly
@@ -48,14 +48,14 @@ npx playwright test ...               # Playwright will auto-start a fresh dev s
 | Command                                      | Time | Tests                | What it checks                                      |
 | -------------------------------------------- | ---- | -------------------- | --------------------------------------------------- |
 | `npm test`                                   | ~1s  | 73                   | Vitest in jsdom — fast unit tests                   |
-| `npx playwright test ... --project=chromium` | ~2s  | 228                  | Full suite in real Chromium                         |
+| `npx playwright test ... --project=chromium` | ~2s  | 234                  | Full suite in real Chromium                         |
 | `npm run test:e2e`                           | ~5s  | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
 
 Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final verification.
 
 ### How the dev server works
 
-`npm run dev` scans ports 3000–3099, binds to the first available one, and writes it to `.port`. The Playwright config reads `.port` at startup and navigates to `http://localhost:<port>/`. The test page at `/` (root `index.html`) loads Mepto from source and runs 228 assertions.
+`npm run dev` scans ports 3000–3099, binds to the first available one, and writes it to `.port`. The Playwright config reads `.port` at startup and navigates to `http://localhost:<port>/`. The test page at `/` (root `index.html`) loads Mepto from source and runs 234 assertions.
 
 ### Do not edit these files
 
@@ -65,21 +65,21 @@ Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final v
 
 ### What's tested / what's not
 
-The 228-test suite in `index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the root `index.html` suite.
+The 234-test suite in `index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the root `index.html` suite.
 
 ---
 
 ## Current Task
 
-Transition all source files to TypeScript, adding parameter types to untyped functions. Refactor antipatterns (shared mutable module-level variables, parameter mutation, `let` where `const` applies) as they are encountered. Verify each change with the 228-test suite before moving on.
+Transition all source files to TypeScript, adding parameter types to untyped functions. Refactor antipatterns (shared mutable module-level variables, parameter mutation, `let` where `const` applies) as they are encountered. Verify each change with the 234-test suite before moving on.
 
 ---
 
-## Progress Report (as of Apr 2026)
+## Progress Report (as of Jul 2026)
 
-### Overall: ~30% complete
+### Overall: ~40% complete
 
-Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix removal done. 4 of 17 modules fully converted (`data.ts`, `callbacks.ts`, `deferred.ts`, `form.ts`). 10 modules remain as JavaScript in practice.
+Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix removal done. 5 of 17 modules fully converted (`data.ts`, `callbacks.ts`, `deferred.ts`, `form.ts`, `event.ts`). 9 modules remain as JavaScript in practice.
 
 ### Completed
 
@@ -91,19 +91,20 @@ Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix rem
 - [x] **Convert `callbacks.ts`**: `var` → `const`/`let`, typed closure state and all params
 - [x] **Convert `deferred.ts`**: `var` → `const`/`let`, typed tuples, deferred, and promise objects
 - [x] **Convert `form.ts`**: `var` → `const`/`let`, typed all params and return values
+- [x] **Convert `event.ts`**: `var` → `const`/`let`, typed all params, added `Handler`/`ZidTarget` interfaces, typed the IIFE with `MeptoStatic`
 
 ### Per-File Status
 
 | File            | Lines | Typing          | Key Issues                                                                                                                                                 |
 | --------------- | ----- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `types.ts`      | 466   | **Done**        | `Mepto.matches` typed as bare `Function` — should get a proper signature                                                                                   |
-| `meptos.ts`     | 55    | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false                                                                                                |
-| `mepto.ts`      | ~1430 | **Partial**     | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type`        |
+| `types.ts`      | 496   | **Done**        | `Mepto.matches` typed as bare `Function` — should get a proper signature                                                                                   |
+| `meptos.ts`     | 54    | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false                                                                                                |
+| `mepto.ts`      | ~2180 | **Partial**     | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type`        |
 | `data.ts`       | 92    | **Done**        | `WeakMap` cache, `Symbol` expando, typed params                                                                                                            |
-| `callbacks.ts`  | 122   | **Done**        | Typed closure state and all methods                                                                                                                        |
-| `deferred.ts`   | 118   | **Done**        | Typed tuples, deferred/promise objects                                                                                                                     |
-| `form.ts`       | 40    | **Done**        | All params and return values typed                                                                                                                         |
-| `event.ts`      | ~270  | **Not started** | All `var`, zero annotations. Shared mutable `handlers` map and `_zid` counter. Untyped params throughout. `fn` mutation inside `add()` for hover emulation |
+| `callbacks.ts`  | 119   | **Done**        | Typed closure state and all methods                                                                                                                        |
+| `deferred.ts`   | 116   | **Done**        | Typed tuples, deferred/promise objects                                                                                                                     |
+| `form.ts`       | 41    | **Done**        | All params and return values typed                                                                                                                         |
+| `event.ts`      | 470   | **Done**        | Typed IIFE, `Handler`/`ZidTarget` interfaces. Shared mutable `handlers` map and `_zid` counter (typed). `fn` mutation inside `add()` for hover emulation   |
 | `ajax.ts`       | 381   | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)`                          |
 | `fx.ts`         | 123   | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect                                          |
 | `fx_methods.ts` | 71    | **Not started** | All `var`, zero annotations                                                                                                                                |
@@ -112,15 +113,15 @@ Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix rem
 | `detect.ts`     | 72    | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context                                                                                  |
 | `stack.ts`      | 22    | **Not started** | All `var`, zero annotations                                                                                                                                |
 | `gesture.ts`    | 35    | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout`                                                                          |
-| `touch.ts`      | ~190  | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed)                                                         |
+| `touch.ts`      | 189   | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed)                                                         |
 
 ### Recommended Next Steps
 
 1. ~~**Delete dead legacy files**: `ie.ts`, `ios3.ts`, and evaluate `amd_layout.ts`~~ **Done**
 2. **Continue `mepto.ts` typing**: Resolve remaining `any` types on core APIs (`mepto.init`, `$()`, `$.extend`, `$.fn.*` methods)
-3. **Convert remaining modules**: `event.ts` → `ajax.ts` → `fx.ts` → `fx_methods.ts` → `selector.ts` → `detect.ts` → `touch.ts` → `gesture.ts` → `assets.ts` → `stack.ts`
+3. **Convert remaining modules**: `ajax.ts` → `fx.ts` → `fx_methods.ts` → `selector.ts` → `detect.ts` → `touch.ts` → `gesture.ts` → `assets.ts` → `stack.ts`
 4. ~~**Migrate `data.ts` cache to `WeakMap`** per performance philosophy~~ **Done**
-5. **Expand test coverage**: The 228-test suite does not cover AJAX, deferreds, callbacks, animations, touch, or detect. These modules need tests before/alongside conversion
+5. **Expand test coverage**: The 234-test suite does not cover AJAX, deferreds, callbacks, animations, touch, or detect. These modules need tests before/alongside conversion
 6. **Tighten `tsconfig.json`** after all files are typed (incrementally enable `strict`, `noImplicitAny`, etc.)
 
 ---
@@ -154,6 +155,7 @@ Reference completed conversions to see these patterns in practice:
 
 - **`src/callbacks.ts`** — typed closure state, all method signatures typed
 - **`src/data.ts`** — WeakMap for element-associated state, typed expando Symbol
+- **`src/event.ts`** — typed IIFE, `Handler`/`ZidTarget` interfaces, fully typed params
 - **`src/form.ts`** — short and clean, best first read
 
 ---
@@ -166,9 +168,9 @@ Build the library and record the passing test count before making any changes. E
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-A clean baseline looks like: `1 passed` (the single Playwright test, which internally asserts 228 pass and 0 fail).
+A clean baseline looks like: `1 passed` (the single Playwright test, which internally asserts 234 pass and 0 fail).
 
-> **Important:** The test suite loads `/dist/meptos.umd.cjs`. Always run `npm run build` before running tests — the harness tests the compiled output, not the source.
+> **Note:** The test suite loads Mepto from source (`/src/meptos.ts` via ES module imports in `index.html`). No build step is needed for testing — editing a `.ts` file and re-running the suite is enough.
 
 ---
 
@@ -316,7 +318,7 @@ cat .port                          # → e.g. 3000
 
 ### Landing Page — Unit Test Suite
 
-`http://localhost:$(cat .port)/` is the unit test suite. It loads Mepto directly from source — **no build step required**. All 228 tests run automatically on page load and the result is visible immediately.
+`http://localhost:$(cat .port)/` is the unit test suite. It loads Mepto directly from source — **no build step required**. All 234 tests run automatically on page load and the result is visible immediately.
 
 - `#summary.pass` — all tests passed
 - `#summary.fail` — one or more tests failed (failures listed inline with ✗)
@@ -411,7 +413,7 @@ The landing page (`/`) is the unit test suite. It loads from source — no build
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-Playwright navigates to `/`, waits for `#summary` to get class `pass` or `fail`, then asserts `failed === 0` and `passed === 228`. On failure it prints the names of every failing test.
+Playwright navigates to `/`, waits for `#summary` to get class `pass` or `fail`, then asserts `failed === 0` and `passed === 234`. On failure it prints the names of every failing test.
 
 ---
 
@@ -584,7 +586,7 @@ mepto/
 │   └── llm-test-harness/    # Testing harness for agents
 │       ├── bin/mepto-test.js
 │       └── src/
-├── index.html                # Unit test suite (228 tests, loads from source)
+├── index.html                # Unit test suite (234 tests, loads from source)
 ├── test/                     # Test files
 │   ├── blank.html           # LLM test harness bridge page
 │   ├── e2e/                 # Playwright e2e specs
@@ -675,7 +677,7 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 | Command                                                              | Description                     |
 | -------------------------------------------------------------------- | ------------------------------- |
-| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 228-test unit suite     |
+| `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | Run the 234-test unit suite     |
 | `npx playwright test test/e2e/scratch.spec.ts --project=chromium`    | Run a scratch spec              |
 | `npx playwright test --project=chromium`                             | Run all e2e specs in Chromium   |
 | `npx playwright test --headed`                                       | Run with visible browser window |
