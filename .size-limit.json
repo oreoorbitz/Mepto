@@ -1,0 +1,12 @@
+[
+  {
+    "path": "dist/meptos.js",
+    "limit": "15 KB",
+    "name": "ESM Build"
+  },
+  {
+    "path": "dist/meptos.umd.cjs",
+    "limit": "15 KB",
+    "name": "UMD Build"
+  }
+]

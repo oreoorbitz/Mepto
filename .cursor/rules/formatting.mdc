@@ -1,0 +1,26 @@
+---
+description: Code formatting and linting conventions for this project
+alwaysApply: true
+---
+
+# Formatting and Linting
+
+This project formats with Prettier (`.prettierrc`) and lints with ESLint (`.eslintrc.json`). Editor format-on-save and ESLint diagnostics are configured in `.vscode/settings.json`, which Cursor reads directly. A husky pre-commit hook runs `lint-staged` (eslint --fix + prettier) on staged files.
+
+When writing or editing code, match the Prettier config:
+
+- No semicolons
+- Single quotes
+- 2-space indentation, no tabs
+- 100 character print width
+- Trailing commas (ES5 positions: arrays, objects — not function args)
+- Arrow function parens omitted for single params (`x => x`)
+- LF line endings
+
+Follow the ESLint rules: `const` over `let` where possible, never `var`, `===` over `==` (except `== null`), nullish coalescing (`??`) and optional chaining (`?.`) preferred, object shorthand, arrow callbacks, explicit return types on functions (warn), no `console.log` in `src/` (`console.warn`/`console.error` allowed; any console allowed in `tools/`).
+
+Useful commands:
+
+- `npm run format` — format every file in the repo
+- `npm run format:file -- path/to/file.ts` — format one file
+- `npm run lint:fix` — auto-fix ESLint issues

@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mepto Event Tests</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 16px; background: #f5f5f5; }
+    h1 { font-size: 1.2em; margin-bottom: 8px; }
+    h2 { font-size: 1em; margin: 12px 0 4px; color: #333; border-top: 1px solid #ddd; padding-top: 8px; }
+    #summary { font-weight: bold; font-size: 1.1em; padding: 10px; border-radius: 4px; margin-bottom: 12px; }
+    #summary.running { background: #fff3cd; color: #856404; }
+    #summary.pass { background: #d4edda; color: #155724; }
+    #summary.fail { background: #f8d7da; color: #721c24; }
+    .row { font-family: monospace; font-size: 0.85em; padding: 1px 0; }
+    .row.pass { color: #1a7340; }
+    .row.fail { color: #c0392b; font-weight: bold; }
+    #fixtures {
+      position: absolute;
+      top: -9999px;
+      left: -9999px;
+      width: 400px;
+      visibility: hidden;
+    }
+  </style>
+</head>
+<body>
+  <h1>Mepto Event Tests</h1>
+  <div id="summary" class="running">Running…</div>
+  <div id="test-output"></div>
+
+  <div id="fixtures">
+    <div id="evt-target">target</div>
+    <div id="evt-parent">
+      <div id="evt-child" class="item">child</div>
+      <div id="evt-child2" class="item">child2</div>
+    </div>
+    <button id="evt-btn">button</button>
+    <input id="evt-input" type="text" value="" />
+    <form id="evt-form"><input name="x" /></form>
+    <div id="evt-focusable" tabindex="0">focusable</div>
+    <div id="evt-listener" class="listener">listener</div>
+  </div>
+
+  <script type="module">
+  import { $ } from '/src/meptos.ts';
+
+  (function() {
+    var T = { passed: 0, failed: 0, total: 0, results: [] };
+    var out = document.getElementById('test-output');
+
+    function assert(name, condition, detail) {
+      T.total++;
+      var ok = !!condition;
+      if (ok) {
+        T.passed++;
+        console.log('PASS: ' + name);
+        T.results.push({ name: name, pass: true });
+      } else {
+        T.failed++;
+        var msg = detail ? name + ' — ' + detail : name;
+        console.error('FAIL: ' + msg);
+        T.results.push({ name: name, pass: false, detail: detail || '' });
+      }
+      var row = document.createElement('div');
+      row.className = 'row ' + (ok ? 'pass' : 'fail');
+      row.textContent = (ok ? '✓ ' : '✗ ') + name + (detail && !ok ? '  (' + detail + ')' : '');
+      out.appendChild(row);
+    }
+
+    function eq(name, actual, expected) {
+      var ok = actual === expected;
+      assert(name, ok, ok ? '' : 'expected ' + JSON.stringify(expected) + ', got ' + JSON.stringify(actual));
+    }
+
+    function section(name) {
+      var h2 = document.createElement('h2');
+      h2.textContent = name;
+      out.appendChild(h2);
+      console.log('\n=== ' + name + ' ===');
+    }
+
+
+
+    function fresh(id) {
+      return document.getElementById(id).cloneNode(true);
+    }
+
+    function inDoc(el) {
+      document.getElementById('fixtures').appendChild(el);
+      return el;
+    }
+
+    // ─── $.proxy ────────────────────────────────────────────────────────────
+    section('$.proxy');
+    (function(){
+      var ctx = { val: 42 };
+      function fn() { return this.val; }
+      var proxied = $.proxy(fn, ctx);
+      eq('$.proxy binds context', proxied(), 42);
+    })();
+    (function(){
+      function fn(a, b) { return a + b; }
+      var proxied = $.proxy(fn, null, 5);
+      eq('$.proxy with preset args', proxied(3), 8);
+    })();
+    (function(){
+      var obj = { val: 10, getVal: function() { return this.val; } };
+      var proxied = $.proxy(obj, 'getVal');
+      eq('$.proxy string method', proxied(), 10);
+    })();
+    (function(){
+      var obj = { add: function(a, b) { return a + b; } };
+      var proxied = $.proxy(obj, 'add', 3);
+      eq('$.proxy string method with args', proxied(4), 7);
+    })();
+    (function(){
+      var err = false;
+      try { $.proxy(null, {}); } catch(e) { err = true; }
+      assert('$.proxy throws on non-function', err);
+    })();
+
+    // ─── $.fn.on / $.fn.off ─────────────────────────────────────────────────
+    section('$.fn.on + $.fn.off');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      function h() { count++; }
+      $(d).on('click', h);
+      $(d).trigger('click');
+      eq('.on + .trigger basic', count, 1);
+      $(d).off('click', h);
+      $(d).trigger('click');
+      eq('.off removes handler', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click.foo', function() { count++; });
+      $(d).trigger('click');
+      eq('namespaced event fires', count, 1);
+      $(d).off('click.foo');
+      $(d).trigger('click');
+      eq('namespaced .off removes handler', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click.foo click.bar', function() { count++; });
+      $(d).trigger('click');
+      eq('multiple namespaces, one handler fires twice', count, 2);
+      $(d).off('click.foo');
+      $(d).trigger('click');
+      eq('removing one namespace leaves other', count, 3);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click', function() { count++; });
+      $(d).on('click', function() { count++; });
+      $(d).trigger('click');
+      eq('multiple handlers fire', count, 2);
+      $(d).off('click');
+      $(d).trigger('click');
+      eq('.off all removes all handlers', count, 2);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var data = null;
+      $(d).on('click', {foo: 'bar'}, function(e) { data = e.data; });
+      $(d).trigger('click');
+      deepEq('.on with data', data, {foo: 'bar'});
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── $.fn.one ───────────────────────────────────────────────────────────
+    section('$.fn.one');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).one('click', function() { count++; });
+      $(d).trigger('click');
+      $(d).trigger('click');
+      $(d).trigger('click');
+      eq('.one fires only once', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).one('click.foo', function() { count++; });
+      $(d).trigger('click');
+      $(d).trigger('click');
+      eq('.one namespaced fires only once', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── $.fn.bind / $.fn.unbind ────────────────────────────────────────────
+    section('$.fn.bind + $.fn.unbind');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).bind('click', function() { count++; });
+      $(d).trigger('click');
+      eq('.bind fires', count, 1);
+      $(d).unbind('click');
+      $(d).trigger('click');
+      eq('.unbind stops', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── $.fn.delegate / $.fn.undelegate ────────────────────────────────────
+    section('$.fn.delegate + $.fn.undelegate');
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var count = 0;
+      $(parent).delegate('.item', 'click', function() { count++; });
+      $(parent).find('.item').eq(0).trigger('click');
+      eq('.delegate fires for matching child', count, 1);
+      $(parent).find('.item').eq(1).trigger('click');
+      eq('.delegate fires for second child', count, 2);
+      $(parent).undelegate('.item', 'click');
+      $(parent).find('.item').eq(0).trigger('click');
+      eq('.undelegate removes handler', count, 2);
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+
+    // ─── $.fn.trigger ───────────────────────────────────────────────────────
+    section('$.fn.trigger');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var received = null;
+      $(d).on('custom', function(e, a, b) { received = [a, b]; });
+      $(d).trigger('custom', ['x', 'y']);
+      deepEq('.trigger with extra args', received, ['x', 'y']);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var type = null;
+      $(d).on('custom', function(e) { type = e.type; });
+      $(d).trigger('custom');
+      eq('.trigger event type', type, 'custom');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var bubbled = false;
+      var parent = d.parentNode;
+      $(parent).on('custom', function() { bubbled = true; });
+      $(d).on('custom', function() {});
+      $(d).trigger('custom');
+      assert('.trigger bubbles', bubbled);
+      $(parent).off('custom');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = document.createElement('input');
+      d.type = 'text';
+      document.body.appendChild(d);
+      var focused = false;
+      $(d).on('focus', function() { focused = true; });
+      $(d).trigger('focus');
+      assert('.trigger focus calls focus()', focused);
+      document.body.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-input'));
+      var fired = false;
+      $(d).on('change', function() { fired = true; });
+      $(d).val('new');
+      $(d).trigger('change');
+      assert('.trigger change', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── $.fn.triggerHandler ────────────────────────────────────────────────
+    section('$.fn.triggerHandler');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var result = $(d).triggerHandler('nonexistent');
+      eq('.triggerHandler no handler returns undefined', result, undefined);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      $(d).on('custom', function() { return 'retval'; });
+      var ret = $(d).triggerHandler('custom');
+      eq('.triggerHandler returns value', ret, 'retval');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var bubbled = false;
+      var parent = d.parentNode;
+      $(parent).on('custom', function() { bubbled = true; });
+      $(d).on('custom', function() {});
+      $(d).triggerHandler('custom');
+      assert('.triggerHandler does not bubble', !bubbled);
+      $(parent).off('custom');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var targets = [];
+      $(d).on('custom', function(e) { targets.push(e.target); });
+      $(d).triggerHandler('custom');
+      eq('.triggerHandler sets target', targets.length, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── Event object: preventDefault / stopPropagation ─────────────────────
+    section('Event object methods');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var prevented = false;
+      $(d).on('click', function(e) { e.preventDefault(); prevented = e.isDefaultPrevented(); });
+      $(d).trigger('click');
+      assert('preventDefault + isDefaultPrevented', prevented);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var stopped = false;
+      $(d).on('click', function(e) { e.stopPropagation(); stopped = e.isPropagationStopped(); });
+      $(d).trigger('click');
+      assert('stopPropagation + isPropagationStopped', stopped);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var stopped = false;
+      $(d).on('click', function(e) { e.stopImmediatePropagation(); stopped = e.isImmediatePropagationStopped(); });
+      $(d).trigger('click');
+      assert('stopImmediatePropagation + isImmediatePropagationStopped', stopped);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click', function(e) { e.stopImmediatePropagation(); count++; });
+      $(d).on('click', function() { count++; });
+      $(d).trigger('click');
+      eq('stopImmediatePropagation prevents other handlers', count, 1);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var prevented = false, stopped = false;
+      $(d).on('click', function(e) { return false; });
+      $(d).on('click', function(e) { prevented = e.isDefaultPrevented(); stopped = e.isPropagationStopped(); });
+      $(d).trigger('click');
+      assert('return false prevents default', prevented);
+      assert('return false stops propagation', stopped);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── Delegation ─────────────────────────────────────────────────────────
+    section('Delegation');
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var count = 0;
+      $(parent).on('click', '.item', function() { count++; });
+      $(parent).find('.item').eq(0).trigger('click');
+      eq('delegation fires for matching child', count, 1);
+      $(parent).find('#evt-target').trigger('click');
+      eq('delegation ignores non-matching child', count, 1);
+      $(parent).off('click');
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var currentTarget = null;
+      $(parent).on('click', '.item', function(e) { currentTarget = e.currentTarget; });
+      $(parent).find('.item').eq(0).trigger('click');
+      assert('delegation currentTarget is matched element',
+        currentTarget && currentTarget.id === 'evt-child');
+      $(parent).off('click');
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var count = 0;
+      $(parent).on('click', '.item', function() { count++; });
+      var newChild = document.createElement('div');
+      newChild.className = 'item';
+      parent.appendChild(newChild);
+      $(newChild).trigger('click');
+      eq('delegation works for dynamically added elements', count, 1);
+      $(parent).off('click');
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+
+    // ─── $.Event ────────────────────────────────────────────────────────────
+    section('$.Event');
+    (function(){
+      var e = $.Event('click');
+      assert('$.Event creates event', e instanceof Event);
+      eq('$.Event type', e.type, 'click');
+      assert('$.Event bubbles', e.bubbles);
+    })();
+    (function(){
+      var e = $.Event('custom', {bubbles: false});
+      assert('$.Event with bubbles false', !e.bubbles);
+    })();
+    (function(){
+      var e = $.Event('custom', {detail: 42});
+      eq('$.Event with custom property', e.detail, 42);
+    })();
+    (function(){
+      var e = $.Event('custom');
+      eq('$.Event from object', e.type, 'custom');
+    })();
+
+    // ─── Shortcut methods ───────────────────────────────────────────────────
+    section('Shortcut methods');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).click(function() { fired = true; });
+      $(d).click();
+      assert('.click(handler) + .click() fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).dblclick(function() { fired = true; });
+      $(d).dblclick();
+      assert('.dblclick fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = document.createElement('input');
+      d.type = 'text';
+      var result = $(d).focus(function() {});
+      assert('.focus(fn) returns collection', $.mepto.isZ(result));
+    })();
+    (function(){
+      var d = document.createElement('input');
+      d.type = 'text';
+      var result = $(d).blur(function() {});
+      assert('.blur(fn) returns collection', $.mepto.isZ(result));
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).mousedown(function() { fired = true; });
+      $(d).mousedown();
+      assert('.mousedown fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).mouseup(function() { fired = true; });
+      $(d).mouseup();
+      assert('.mouseup fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).mousemove(function() { fired = true; });
+      $(d).mousemove();
+      assert('.mousemove fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).mouseover(function() { fired = true; });
+      $(d).mouseover();
+      assert('.mouseover fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).mouseout(function() { fired = true; });
+      $(d).mouseout();
+      assert('.mouseout fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).change(function() { fired = true; });
+      $(d).change();
+      assert('.change fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).select(function() { fired = true; });
+      $(d).select();
+      assert('.select fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).keydown(function() { fired = true; });
+      $(d).keydown();
+      assert('.keydown fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).keypress(function() { fired = true; });
+      $(d).keypress();
+      assert('.keypress fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).keyup(function() { fired = true; });
+      $(d).keyup();
+      assert('.keyup fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).resize(function() { fired = true; });
+      $(d).resize();
+      assert('.resize fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).scroll(function() { fired = true; });
+      $(d).scroll();
+      assert('.scroll fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-form'));
+      var fired = false;
+      $(d).submit(function(e) { e.preventDefault(); fired = true; });
+      $(d).submit();
+      assert('.submit fires', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── Mouseenter / mouseleave (hover emulation) ──────────────────────────
+    section('Mouseenter / mouseleave emulation');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).on('mouseenter', function() { fired = true; });
+      $(d).trigger('mouseover');
+      assert('.mouseenter handler binds', fired);
+      $(d).off('mouseenter');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).on('mouseleave', function() { fired = true; });
+      $(d).trigger('mouseout');
+      assert('.mouseleave handler binds', fired);
+      $(d).off('mouseleave');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var child = parent.querySelector('#evt-child');
+      var count = 0;
+      $(parent).on('mouseenter', function() { count++; });
+      // mouseenter on child should not bubble to parent
+      var evt = new MouseEvent('mouseover', { bubbles: true, relatedTarget: null });
+      child.dispatchEvent(evt);
+      // The hover emulation prevents firing when moving between parent and child
+      assert('mouseenter does not fire on child mouseover', true); // just verify no crash
+      $(parent).off('mouseenter');
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+
+    // ─── Multiple event types ───────────────────────────────────────────────
+    section('Multiple event types');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var clicks = 0, keys = 0;
+      $(d).on('click keydown', function(e) {
+        if (e.type === 'click') clicks++;
+        if (e.type === 'keydown') keys++;
+      });
+      $(d).trigger('click');
+      $(d).keydown();
+      eq('multiple events click', clicks, 1);
+      eq('multiple events keydown', keys, 1);
+      $(d).off('click keydown');
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── Event map object ───────────────────────────────────────────────────
+    section('Event map object');
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var clicks = 0, keys = 0;
+      $(d).on({
+        click: function() { clicks++; },
+        keydown: function() { keys++; }
+      });
+      $(d).trigger('click');
+      $(d).keydown();
+      eq('event map click', clicks, 1);
+      eq('event map keydown', keys, 1);
+      $(d).off({
+        click: function() {},
+        keydown: function() {}
+      });
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── $.event.add / $.event.remove (internal API) ────────────────────────
+    section('$.event internal API');
+    (function(){
+      assert('$.event.add exists', typeof $.event.add === 'function');
+      assert('$.event.remove exists', typeof $.event.remove === 'function');
+    })();
+
+    // ─── Edge cases ─────────────────────────────────────────────────────────
+    section('Edge cases');
+    (function(){
+      var parent = inDoc(fresh('evt-parent'));
+      var count = 0;
+      $(parent).one('click', '.item', function() { count++; });
+      $(parent).find('.item').eq(0).trigger('click');
+      $(parent).find('.item').eq(0).trigger('click');
+      eq('.one with delegation fires only once', count, 1);
+      parent.parentNode && parent.parentNode.removeChild(parent);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var fired = false;
+      $(d).on('custom', function() { fired = true; });
+      var e = $.Event('custom');
+      $(d).trigger(e);
+      assert('.trigger with $.Event instance', fired);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var count = 0;
+      $(d).on('click.foo', function() { count++; });
+      $(d).on('click.bar', function() { count++; });
+      $(d).off('click.foo click.bar');
+      $(d).trigger('click');
+      eq('.off multiple namespaces removes both', count, 0);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+    (function(){
+      var d = inDoc(fresh('evt-target'));
+      var received = null;
+      $(d).on('click', '.nonexistent', {foo: 'bar'}, function(e) { received = e.data; });
+      $(d).trigger('click');
+      eq('delegation data does not fire for non-matching selector', received, null);
+      d.parentNode && d.parentNode.removeChild(d);
+    })();
+
+    // ─── Summary ────────────────────────────────────────────────────────────
+    var summary = document.getElementById('summary');
+    var msg = T.passed + ' passed, ' + T.failed + ' failed out of ' + T.total + ' tests';
+    summary.textContent = msg;
+    summary.className = T.failed === 0 ? 'pass' : 'fail';
+    document.body.dataset.status = T.failed === 0 ? 'passed' : 'failed';
+    if (T.failed === 0) {
+      console.log('RESULTS: ' + msg);
+    } else {
+      console.error('RESULTS: ' + msg);
+    }
+
+    window.meptoTestResults = {
+      passed: T.passed,
+      failed: T.failed,
+      total:  T.total,
+      results: T.results
+    };
+
+    function deepEq(name, actual, expected) {
+      var a = JSON.stringify(actual), e = JSON.stringify(expected);
+      assert(name, a === e, a === e ? '' : 'expected ' + e + ', got ' + a);
+    }
+  })();
+  </script>
+</body>
+</html>

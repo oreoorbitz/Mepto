@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mepto Test - Blank Page</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        padding: 20px;
+        background: #f5f5f5;
+      }
+      #test-container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        min-height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="test-container">
+      <!-- Test content will be injected here -->
+    </div>
+
+    <!--
+    Load Mepto from SOURCE, not /dist. Vite transpiles the TS on the fly, so
+    the harness always reflects the current src/ — no build step required. This
+    matches how the root index.html test suite loads the library. Loaded as an
+    ES module (type="module"), so $/Mepto attach to window asynchronously.
+    The runner waits for networkidle0 before executing test code, by which
+    point the module has evaluated and window.$ / window.Mepto are available.
+
+    Console capture is handled entirely by Puppeteer's page.on('console') in
+    runner.ts — do NOT add a window.MeptoTestBridge override here. A previous
+    version did, which double-buffered every message into an array nothing read.
+  -->
+    <script type="module">
+      import { $ } from '/src/meptos.ts'
+      window.$ = $
+      window.Mepto = $
+      window.mepto = $
+      console.log('Mepto loaded from source')
+    </script>
+  </body>
+</html>
