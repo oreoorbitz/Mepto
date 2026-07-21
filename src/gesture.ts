@@ -17,9 +17,8 @@ interface GestureState {
   if ($.os.ios) {
     let gesture: GestureState = {}
 
-    function parentIfText(node: Node): Element | null {
-      return 'tagName' in node ? (node as Element) : (node.parentNode as Element | null)
-    }
+    const parentIfText = (node: Node): Element | null =>
+      'tagName' in node ? (node as Element) : (node.parentNode as Element | null)
 
     $(document)
       .bind('gesturestart', (e: Event) => {
@@ -34,9 +33,10 @@ interface GestureState {
       })
       .bind('gestureend', (e: Event) => {
         if (gesture.e2 > 0) {
-          Math.abs(gesture.e1 - gesture.e2) != 0 &&
-            $(gesture.target).trigger('pinch') &&
+          if (Math.abs(gesture.e1 - gesture.e2) !== 0) {
+            $(gesture.target).trigger('pinch')
             $(gesture.target).trigger('pinch' + (gesture.e1 - gesture.e2 > 0 ? 'In' : 'Out'))
+          }
           gesture.e1 = gesture.e2 = gesture.last = 0
         } else if ('last' in gesture) {
           gesture = {}

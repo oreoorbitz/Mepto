@@ -24,12 +24,13 @@ interface TouchEventMap {
 }
 
 ;(function ($: MeptoStatic) {
+  const longTapDelay = 750
+
   let touch: TouchState = {},
     touchTimeout: ReturnType<typeof setTimeout> | null = null,
     tapTimeout: ReturnType<typeof setTimeout> | null = null,
     swipeTimeout: ReturnType<typeof setTimeout> | null = null,
     longTapTimeout: ReturnType<typeof setTimeout> | null = null,
-    longTapDelay = 750,
     down: ((e: Event) => void) | undefined,
     up: ((e: Event) => void) | undefined,
     move: ((e: Event) => void) | undefined,

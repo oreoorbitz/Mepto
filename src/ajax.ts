@@ -326,7 +326,8 @@ interface SerialParams extends Array<string> {
 
     if (!settings.crossDomain) setHeader('X-Requested-With', 'XMLHttpRequest')
     setHeader('Accept', mime || '*/*')
-    if ((mime = settings.mimeType || mime)) {
+    mime = settings.mimeType || mime
+    if (mime) {
       if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
       xhr.overrideMimeType(mime)
     }
