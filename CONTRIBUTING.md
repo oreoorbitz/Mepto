@@ -27,6 +27,28 @@ In order for your code to make it in, several conditions must be met:
 
 Whew, now that we have that out of the way thanks again!
 
+## Required local checks
+
+CI runs these on every push and PR. Run the same sequence locally before pushing:
+
+~~~sh
+$ npm ci || npm install
+$ npm run typecheck
+$ npm run lint
+$ npm run format:check
+$ npm test
+$ npx playwright install --with-deps chromium
+$ npx playwright test --project=chromium
+$ npm run build
+$ npm run size
+~~~
+
+The first run after this workflow lands will fail on the existing
+lint/typecheck/format debt; that is expected and is being fixed in
+follow-up PRs. **Do not silence these gates to make CI green.** If a
+check is blocking you on something you are not responsible for, open a
+narrow PR against that one gate and link it from your PR.
+
 ## Code style guidelines
 
 * Two spaces "soft tabs" indentation
