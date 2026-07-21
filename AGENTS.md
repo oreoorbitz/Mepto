@@ -8,6 +8,10 @@ Mepto is a lightweight, modern replacement for jQuery. The core aim is to match 
 
 ## Quick Start for LLMs
 
+**Runtime: Node 24 LTS (required).** The project targets and is pinned to Node 24
+(`.nvmrc` = 24, `engines.node` = "24.x", `engine-strict`). Run `nvm use` or
+install Node 24 before running any command — other versions are rejected.
+
 When making changes to this codebase, follow this routine to avoid common pitfalls:
 
 ### Verify your change (fast path — no build needed)
@@ -95,25 +99,25 @@ Legacy files deleted. `mepto.ts` `let` → `const` cleanup and vendor-prefix rem
 
 ### Per-File Status
 
-| File            | Lines | Typing          | Key Issues                                                                                                                                                 |
-| --------------- | ----- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `types.ts`      | 496   | **Done**        | `Mepto.matches` typed as bare `Function` — should get a proper signature                                                                                   |
-| `meptos.ts`     | 54    | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false                                                                                                |
-| `mepto.ts`      | ~2180 | **Partial**     | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type`        |
-| `data.ts`       | 92    | **Done**        | `WeakMap` cache, `Symbol` expando, typed params                                                                                                            |
-| `callbacks.ts`  | 119   | **Done**        | Typed closure state and all methods                                                                                                                        |
-| `deferred.ts`   | 116   | **Done**        | Typed tuples, deferred/promise objects                                                                                                                     |
-| `form.ts`       | 41    | **Done**        | All params and return values typed                                                                                                                         |
-| `event.ts`      | 470   | **Done**        | Typed IIFE, `Handler`/`ZidTarget` interfaces. Shared mutable `handlers` map and `_zid` counter (typed). `fn` mutation inside `add()` for hover emulation   |
-| `ajax.ts`       | 381   | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)`                          |
-| `fx.ts`         | 123   | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect                                          |
-| `fx_methods.ts` | 71    | **Not started** | All `var`, zero annotations                                                                                                                                |
-| `selector.ts`   | 85    | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg`                                                     |
-| `assets.ts`     | 21    | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID                                                                                 |
-| `detect.ts`     | 72    | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context                                                                                  |
-| `stack.ts`      | 22    | **Not started** | All `var`, zero annotations                                                                                                                                |
-| `gesture.ts`    | 35    | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout`                                                                          |
-| `touch.ts`      | 189   | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed)                                                         |
+| File            | Lines | Typing          | Key Issues                                                                                                                                               |
+| --------------- | ----- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `types.ts`      | 496   | **Done**        | `Mepto.matches` typed as bare `Function` — should get a proper signature                                                                                 |
+| `meptos.ts`     | 54    | **Mostly done** | Minor: dead-code guard (`if($ === undefined)`) always false                                                                                              |
+| `mepto.ts`      | ~2180 | **Partial**     | `let` → `const` done. Vendor-prefix code removed. Many `any` types remain on core APIs. Shared mutable `elementDisplay`, `classCache`, `class2type`      |
+| `data.ts`       | 92    | **Done**        | `WeakMap` cache, `Symbol` expando, typed params                                                                                                          |
+| `callbacks.ts`  | 119   | **Done**        | Typed closure state and all methods                                                                                                                      |
+| `deferred.ts`   | 116   | **Done**        | Typed tuples, deferred/promise objects                                                                                                                   |
+| `form.ts`       | 41    | **Done**        | All params and return values typed                                                                                                                       |
+| `event.ts`      | 470   | **Done**        | Typed IIFE, `Handler`/`ZidTarget` interfaces. Shared mutable `handlers` map and `_zid` counter (typed). `fn` mutation inside `add()` for hover emulation |
+| `ajax.ts`       | 381   | **Not started** | All `var`, zero annotations. Shared mutable `jsonpID`, `originAnchor`. `settings` mutated throughout. Indirect `(1,eval)(result)`                        |
+| `fx.ts`         | 123   | **Not started** | All `var`, zero annotations. Shared mutable vendor-prefix detection vars. `cssReset` built by chained side-effect                                        |
+| `fx_methods.ts` | 71    | **Not started** | All `var`, zero annotations                                                                                                                              |
+| `selector.ts`   | 85    | **Not started** | All `var`, zero annotations. Shared mutable `classTag` with timestamp. `process()` mutates `sel`/`arg`                                                   |
+| `assets.ts`     | 21    | **Not started** | All `var`, zero annotations. Shared mutable `cache` array and `timeout` ID                                                                               |
+| `detect.ts`     | 72    | **Not started** | All `var`, zero annotations. Sets `this.os`/`this.browser` on `$` context                                                                                |
+| `stack.ts`      | 22    | **Not started** | All `var`, zero annotations                                                                                                                              |
+| `gesture.ts`    | 35    | **Not started** | All `var`, zero annotations. Shared mutable `gesture` object and `gestureTimeout`                                                                        |
+| `touch.ts`      | 189   | **Not started** | All `var`, zero annotations. Shared mutable `touch` object, 4 timeout IDs (legacy IE code removed)                                                       |
 
 ### Recommended Next Steps
 
