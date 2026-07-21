@@ -706,6 +706,108 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 ---
 
+## Git & GitHub Workflow
+
+This section governs how LLM agents interact with git and GitHub in this
+repo. It supplements the human-facing `CONTRIBUTING.md`, which remains
+authoritative for project norms (one concern per PR, jQuery-compat, tests
+required, English only).
+
+### Repository layout
+
+- `origin` → `oreoorbitz/Mepto` (the fork this clone pushes to)
+- `upstream` → `madrobby/zepto` (the original zepto source — read-only
+  reference; do not push here)
+- Default branch: `main`. Release branches (`1.1-stable`) exist on
+  remotes but should not be touched without maintainer sign-off.
+
+### Authentication
+
+`gh` CLI must be authenticated before any GitHub API call (PR fetch,
+review, issue view, etc.). Check status with `gh auth status`. If it
+fails, the user must run `gh auth login` interactively — agents cannot
+complete the OAuth browser flow themselves.
+
+### Commit messages
+
+Use **Conventional Commits** style. Recent history (`fix:`, `build:`,
+`ci:`, `chore:`, `refactor:`) is the target; older informal messages
+(`Progress`, `Auto format`) predate CI and are not a precedent.
+
+```
+<type>(<optional scope>): <imperative subject, lowercase, ≤72 chars>
+
+<optional body explaining why, not what>
+```
+
+- `type` ∈ `feat | fix | refactor | chore | ci | build | docs | test | perf`
+- Subject in English, imperative mood (`add` not `added`), no trailing period
+- Scope is optional (`fix(ajax):`, `feat(event):`) — use it when the change
+  is confined to one module
+- One logical change per commit. If a commit needs "and also" to make
+  sense, split it.
+
+### Branch naming
+
+`<type>/<short-kebab-desc>` — e.g. `feat/ts7-typecheck`,
+`fix/ajax-jsonp`, `chore/deps-bump`. Match the branch's primary commit
+type. Keep names short but searchable.
+
+### Confirmation gate
+
+**Always confirm with the user before running any of these**, even if
+the surrounding task implies it:
+
+| Command                                           | Why                                        |
+| ------------------------------------------------- | ------------------------------------------ |
+| `git push` (any form)                             | Publishes work; visible to others          |
+| `git push --force` / `--force-with-lease`         | Rewrites public history                    |
+| `git reset --hard <ref>` (shared ref)             | Discards commits                           |
+| `git branch -D` / `git tag -d` (on shared tag)    | Deletes work                               |
+| `git rebase -i` / interactive rebase              | Requires interactive TUI, rewrites history |
+| `gh pr create` / `gh pr merge` / `gh pr close`    | Visible to collaborators, hard to reverse  |
+| `gh pr review --approve/--request-changes` (post) | Public review verdict                      |
+| `gh issue close` / `gh issue edit`                | Mutates shared state                       |
+| `gh release create` / `gh release delete`         | Publishes artifacts                        |
+
+A prior approval for one of these (e.g. one `git push`) does **not**
+authorize future instances — confirm each time unless the user has
+granted durable, explicit pre-authorization in `QWEN.md` or `AGENTS.md`.
+
+**Safe to run without confirmation** (read-only, local, or reversible):
+
+- `git status`, `git log`, `git diff`, `git show`, `git fetch`, `git blame`
+- `git add`, `git commit` (local only — pushing the commit still needs confirmation)
+- `git checkout -b <new-local-branch>`, `git switch <local-branch>`
+- `git stash` / `git stash pop` (local, reversible)
+- `gh auth status`, `gh pr view`, `gh pr list`, `gh pr checks`, `gh pr diff`
+- `gh issue view`, `gh issue list`
+- `gh repo view`, `gh api` **for GET requests only** (`-X GET` or no `-X`)
+- `qwen review fetch-pr` and `qwen review cleanup` (worktree isolation, no mutation of main tree)
+
+### gh CLI patterns
+
+**Fetching a PR for review** — always use `qwen review fetch-pr`, never
+`gh pr checkout` (which mutates the user's working tree). See the
+`/review` skill.
+
+**Posting a review** — use `gh api repos/{owner}/{repo}/pulls/{n}/reviews
+--input <file.json>`, not `gh pr review` (the latter does not support
+inline comments).
+
+**Reading a PR's metadata** — `gh pr view <n> --json <fields>` is
+preferred over plain `gh pr view <n>` (machine-readable, no TUI).
+
+### Squash merges and PR titles
+
+This repo uses squash merges (GitHub default on `oreoorbitz/Mepto`).
+The squashed commit takes its message from the **PR title**, so:
+
+- PR title should read like a final commit subject (`fix(ajax): handle empty response`, not `fixes`)
+- PR description should expand on the "why" — this becomes the squashed commit body
+
+---
+
 ## Need Help?
 
 1. Check the harness architecture in `plans/llm-test-harness.md`

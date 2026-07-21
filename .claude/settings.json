@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git fetch:*)",
+      "Bash(git blame:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(git config --get:*)",
+      "Bash(git config --list)",
+      "Bash(git stash list)",
+      "Bash(gh auth status)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh api graphql)",
+      "Bash(gh api repos/*)",
+      "Bash(qwen review fetch-pr:*)",
+      "qwen:review"
+    ]
+  },
+  "_comment": "Commands that need user confirmation (git push, gh pr create/merge/close, gh pr review post, git reset --hard, git branch -D, etc.) are intentionally NOT listed here. They fall through to the default prompt — that is the confirmation gate. See AGENTS.md 'Git & GitHub Workflow' for the full policy."
+}
