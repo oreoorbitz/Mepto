@@ -29,8 +29,8 @@ Whew, now that we have that out of the way thanks again!
 
 ## Required local checks
 
-**Prerequisite: Node 25.** This project is pinned to Node 25 (matching
-`.nvmrc`). Run `nvm use` (or install Node 25) before anything else — `npm`
+**Prerequisite: Node 24 (LTS).** This project is pinned to Node 24 (matching
+`.nvmrc`). Run `nvm use` (or install Node 24) before anything else — `npm`
 runs with `engine-strict`, so any other version will be rejected.
 
 CI runs these on every push and PR. Run the same sequence locally before pushing:

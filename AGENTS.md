@@ -8,9 +8,9 @@ Mepto is a lightweight, modern replacement for jQuery. The core aim is to match 
 
 ## Quick Start for LLMs
 
-**Runtime: Node 25 (required).** The project targets and is pinned to Node 25
-(`.nvmrc` = 25, `engines.node` = "25.x", `engine-strict`). Run `nvm use` or
-install Node 25 before running any command — other versions are rejected.
+**Runtime: Node 24 LTS (required).** The project targets and is pinned to Node 24
+(`.nvmrc` = 24, `engines.node` = "24.x", `engine-strict`). Run `nvm use` or
+install Node 24 before running any command — other versions are rejected.
 
 When making changes to this codebase, follow this routine to avoid common pitfalls:
 

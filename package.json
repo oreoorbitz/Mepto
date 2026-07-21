@@ -68,7 +68,7 @@
     "url": "https://github.com/mepto/meptos/issues"
   },
   "engines": {
-    "node": "25.x"
+    "node": "24.x"
   },
   "browserslist": [
     "last 3 Chrome versions",

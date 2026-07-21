@@ -2,11 +2,11 @@
 
 ## Goals
 
-1. **Pin Node 25** as the single source of truth across `.nvmrc`, `engines`, and CI.
+1. **Pin Node 24 (LTS)** as the single source of truth across `.nvmrc`, `engines`, and CI. (Originally Node 25, revised: Node 25 reached end-of-life 2026-06-01; Node 24 is the active LTS, maintained until April 2028.)
 2. **Upgrade to TypeScript 7.0** (the Go-native compiler) for fast type-checking, staged around a known blocker.
 3. **Make the repo LLM-contributor friendly** with fast, machine-checkable feedback loops, while keeping the build performant and dev-friendly.
 
-## Current state (as analyzed 2026-07-21)
+## Current state (pre-PR baseline, as analyzed 2026-07-21 — PR1 changes these values)
 
 | Area               | Current                                                                | Problem                                                         |
 | ------------------ | ---------------------------------------------------------------------- | --------------------------------------------------------------- |
@@ -32,7 +32,7 @@ Verified via research (2026-07-21):
 Sources:
 
 - https://www.theregister.com/devops/2026/07/09/speedier-type-checks-in-typescript-70-as-first-stable-go-release-ships/
-- https://devblogs.microsoft.com/typescript/announcing-typescript-7-0-rc/
+- https://devblogs.microsoft.com/typescript/announcing-typescript-7-0/
 - https://www.digitalapplied.com/blog/typescript-7-0-ga-native-compiler-migration-playbook-2026
 
 ## Plan
@@ -43,13 +43,13 @@ Sources:
 - Remove WSL junk: `mepto.ts:Zone.Identifier`, `V8_OPTIMIZATION_RULES.md:Zone.Identifier`; add `*:Zone.Identifier` to `.gitignore`.
 - Result: the tree reflects the actual (Vite) build.
 
-### Phase 1 — Pin Node 25 (single source of truth)
+### Phase 1 — Pin Node 24 LTS (single source of truth)
 
-- `.nvmrc` → `25` (already set; keep).
-- `package.json` `engines.node` → `">=25"` (or `"25.x"` if you want to hard-pin).
-- CI matrix → drop 20/22/24, run on `25` only (optionally keep one older LTS as a compat canary if desired).
+- `.nvmrc` → `24`.
+- `package.json` `engines.node` → `"24.x"` (hard-pin).
+- CI matrix → drop 20/22, run on `24` only.
 - Add `"packageManager"` / `.npmrc` `engine-strict=true` so the pin is enforced locally, giving LLM contributors a fast, clear failure instead of subtle version drift.
-- Update `CONTRIBUTING.md` / `AGENTS.md` to state Node 25.
+- Update `CONTRIBUTING.md` / `AGENTS.md` to state Node 24.
 
 ### Phase 2 — TypeScript 7.0 upgrade (staged)
 
@@ -88,7 +88,7 @@ Sources:
 
 ## Decisions (locked 2026-07-21)
 
-1. **Node pin:** Hard-pin `25.x`. `engines.node` = `"25.x"`, `engine-strict=true`, CI matrix collapses to node `25` only (no older-LTS canary).
+1. **Node pin:** Hard-pin `24.x` (active LTS). `engines.node` = `"24.x"`, `engine-strict=true`, CI matrix collapses to node `24` only (no extra canary). _Revised 2026-07-21: the original `25.x` decision predated noticing Node 25 went EOL on 2026-06-01._
 2. **`.d.ts` strategy:** **Option A** — typecheck on TS 7, keep a pinned `typescript@5.x` devDependency used only by `vite-plugin-dts`. Revisit after TS 7.1's programmatic API lands.
 3. **Linter:** **Add `oxlint`** as the fast first-pass (pre-commit + CI), keep type-aware ESLint (flat config + `@typescript-eslint` v8) as the thorough gate.
 4. **Minification:** **Enable `minify: 'esbuild'`** for the published bundle; `size-limit` then measures real shipped bytes against the 15KB budget. Keep sourcemaps.
