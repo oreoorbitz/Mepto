@@ -311,26 +311,15 @@ interface SerialParams extends Array<string> {
       return $.ajaxJSONP(settings, deferred) as XMLHttpRequest
     }
 
-    let mime = settings.accepts[settings.dataType as string]
-    const headers: Record<string, [string, string]> = {},
-      setHeader = function (name: string, value: string): void {
-        headers[name.toLowerCase()] = [name, value]
-      },
-      protocolMatch = /^([\w-]+):\/\//.exec(settings.url),
-      protocol = protocolMatch ? protocolMatch[1] : window.location.protocol,
-      xhr = settings.xhr(),
-      nativeSetHeader = xhr.setRequestHeader.bind(xhr)
-    let abortTimeout: ReturnType<typeof setTimeout> | undefined
-
-    if (deferred) deferred.promise(xhr)
+    let mime = settings.accepts[dataType as string]
+    const headers: Record<string, string> = {}
+    const setHeader = function (name: string, value: string): void {
+      headers[name] = value
+    }
 
     if (!settings.crossDomain) setHeader('X-Requested-With', 'XMLHttpRequest')
     setHeader('Accept', mime || '*/*')
-    mime = settings.mimeType || mime
-    if (mime) {
-      if (mime.indexOf(',') > -1) mime = mime.split(',', 2)[0]
-      xhr.overrideMimeType(mime)
-    }
+
     if (
       settings.contentType ||
       (settings.contentType !== false && settings.data && settings.type.toUpperCase() != 'GET')
@@ -339,73 +328,138 @@ interface SerialParams extends Array<string> {
 
     if (settings.headers)
       for (const name in settings.headers) setHeader(name, settings.headers[name])
-    xhr.setRequestHeader = setHeader
 
-    xhr.onreadystatechange = (): void => {
-      if (xhr.readyState == 4) {
-        xhr.onreadystatechange = empty
-        clearTimeout(abortTimeout)
-        let result: unknown,
-          error: unknown = false
-        if (
-          (xhr.status >= 200 && xhr.status < 300) ||
-          xhr.status == 304 ||
-          (xhr.status == 0 && protocol == 'file:')
-        ) {
-          dataType =
-            dataType || mimeToDataType(settings.mimeType || xhr.getResponseHeader('content-type'))
+    // --- fetch-based transport ---
+    const protocolMatch = /^([\w-]+):\/\//.exec(settings.url)
+    const protocol = protocolMatch ? protocolMatch[1] : window.location.protocol
+    const abortController = new AbortController()
+    const fetchMethod = (settings.type || 'GET').toUpperCase()
+    const fetchHeaders = new Headers(headers)
+    const fetchBody: BodyInit | undefined =
+      fetchMethod === 'GET' || fetchMethod === 'HEAD'
+        ? undefined
+        : settings.data != null
+          ? String(settings.data)
+          : undefined
 
-          if (xhr.responseType == 'arraybuffer' || xhr.responseType == 'blob') result = xhr.response
-          else {
-            result = xhr.responseText
-
-            try {
-              // http://perfectionkills.com/global-eval-what-are-the-options/
-              // sanitize response accordingly if data filter callback provided
-              result = ajaxDataFilter(result, dataType!, settings)
-              if (dataType == 'script') (1, eval)(result as string)
-              else if (dataType == 'xml') result = xhr.responseXML
-              else if (dataType == 'json')
-                result = blankRE.test(result as string) ? null : $.parseJSON(result as string)
-            } catch (e) {
-              error = e
-            }
-
-            if (error) return ajaxError(error, 'parsererror', xhr, settings, deferred)
-          }
-
-          ajaxSuccess(result, xhr, settings, deferred)
-        } else {
-          ajaxError(xhr.statusText || null, xhr.status ? 'error' : 'abort', xhr, settings, deferred)
-        }
-      }
+    const fetchInit: RequestInit = {
+      method: fetchMethod,
+      headers: fetchHeaders,
+      body: fetchBody,
+      signal: abortController.signal,
     }
+    if (settings.xhrFields && (settings.xhrFields as Record<string, unknown>).withCredentials)
+      fetchInit.credentials = 'include'
+
+    // XHR-shaped shim returned to callers — populated when the fetch resolves
+    let _status = 0,
+      _statusText = '',
+      _responseText = ''
+    const _responseHeaders = new Map<string, string>()
+
+    const xhr = {
+      get readyState() {
+        return _status !== 0 || _responseText ? 4 : 0
+      },
+      get status() {
+        return _status
+      },
+      get statusText() {
+        return _statusText
+      },
+      get responseText() {
+        return _responseText
+      },
+      getResponseHeader(name: string): string | null {
+        return _responseHeaders.get(name.toLowerCase()) || null
+      },
+      getAllResponseHeaders(): string {
+        let s = ''
+        _responseHeaders.forEach((v, k) => {
+          s += `${k}: ${v}\r\n`
+        })
+        return s
+      },
+      abort(): void {
+        abortController.abort()
+      },
+      setRequestHeader(): void {},
+    }
+
+    if (deferred) deferred.promise(xhr)
+
+    let abortTimeout: ReturnType<typeof setTimeout> | undefined
 
     if (ajaxBeforeSend(xhr, settings) === false) {
-      xhr.abort()
+      abortController.abort()
       ajaxError(null, 'abort', xhr, settings, deferred)
-      return xhr
+      return xhr as XMLHttpRequest
     }
-
-    const async = 'async' in settings ? settings.async : true
-    xhr.open(settings.type, settings.url, async, settings.username, settings.password)
-
-    if (settings.xhrFields)
-      for (const name in settings.xhrFields)
-        (xhr as unknown as Record<string, unknown>)[name] = settings.xhrFields[name]
-
-    for (const name in headers) nativeSetHeader(headers[name][0], headers[name][1])
 
     if (settings.timeout > 0)
       abortTimeout = setTimeout((): void => {
-        xhr.onreadystatechange = empty
-        xhr.abort()
+        abortController.abort()
         ajaxError(null, 'timeout', xhr, settings, deferred)
       }, settings.timeout)
 
-    // avoid sending empty string (#319)
-    xhr.send(settings.data ? settings.data : null)
-    return xhr
+    fetch(settings.url, fetchInit)
+      .then(async (response): Promise<void> => {
+        clearTimeout(abortTimeout)
+        _status = response.status
+        _statusText = response.statusText
+        response.headers.forEach((v, k) => _responseHeaders.set(k.toLowerCase(), v))
+
+        let result: unknown
+        let resolvedDataType: string | undefined = dataType
+        resolvedDataType = resolvedDataType || mimeToDataType(response.headers.get('content-type'))
+
+        const xhrResponseType = (settings.xhrFields as Record<string, string> | undefined)
+          ?.responseType
+        if (xhrResponseType === 'arraybuffer') result = await response.arrayBuffer()
+        else if (xhrResponseType === 'blob') result = await response.blob()
+        else {
+          _responseText = await response.text()
+          result = _responseText
+
+          try {
+            result = ajaxDataFilter(result, resolvedDataType, settings)
+            if (resolvedDataType === 'script') (1, eval)(result as string)
+            else if (resolvedDataType === 'xml')
+              result = new DOMParser().parseFromString(result as string, 'application/xml')
+            else if (resolvedDataType === 'json')
+              result = blankRE.test(result as string) ? null : $.parseJSON(result as string)
+          } catch (e) {
+            ajaxError(e, 'parsererror', xhr, settings, deferred)
+            return
+          }
+        }
+
+        if (
+          response.ok ||
+          response.status === 304 ||
+          (response.status === 0 && protocol === 'file:')
+        ) {
+          ajaxSuccess(result, xhr, settings, deferred)
+        } else {
+          ajaxError(
+            response.statusText || null,
+            response.status ? 'error' : 'abort',
+            xhr,
+            settings,
+            deferred
+          )
+        }
+      })
+      .catch((err: Error): void => {
+        clearTimeout(abortTimeout)
+        if (err.name === 'AbortError') {
+          ajaxError(null, 'abort', xhr, settings, deferred)
+        } else {
+          ajaxError(err, 'error', xhr, settings, deferred)
+        }
+      })
+
+    return xhr as XMLHttpRequest
   }
 
   // handle optional data/success arguments
