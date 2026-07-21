@@ -11,8 +11,9 @@ dist/
 build/
 *.tsbuildinfo
 
-# IDE
+# IDE / tooling
 .idea/
+.qwen/
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
