@@ -6,7 +6,6 @@ import { type MeptoStatic, type MeptoCollection, type MeptoElement } from './typ
 
 declare const mepto: MeptoStatic
 ;(function ($: MeptoStatic) {
-  let _zid = 1
   const slice = Array.prototype.slice
   const isFunction = $.isFunction
   const isString = function (obj: unknown): obj is string {
@@ -23,43 +22,41 @@ declare const mepto: MeptoStatic
     i: number
   }
 
-  type ZidTarget = { _zid?: number }
+  const elementHandlers = new WeakMap<EventTarget, Handler[]>()
+  let _fnId = 1
+  const fnIds = new WeakMap<Function, number>()
 
-  const handlers: Record<number, Handler[]> = {}
-  const specialEvents: Record<string, string> = {}
-  const focusinSupported = 'onfocusin' in window
+  function fnZid(fn: (...args: unknown[]) => unknown): number {
+    let id = fnIds.get(fn)
+    if (id === undefined) {
+      id = _fnId++
+      fnIds.set(fn, id)
+    }
+    return id
+  }
+
   const focus: Record<string, string> = { focus: 'focusin', blur: 'focusout' }
   const hover: Record<string, string> = { mouseenter: 'mouseover', mouseleave: 'mouseout' }
 
-  specialEvents.click =
-    specialEvents.mousedown =
-    specialEvents.mouseup =
-    specialEvents.mousemove =
-      'MouseEvents'
-
-  function zid(element: ZidTarget): number {
-    return element._zid || (element._zid = _zid++)
-  }
-
   function findHandlers(
-    element: Element & ZidTarget,
+    element: Element,
     event: string,
-    fn?: ((...args: unknown[]) => unknown) & ZidTarget,
+    fn?: (...args: unknown[]) => unknown,
     selector?: string
   ): Handler[] {
-    const elementHandlers = handlers[zid(element)]
-    if (!elementHandlers || elementHandlers.length === 0) return []
+    const stored = elementHandlers.get(element)
+    if (!stored || stored.length === 0) return []
 
     const parsed = parse(event)
     const matcher = parsed.ns ? matcherFor(parsed.ns) : null
-    const fnZid = fn ? zid(fn) : null
+    const targetFnId = fn ? fnZid(fn) : null
 
-    return elementHandlers.filter(
+    return stored.filter(
       handler =>
         handler &&
         (!parsed.e || handler.e === parsed.e) &&
         (!parsed.ns || matcher!.test(handler.ns)) &&
-        (!fn || zid(handler.fn as unknown as ZidTarget) === fnZid) &&
+        (!fn || fnZid(handler.fn) === targetFnId) &&
         (!selector || handler.sel === selector)
     )
   }
@@ -73,12 +70,12 @@ declare const mepto: MeptoStatic
     return new RegExp('(?:^| )' + ns.replace(' ', ' .* ?') + '(?: |$)')
   }
 
-  function eventCapture(handler: Handler, captureSetting?: boolean): boolean {
-    return (!!handler.del && !focusinSupported && handler.e in focus) || !!captureSetting
+  function eventCapture(captureSetting?: boolean): boolean {
+    return !!captureSetting
   }
 
   function realEvent(type: string): string {
-    return hover[type] || (focusinSupported && focus[type]) || type
+    return hover[type] || focus[type] || type
   }
 
   function add(
@@ -90,8 +87,11 @@ declare const mepto: MeptoStatic
     delegator?: (...args: unknown[]) => unknown,
     capture?: boolean
   ): void {
-    const id = zid(element as Element & ZidTarget)
-    const set = handlers[id] || (handlers[id] = [])
+    let set = elementHandlers.get(element)
+    if (!set) {
+      set = []
+      elementHandlers.set(element, set)
+    }
     ;(events.match(/\S+/g) || []).forEach((event: string): void => {
       if (event == 'ready') {
         $(document).ready(fn as unknown as () => void)
@@ -134,11 +134,7 @@ declare const mepto: MeptoStatic
       }
       set.push(handler)
       if ('addEventListener' in element)
-        element.addEventListener(
-          realEvent(handler.e),
-          handler.proxy,
-          eventCapture(handler, capture)
-        )
+        element.addEventListener(realEvent(handler.e), handler.proxy, eventCapture(capture))
     })
   }
 
@@ -149,20 +145,15 @@ declare const mepto: MeptoStatic
     selector?: string,
     capture?: boolean
   ): void {
-    const target = element as Element & ZidTarget
-    const id = zid(target)
-    const fnTarget = fn as ((...args: unknown[]) => unknown) & ZidTarget
+    const stored = elementHandlers.get(element)
+    if (!stored) return
 
     const eventNames = (events || '').match(/\S+/g) || ['']
 
     eventNames.forEach(event => {
-      findHandlers(target, event, fnTarget, selector).forEach(handler => {
-        delete handlers[id][handler.i]
-        element.removeEventListener(
-          realEvent(handler.e),
-          handler.proxy,
-          eventCapture(handler, capture)
-        )
+      findHandlers(element, event, fn, selector).forEach(handler => {
+        delete stored[handler.i]
+        element.removeEventListener(realEvent(handler.e), handler.proxy, eventCapture(capture))
       })
     })
   }
@@ -179,7 +170,7 @@ declare const mepto: MeptoStatic
       const proxyFn = function () {
         return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments)
       }
-      ;(proxyFn as unknown as ZidTarget)._zid = zid(fn as unknown as ZidTarget)
+      fnIds.set(proxyFn, fnZid(fn))
       return proxyFn
     } else if (isString(context)) {
       const obj = fn as Record<string, (...args: unknown[]) => unknown>
@@ -242,19 +233,7 @@ declare const mepto: MeptoStatic
         ;(evt as Record<string, () => boolean>)[predicate] = returnFalse
       })
 
-      try {
-        ;(evt as Event & { timeStamp?: number }).timeStamp ||
-          ((evt as Event & { timeStamp?: number }).timeStamp = Date.now())
-      } catch (ignored) {}
-
-      if (
-        (source as Event).defaultPrevented !== undefined
-          ? (source as Event).defaultPrevented
-          : 'returnValue' in source
-            ? (source as Event & { returnValue: boolean }).returnValue === false
-            : (source as Event & { getPreventDefault?: () => boolean }).getPreventDefault &&
-              (source as Event & { getPreventDefault?: () => boolean }).getPreventDefault!()
-      )
+      if ((source as Event).defaultPrevented)
         (evt as Event & { isDefaultPrevented?: () => boolean }).isDefaultPrevented = returnTrue
     }
     return event
@@ -457,14 +436,17 @@ declare const mepto: MeptoStatic
   ): Event {
     if (!isString(type))
       ((props = type as Record<string, unknown>), (type = (props as Record<string, string>).type))
-    const event = document.createEvent(specialEvents[type as string] || 'Events')
     let bubbles = true
     if (props)
       for (const name in props)
-        name === 'bubbles'
-          ? (bubbles = !!props[name])
-          : ((event as unknown as Record<string, unknown>)[name] = props[name])
-    event.initEvent(type as string, bubbles, true)
+        if (name === 'bubbles') bubbles = !!(props as Record<string, unknown>)[name]
+    const event = new Event(type as string, { bubbles, cancelable: true })
+    if (props)
+      for (const name in props)
+        if (name !== 'bubbles')
+          (event as unknown as Record<string, unknown>)[name] = (props as Record<string, unknown>)[
+            name
+          ]
     return compatible(event)
   }
 })(mepto)

@@ -1036,7 +1036,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     return filter.call(elements, callback)
   }
 
-  if (window.JSON) $.parseJSON = JSON.parse
+  $.parseJSON = JSON.parse
 
   // Hoisted scroll setters — perf: scrollTop/scrollLeft reuse these instead of
   // allocating a fresh closure pair on every call. The element/window branch is
@@ -1083,9 +1083,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   // Define methods that will be available on all
   // mepto collections
   $.fn = {
-    // NOTE: `letructor` is almost certainly a mangled `constructor` key; the
-    // name is kept verbatim because external code may reference it.
-    letructor: mepto.Z,
+    constructor: mepto.Z,
     length: 0,
 
     // Because a collection acts like an array,
@@ -1149,7 +1147,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       fn: (this: Element, index: number, element: Element) => U | null | undefined
     ): MeptoCollection {
       // $() accepts any array of values at runtime; the cast is compile-time only
-      return $($.map(this as unknown as Element[], (el, i) => fn.call(el, i, el)) as unknown as Element[])
+      return $(
+        $.map(this as unknown as Element[], (el, i) => fn.call(el, i, el)) as unknown as Element[]
+      )
     },
     slice(this: FnThis, start?: number, end?: number): MeptoCollection {
       return $(slice.call(this, start, end))
@@ -1180,13 +1180,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     get(this: FnThis, idx?: number): any {
       return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
     },
-    toArray(this: FnThis, ): Element[] {
+    toArray(this: FnThis): Element[] {
       return this.get() as Element[]
     },
-    size(this: FnThis, ): number {
+    size(this: FnThis): number {
       return this.length
     },
-    remove(this: FnThis, ): MeptoCollection {
+    remove(this: FnThis): MeptoCollection {
       return this.each(function (this: Element) {
         if (this.parentNode != null) this.parentNode.removeChild(this)
       })
@@ -1233,12 +1233,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       }
       return $(result)
     },
-    add(this: FnThis, 
+    add(
+      this: FnThis,
       selector: string | Element | ArrayLike<Element>,
       context?: Element | Document
     ): MeptoCollection {
       // concat flattens MeptoCollection arguments to arrays at runtime
-      return $(uniq(this.concat($(selector as string | Element | Element[], context) as unknown as Element[])))
+      return $(
+        uniq(
+          this.concat($(selector as string | Element | Element[], context) as unknown as Element[])
+        )
+      )
     },
     /**
      * Checks whether the first element matches the given CSS selector,
@@ -1325,12 +1330,12 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     eq(this: FnThis, idx: number): MeptoCollection {
       return idx === -1 ? this.slice(idx) : this.slice(idx, +idx + 1)
     },
-    first(this: FnThis, ): MeptoCollection {
+    first(this: FnThis): MeptoCollection {
       // The original `el && !isObject(el) ? $(el) : $(el)` had identical
       // branches (suspected unfinished refactor) — collapsed; behavior unchanged.
       return $(this[0])
     },
-    last(this: FnThis, ): MeptoCollection {
+    last(this: FnThis): MeptoCollection {
       return $(this[this.length - 1])
     },
     /**
@@ -1525,7 +1530,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         selector
       )
     },
-    contents(this: FnThis, ): MeptoCollection {
+    contents(this: FnThis): MeptoCollection {
       return this.map(function (this: Element) {
         return (this as HTMLIFrameElement).contentDocument || slice.call(this.childNodes)
       })
@@ -1545,7 +1550,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         selector
       )
     },
-    empty(this: FnThis, ): MeptoCollection {
+    empty(this: FnThis): MeptoCollection {
       return this.each(function (this: Element) {
         setInnerHTML(this, '')
       })
@@ -1556,7 +1561,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         return (el as unknown as Record<string, unknown>)[property]
       })
     },
-    show(this: FnThis, ): MeptoCollection {
+    show(this: FnThis): MeptoCollection {
       return this.each(function (this: HTMLElement) {
         this.style.display == 'none' && (this.style.display = '')
         if (getComputedStyle(this, '').getPropertyValue('display') == 'none')
@@ -1580,7 +1585,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param structure - Wrapper element, HTML string, or function.
      * @returns The original collection for chaining.
      */
-    wrap(this: FnThis, structure: string | Element | ((index: number) => string | Element)): MeptoCollection {
+    wrap(
+      this: FnThis,
+      structure: string | Element | ((index: number) => string | Element)
+    ): MeptoCollection {
       const isCallable = isFunction(structure)
       let wrapperElement: Element | undefined
       let shouldClone = false
@@ -1629,7 +1637,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param structure - Wrapper element, HTML string, or function returning one.
      * @returns The original collection for chaining.
      */
-    wrapInner(this: FnThis, 
+    wrapInner(
+      this: FnThis,
       structure: string | Element | ((index: number) => string | Element) | null
     ): MeptoCollection {
       if (structure == null) return this
@@ -1638,9 +1647,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       return this.each(function (this: Element, index) {
         const self = $(this)
         const contents = self.contents()
-        const wrappingContent = (
-          isCallable ? structure.call(this, index) : structure
-        ) as string | Element
+        const wrappingContent = (isCallable ? structure.call(this, index) : structure) as
+          | string
+          | Element
 
         if (contents.length) {
           ;(contents as FnThis).wrapAll(wrappingContent)
@@ -1649,18 +1658,18 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         }
       })
     },
-    unwrap(this: FnThis, ): MeptoCollection {
+    unwrap(this: FnThis): MeptoCollection {
       this.parent().each(function (this: Element) {
         $(this).replaceWith($(this).children())
       })
       return this
     },
-    clone(this: FnThis, ): MeptoCollection {
+    clone(this: FnThis): MeptoCollection {
       return this.map(function (this: Element) {
         return this.cloneNode(true)
       })
     },
-    hide(this: FnThis, ): MeptoCollection {
+    hide(this: FnThis): MeptoCollection {
       return this.css('display', 'none')
     },
     toggle(this: FnThis, setting?: boolean): MeptoCollection {
@@ -1716,7 +1725,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param text - Text string, number, or function returning text.
      * @returns Text string (getter) or the collection (setter).
      */
-    text(this: FnThis, 
+    text(
+      this: FnThis,
       text?: string | number | null | ((idx: number, current: string | null) => string | null)
     ): string | null | MeptoCollection {
       // perf: arguments.length read instead of `0 in arguments` (see html()).
@@ -1814,7 +1824,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Property value or function receiving `(index, oldValue)`.
      * @returns Property value (getter) or the collection (setter).
      */
-    prop(this: FnThis, name: string | Record<string, unknown>, value?: unknown): unknown | MeptoCollection {
+    prop(
+      this: FnThis,
+      name: string | Record<string, unknown>,
+      value?: unknown
+    ): unknown | MeptoCollection {
       const resolvedName: string | Record<string, unknown> =
         typeof name === 'string' ? propMap[name] || name : name
       // perf: arguments.length read instead of `1 in arguments` — `in` on
@@ -1877,7 +1891,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value - Value string, array, or function.
      * @returns Value (getter) or the collection (setter).
      */
-    val(this: FnThis, 
+    val(
+      this: FnThis,
       value?: string | string[] | ((idx: number, current: string) => string)
     ): string | string[] | undefined | MeptoCollection {
       // Setter
@@ -1969,7 +1984,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param value    - CSS value, or omitted/`null` to remove the property.
      * @returns CSS value (getter) or the collection (setter).
      */
-    css(this: FnThis, 
+    css(
+      this: FnThis,
       property: string | string[] | Record<string, string | number | null | undefined>,
       value?: string | number | null
     ): string | Record<string, string> | undefined | MeptoCollection {
@@ -2088,7 +2104,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Space-separated class names, or function returning them.
      * @returns The collection for chaining.
      */
-    addClass(this: FnThis, name: string | ((index: number, currentClass: string) => string)): MeptoCollection {
+    addClass(
+      this: FnThis,
+      name: string | ((index: number, currentClass: string) => string)
+    ): MeptoCollection {
       if (!name) return this
       return this.each(function (this: Element, idx) {
         if (!('className' in this)) return
@@ -2115,7 +2134,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param name - Space-separated class names, or function returning them.
      * @returns The collection for chaining.
      */
-    removeClass(this: FnThis, 
+    removeClass(
+      this: FnThis,
       name?: string | ((index: number, currentClass: string) => string)
     ): MeptoCollection {
       return this.each(function (this: Element, idx) {
@@ -2147,7 +2167,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param when - `true` to add, `false` to remove; omit to toggle.
      * @returns The collection for chaining.
      */
-    toggleClass(this: FnThis, 
+    toggleClass(
+      this: FnThis,
       name: string | ((index: number, currentClass: string) => string),
       when?: boolean
     ): MeptoCollection {
@@ -2230,15 +2251,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
 
       // Add offsetParent borders
       const offsetParentEl = offsetParent[0]
-      parentOffset.top += parseFloat(readStyle(offsetParentEl, 'borderTopWidth', 'border-top-width')) || 0
-      parentOffset.left += parseFloat(readStyle(offsetParentEl, 'borderLeftWidth', 'border-left-width')) || 0
+      parentOffset.top +=
+        parseFloat(readStyle(offsetParentEl, 'borderTopWidth', 'border-top-width')) || 0
+      parentOffset.left +=
+        parseFloat(readStyle(offsetParentEl, 'borderLeftWidth', 'border-left-width')) || 0
 
       return {
         top: offset.top - parentOffset.top,
         left: offset.left - parentOffset.left,
       }
     },
-    offsetParent(this: FnThis, ): MeptoCollection {
+    offsetParent(this: FnThis): MeptoCollection {
       return this.map(function (this: Element): Element | null {
         let parent: Element | null = (this as HTMLElement).offsetParent || document.body
         // perf: readStyle avoids a $() wrapper allocation per loop iteration
@@ -2359,8 +2382,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             ? (el as unknown as Document).documentElement[
                 ('scroll' + dimensionProperty) as 'scrollWidth' | 'scrollHeight'
               ]
-            : ((offset = this.offset() as unknown as { width: number; height: number } | null) &&
-              offset![dimension as 'width' | 'height']) as number
+            : (((offset = this.offset() as unknown as { width: number; height: number } | null) &&
+                offset![dimension as 'width' | 'height']) as number)
       else
         return this.each(function (this: Element, idx) {
           const $el = $(this)
@@ -2473,13 +2496,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     // append   => appendTo
     ;($.fn as unknown as Record<string, unknown>)[
       inside ? operator + 'To' : 'insert' + (operatorIndex ? 'Before' : 'After')
-    ] = function (
-      this: FnThis,
-      html: string | Element | ArrayLike<Element>
-    ): MeptoCollection {
-      ;($(html as string | Element | Element[]) as unknown as Record<string, (arg: FnThis) => void>)[
-        operator
-      ](this)
+    ] = function (this: FnThis, html: string | Element | ArrayLike<Element>): MeptoCollection {
+      ;(
+        $(html as string | Element | Element[]) as unknown as Record<string, (arg: FnThis) => void>
+      )[operator](this)
       return this
     }
   })

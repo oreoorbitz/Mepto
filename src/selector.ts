@@ -2,12 +2,14 @@
 //     (c) 2010-2016 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-;(function($){
-  var mepto = $.mepto, oldQsa = mepto.qsa, oldMatches = mepto.matches
+;(function ($) {
+  const mepto = $.mepto,
+    oldQsa = mepto.qsa,
+    oldMatches = mepto.matches
 
-  function visible(elem){
+  function visible(elem) {
     elem = $(elem)
-    return !!(elem.width() || elem.height()) && elem.css("display") !== "none"
+    return !!(elem.width() || elem.height()) && elem.css('display') !== 'none'
   }
 
   // Implements a subset from:
@@ -21,32 +23,54 @@
   // Complex selectors are not supported:
   //   li:has(label:contains("foo")) + li:has(label:contains("bar"))
   //   ul.inner:first > li
-  var filters = $.expr[':'] = {
-    visible:  function(){ if (visible(this)) return this },
-    hidden:   function(){ if (!visible(this)) return this },
-    selected: function(){ if (this.selected) return this },
-    checked:  function(){ if (this.checked) return this },
-    parent:   function(){ return this.parentNode },
-    first:    function(idx){ if (idx === 0) return this },
-    last:     function(idx, nodes){ if (idx === nodes.length - 1) return this },
-    eq:       function(idx, _, value){ if (idx === value) return this },
-    contains: function(idx, _, text){ if ($(this).text().indexOf(text) > -1) return this },
-    has:      function(idx, _, sel){ if (mepto.qsa(this, sel).length) return this }
-  }
+  const filters = ($.expr[':'] = {
+    visible: function () {
+      if (visible(this)) return this
+    },
+    hidden: function () {
+      if (!visible(this)) return this
+    },
+    selected: function () {
+      if (this.selected) return this
+    },
+    checked: function () {
+      if (this.checked) return this
+    },
+    parent: function () {
+      return this.parentNode
+    },
+    first: function (idx) {
+      if (idx === 0) return this
+    },
+    last: function (idx, nodes) {
+      if (idx === nodes.length - 1) return this
+    },
+    eq: function (idx, _, value) {
+      if (idx === value) return this
+    },
+    contains: function (idx, _, text) {
+      if ($(this).text().indexOf(text) > -1) return this
+    },
+    has: function (idx, _, sel) {
+      if (mepto.qsa(this, sel).length) return this
+    },
+  })
 
-  var filterRe = new RegExp('(.*):(\\w+)(?:\\(([^)]+)\\))?$\\s*'),
-      childRe  = /^\s*>/,
-      classTag = 'mepto' + (+new Date())
+  const filterRe = /^(.*):(\w+)(?:\(([^)]+)\))?\s*$/
+  const childRe = /^\s*>/
 
   function process(sel, fn) {
-    // quote the hash in `a[href^=#]` expression
-    sel = sel.replace(/=#\]/g, '="#"]')
-    var filter, arg, match = filterRe.exec(sel)
+    // Fast path: skip pseudo-extension processing for plain CSS selectors
+    if (sel.indexOf(':') === -1) {
+      return fn(sel, null, undefined)
+    }
+    let filter, arg
+    const match = filterRe.exec(sel)
     if (match && match[2] in filters) {
-      filter = filters[match[2]], arg = match[3]
+      ;((filter = filters[match[2]]), (arg = match[3]))
       sel = match[1]
       if (arg) {
-        var num = Number(arg)
+        const num = Number(arg)
         if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '')
         else arg = num
       }
@@ -54,32 +78,35 @@
     return fn(sel, filter, arg)
   }
 
-  mepto.qsa = function(node, selector) {
-    return process(selector, function(sel, filter, arg){
+  mepto.qsa = function (node, selector) {
+    return process(selector, function (sel, filter, arg) {
+      let nodes
       try {
-        var taggedParent
         if (!sel && filter) sel = '*'
         else if (childRe.test(sel))
-          // support "> *" child queries by tagging the parent node with a
-          // unique class and prepending that classname onto the selector
-          taggedParent = $(node).addClass(classTag), sel = '.'+classTag+' '+sel
+          // support "> *" child queries via native :scope
+          sel = ':scope ' + sel
 
-        var nodes = oldQsa(node, sel)
-      } catch(e) {
+        nodes = oldQsa(node, sel)
+      } catch (e) {
         console.error('error performing selector: %o', selector)
         throw e
-      } finally {
-        if (taggedParent) taggedParent.removeClass(classTag)
       }
-      return !filter ? nodes :
-        mepto.uniq($.map(nodes, function(n, i){ return filter.call(n, i, nodes, arg) }))
+      return !filter
+        ? nodes
+        : mepto.uniq(
+            $.map(nodes, function (n, i) {
+              return filter.call(n, i, nodes, arg)
+            })
+          )
     })
   }
 
-  mepto.matches = function(node, selector){
-    return process(selector, function(sel, filter, arg){
-      return (!sel || oldMatches(node, sel)) &&
-        (!filter || filter.call(node, null, arg) === node)
+  mepto.matches = function (node, selector) {
+    return process(selector, function (sel, filter, arg) {
+      return (
+        (!sel || oldMatches(node, sel)) && (!filter || filter.call(node, 0, [node], arg) === node)
+      )
     })
   }
 })(mepto)

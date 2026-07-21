@@ -142,7 +142,6 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   index(selector?: string | T): number
   end(): MeptoCollection<T>
   add(selector: Selector, context?: Document): MeptoCollection<T>
-  andSelf?(): MeptoCollection<T>
 
   // DOM manipulation
   html(): string
@@ -288,16 +287,6 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   ): MeptoCollection<T>
   fadeToggle(duration?: number | string, easing?: string, callback?: () => void): MeptoCollection<T>
   fadeToggle(options: AnimationOptions): MeptoCollection<T>
-  slideDown(duration?: number | string, easing?: string, callback?: () => void): MeptoCollection<T>
-  slideDown(options: AnimationOptions): MeptoCollection<T>
-  slideUp(duration?: number | string, easing?: string, callback?: () => void): MeptoCollection<T>
-  slideUp(options: AnimationOptions): MeptoCollection<T>
-  slideToggle(
-    duration?: number | string,
-    easing?: string,
-    callback?: () => void
-  ): MeptoCollection<T>
-  slideToggle(options: AnimationOptions): MeptoCollection<T>
   animate(
     properties: CSSProperties,
     duration?: number | string,
@@ -453,11 +442,29 @@ export interface MeptoStatic {
 
   // Events
   event: {
-    add(element: Element, events: string, fn: (...args: unknown[]) => unknown, data?: unknown, selector?: string, delegator?: (...args: unknown[]) => unknown, capture?: boolean): void
-    remove(element: Element, events?: string, fn?: (...args: unknown[]) => unknown, selector?: string, capture?: boolean): void
+    add(
+      element: Element,
+      events: string,
+      fn: (...args: unknown[]) => unknown,
+      data?: unknown,
+      selector?: string,
+      delegator?: (...args: unknown[]) => unknown,
+      capture?: boolean
+    ): void
+    remove(
+      element: Element,
+      events?: string,
+      fn?: (...args: unknown[]) => unknown,
+      selector?: string,
+      capture?: boolean
+    ): void
   }
   Event(type: string | Record<string, unknown>, properties?: Record<string, unknown>): Event
-  proxy(fn: (...args: unknown[]) => unknown, context: unknown, ...args: unknown[]): (...args: unknown[]) => unknown
+  proxy(
+    fn: (...args: unknown[]) => unknown,
+    context: unknown,
+    ...args: unknown[]
+  ): (...args: unknown[]) => unknown
 
   // Data
   data(element: Element, name: string): unknown
@@ -467,30 +474,18 @@ export interface MeptoStatic {
   hasData(element: Element): boolean
 
   // Internal
-  expando: string
   queue(element: Element, queueName: string, callback?: () => void): unknown
   dequeue(element: Element, queueName: string): void
   fx: {
     off: boolean
     speeds: { slow: number; fast: number; _default: number }
-    step: Record<string, (fx: unknown) => void>
+    cssPrefix: string
+    transitionEnd: string
+    animationEnd: string
   }
   expr: {
     ':': Record<string, (element: Element, index: number, matches: unknown) => boolean>
   }
   uuid: number
   active: number
-}
-
-export interface Mepto {
-  matches(element: Element, selector: string): boolean
-  fragment(html: string, name?: string, properties?: PlainObject | null): ArrayLike<Element>
-  Z(dom: ArrayLike<Element> | null | undefined, selector: string): MeptoCollection
-  isZ(object: unknown): boolean
-  qsa(element: ParentNode, selector: string): Element[]
-  getElementsByClassName(className: string, context?: ParentNode): MeptoCollection
-  getElementsByTagName(tagName: string, context?: Document | Element): MeptoCollection
-  getElementById(id: string, context?: ParentNode): MeptoCollection
-  uniq<T>(array: ArrayLike<T>): T[]
-  deserializeValue(value: string): unknown
 }

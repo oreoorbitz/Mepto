@@ -5,11 +5,10 @@
 // The following code is heavily inspired by jQuery's $.fn.data()
 // Uses WeakMap for element-associated data so GC can collect removed nodes.
 
-;(function($: any){
+;(function ($: any) {
   const dataMap = new WeakMap<object, Record<string, unknown>>()
   const dataAttr = $.fn.data
   const camelize = $.camelCase
-  const exp = $.expando = Symbol('meptoData')
 
   function getData(node: any, name?: string): unknown {
     const store = dataMap.get(node)
@@ -39,39 +38,44 @@
     for (let i = 0; i < attrs.length; i++) {
       const attr = attrs[i]
       if (attr.name.indexOf('data-') === 0) {
-        store[camelize(attr.name.replace('data-', ''))] =
-          $.mepto.deserializeValue(attr.value)
+        store[camelize(attr.name.replace('data-', ''))] = $.mepto.deserializeValue(attr.value)
       }
     }
     return store
   }
 
-  $.fn.data = function(name?: string | Record<string, unknown>, value?: unknown): unknown {
-    return value === undefined ?
-      $.isPlainObject(name) ?
-        this.each(function(_i: number, node: Element){
-          $.each(name, function(key: string, val: unknown){ setData(node, key, val) })
-        }) :
-        (0 in this ? getData(this[0], name as string) : undefined) :
-      this.each(function(){ setData(this, name as string, value) })
+  $.fn.data = function (name?: string | Record<string, unknown>, value?: unknown): unknown {
+    return value === undefined
+      ? $.isPlainObject(name)
+        ? this.each(function (_i: number, node: Element) {
+            $.each(name, function (key: string, val: unknown) {
+              setData(node, key, val)
+            })
+          })
+        : 0 in this
+          ? getData(this[0], name as string)
+          : undefined
+      : this.each(function () {
+          setData(this, name as string, value)
+        })
   }
 
-  $.data = function(elem: Element, name?: string, value?: unknown): unknown {
+  $.data = function (elem: Element, name?: string, value?: unknown): unknown {
     return $(elem).data(name, value)
   }
 
-  $.hasData = function(elem: any): boolean {
+  $.hasData = function (elem: any): boolean {
     const store = dataMap.get(elem)
     return store ? !$.isEmptyObject(store) : false
   }
 
-  $.fn.removeData = function(names?: string | string[]): any {
+  $.fn.removeData = function (names?: string | string[]): any {
     if (typeof names == 'string') names = names.split(/\s+/)
-    return this.each(function(){
+    return this.each(function () {
       const store = dataMap.get(this)
       if (!store) return
       if (names) {
-        (names as string[]).forEach(function(key: string){
+        ;(names as string[]).forEach(function (key: string) {
           delete store[camelize(key)]
         })
       } else {
@@ -79,10 +83,9 @@
       }
     })
   }
-
-  ;['remove', 'empty'].forEach(function(methodName: 'remove' | 'empty'){
+  ;['remove', 'empty'].forEach(function (methodName: 'remove' | 'empty') {
     const origFn = $.fn[methodName]
-    $.fn[methodName] = function(): any {
+    $.fn[methodName] = function (): any {
       let elements = this.find('*')
       if (methodName === 'remove') elements = elements.add(this)
       elements.removeData()
