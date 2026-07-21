@@ -1,5 +1,7 @@
 # Mepto – a modern TypeScript jQuery alternative
 
+[![ci](https://github.com/oreoorbitz/Mepto/actions/workflows/ci.yml/badge.svg)](https://github.com/oreoorbitz/Mepto/actions/workflows/ci.yml)
+
 Mepto is a lightweight, jQuery-compatible library for modern browsers, and a
 TypeScript rewrite of [Zepto.js][zepto]. If you use jQuery, you already know
 how to use Mepto.
