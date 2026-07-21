@@ -55,9 +55,22 @@ Sources:
 
 **2a. Type-checking on TS 7 (the fast win)**
 
-- Bump `typescript` to `^7.0.0`.
-- `npm run typecheck` (`tsc --noEmit`) now runs on the Go compiler — expect ~10x faster checks. No config change needed (semantics identical).
-- Bump `@typescript-eslint/*` to the version line that supports TS 7 (v8+), and migrate ESLint to **flat config** (`eslint.config.js`) — ESLint 8's `.eslintrc.json` + typescript-eslint 6 will not support TS 7.
+- ~~Bump `typescript` to `^7.0.0`.~~ **Revised during PR2:** `typescript-eslint`'s
+  actual peer range (even v8.65 / canary) caps TypeScript at `<6.1.0` — type-aware
+  linting needs the TS programmatic API that TS 7 doesn't ship. So the alias
+  direction from Decision 2 is inverted: root `typescript` stays `^5.9`
+  (satisfying typescript-eslint **and** vite-plugin-dts with no overrides), and
+  TS 7 installs as the alias `"typescript-7": "npm:typescript@^7.0.2"` used only
+  by `npm run typecheck`.
+- `npm run typecheck` now runs on the Go compiler — measured ~5x faster on this
+  codebase (1.0s → 0.19s), identical diagnostics (one error-code specialization:
+  TS2345→TS2740 in `callbacks.ts`).
+- Bumped ESLint to v10 flat config (`eslint.config.mjs`) with the unified
+  `typescript-eslint@^8` package, replacing `.eslintrc.json` +
+  `@typescript-eslint/*@6`. Rule set ported 1:1.
+- Both `tsc` binaries are invoked by explicit path in npm scripts — with two
+  TypeScript packages installed, the `node_modules/.bin/tsc` link is
+  nondeterministic.
 
 **2b. Keep `.d.ts` generation working (Option A — decoupled)**
 
@@ -89,6 +102,6 @@ Sources:
 ## Decisions (locked 2026-07-21)
 
 1. **Node pin:** Hard-pin `24.x` (active LTS). `engines.node` = `"24.x"`, `engine-strict=true`, CI matrix collapses to node `24` only (no extra canary). _Revised 2026-07-21: the original `25.x` decision predated noticing Node 25 went EOL on 2026-06-01._
-2. **`.d.ts` strategy:** **Option A** — typecheck on TS 7, keep a pinned `typescript@5.x` devDependency used only by `vite-plugin-dts`. Revisit after TS 7.1's programmatic API lands.
+2. **`.d.ts` strategy:** **Option A** — typecheck on TS 7, keep a pinned `typescript@5.x` devDependency used only by `vite-plugin-dts`. Revisit after TS 7.1's programmatic API lands. _Revised in PR2: `typescript-eslint` also requires the TS 5 API (peer `<6.1.0`), so TS 5.9 is the root `typescript` (serving both consumers) and TS 7 is the alias (`typescript-7`), used only by `npm run typecheck`. Same decoupling, inverted packaging._
 3. **Linter:** **Add `oxlint`** as the fast first-pass (pre-commit + CI), keep type-aware ESLint (flat config + `@typescript-eslint` v8) as the thorough gate.
 4. **Minification:** **Enable `minify: 'esbuild'`** for the published bundle; `size-limit` then measures real shipped bytes against the 15KB budget. Keep sourcemaps.
