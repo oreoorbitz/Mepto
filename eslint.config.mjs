@@ -10,6 +10,8 @@ export default tseslint.config(
       'node_modules/**',
       'coverage/**',
       'playwright-report/**',
+      // third-party-derived plugin, legacy style — prettier formats it via lint-staged
+      'plugins/**',
       '*.config.js',
       '*.config.ts',
       '*.config.mjs',

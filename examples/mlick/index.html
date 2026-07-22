@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mepto Mlick — Carousel QA</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header id="header">
+        <h1>Mlick Carousel</h1>
+        <p class="lead">
+          QA playground for <code>plugins/mlick.js</code> — the Mepto port of the slick carousel.
+          Exercises <code>$.fn.mlick</code>: navigation, dots, fade, autoplay, events, and string
+          commands.
+        </p>
+      </header>
+
+      <section id="section-basic" class="demo">
+        <h2>Basic — arrows + dots</h2>
+        <div id="carousel-basic" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+          <div class="slide"><span>6</span></div>
+        </div>
+      </section>
+
+      <section id="section-multi" class="demo">
+        <h2>Multiple — slidesToShow: 3</h2>
+        <div id="carousel-multi" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+          <div class="slide"><span>6</span></div>
+          <div class="slide"><span>7</span></div>
+          <div class="slide"><span>8</span></div>
+        </div>
+      </section>
+
+      <section id="section-fade" class="demo">
+        <h2>Fade</h2>
+        <div id="carousel-fade" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+        </div>
+      </section>
+
+      <section id="section-autoplay" class="demo">
+        <h2>Autoplay + events</h2>
+        <div id="carousel-autoplay" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+        </div>
+        <div id="event-log-panel">
+          <h3>Event log</h3>
+          <ul id="event-log"></ul>
+        </div>
+      </section>
+
+      <section id="section-api" class="demo">
+        <h2>API commands</h2>
+        <div id="carousel-api" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+        </div>
+        <div id="api-buttons">
+          <button id="api-prev" type="button">mlickPrev</button>
+          <button id="api-next" type="button">mlickNext</button>
+          <button id="api-goto" type="button">mlickGoTo(0)</button>
+          <button id="api-add" type="button">mlickAdd</button>
+          <button id="api-remove" type="button">mlickRemove</button>
+          <button id="api-unslick" type="button">unmlick</button>
+          <button id="api-init" type="button">re-init</button>
+        </div>
+        <p id="api-status">current slide: <span id="api-current">0</span></p>
+      </section>
+    </main>
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>
