@@ -4,7 +4,7 @@
  * Every feature here exists to exercise a slice of Mepto's real-world API
  * surface. See docs/superpowers/specs/2026-07-21-todo-app-design.md.
  */
-import { $ } from '/src/meptos.ts'
+import { $ } from '../../src/meptos.ts'
 
 // ---------- types -----------------------------------------------------------
 
@@ -149,10 +149,6 @@ function renderCount(): void {
   $('#clear-completed').css('display', hasCompleted ? 'block' : 'none')
 }
 
-function renderToggleAll(): void {
-  // rendered inside renderCount, kept here as a no-op for spec parity
-}
-
 function render(): void {
   const $list = $('#todo-list').empty()
 
@@ -170,7 +166,8 @@ function render(): void {
 
   // Array-wrapped fragment routes through append's array branch (node-aware),
   // not the object branch which stringifies.
-  $list.append([frag])
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+  $list.append([frag as unknown as Element])
 
   // edit-in-place visual state
   if (editingId !== null) {
@@ -180,7 +177,6 @@ function render(): void {
   }
 
   renderCount()
-  void renderToggleAll
 }
 
 // ---------- filter bus via $.Callbacks --------------------------------------
@@ -217,26 +213,26 @@ function onToggleAll(e: Event): void {
 
 function onToggle(e: Event): void {
   const $li = $(e.target as Element).closest('li')
-  const id = String($li.data('todoId'))
+  const id = $li.data('todoId') as string
   toggleTodo(id)
 }
 
 function onDestroy(e: Event): void {
   const $li = $(e.target as Element).closest('li')
-  const id = String($li.data('todoId'))
+  const id = $li.data('todoId') as string
   deleteTodo(id)
 }
 
 function onEditStart(e: Event): void {
   const $li = $(e.target as Element).closest('li')
-  editingId = String($li.data('todoId'))
+  editingId = $li.data('todoId') as string
   render()
 }
 
 function onEditKey(e: KeyboardEvent): void {
   const $input = $(e.target as Element)
   const $li = $input.closest('li')
-  const id = String($li.data('todoId'))
+  const id = $li.data('todoId') as string
   if (e.key === 'Enter') {
     editingId = null
     editTodo(id, String($input.val()))
@@ -250,7 +246,7 @@ function onEditCommit(e: Event): void {
   if (editingId === null) return
   const $input = $(e.target as Element)
   const $li = $input.closest('li')
-  const id = String($li.data('todoId'))
+  const id = $li.data('todoId') as string
   const title = String($input.val())
   editingId = null
   editTodo(id, title)
@@ -280,13 +276,9 @@ function bind(): void {
 
 function init(): void {
   todos = load()
-  currentFilter = parseHash()
   bind()
-  // initial UI state reflects the hash
-  $('#filters a').removeClass('selected')
-  const href = currentFilter === 'all' ? '#/' : `#/${currentFilter}`
-  $(`#filters a[href="${href}"]`).addClass('selected')
-  render()
+  // initial UI state reflects the hash, routed through the same path as hashchange
+  filterBus.fire(parseHash())
 }
 
 init()

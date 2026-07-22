@@ -49,7 +49,7 @@ $('#app').addClass('ready').on('click', 'button', handleClick)
 The UMD build exposes `window.$` and `window.mepto`:
 
 ```html
-<script src="https://esm.sh/meptos"></script>
+<script src="https://cdn.jsdelivr.net/npm/meptos/dist/meptos.umd.cjs"></script>
 <script>
   $(function () {
     $('#app').addClass('ready')

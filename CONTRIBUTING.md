@@ -71,7 +71,7 @@ browser one before opening a PR.
 
 | Command                                                              | Time | Tests | What it checks                            |
 | -------------------------------------------------------------------- | ---- | ----- | ----------------------------------------- |
-| `npm test`                                                           | ~1s  | 73    | Vitest in jsdom — fast unit tests         |
+| `npm test`                                                           | ~1s  | 96    | Vitest in jsdom — fast unit tests         |
 | `npx playwright test test/e2e/unit-suite.spec.ts --project=chromium` | ~2s  | 234   | Full suite in a real Chromium browser     |
 | `npm run test:e2e`                                                   | ~5s  | all   | All Playwright specs, all browser engines |
 
