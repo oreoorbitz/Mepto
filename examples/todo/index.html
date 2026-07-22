@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mepto Todo</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <section id="todoapp">
+      <header id="header">
+        <h1>todos</h1>
+        <form id="new-todo-form">
+          <input
+            id="new-todo"
+            type="text"
+            placeholder="What needs to be done?"
+            autocomplete="off"
+            aria-label="New todo"
+            autofocus
+          />
+        </form>
+      </header>
+
+      <main id="main" style="display: none">
+        <form id="toggle-all-form">
+          <input id="toggle-all" type="checkbox" />
+          <label for="toggle-all">Mark all as complete</label>
+        </form>
+
+        <ul id="todo-list"></ul>
+      </main>
+
+      <footer id="footer" style="display: none">
+        <span id="todo-count">
+          <strong id="todo-count-num">0</strong>
+          <span id="todo-count-label">items left</span>
+        </span>
+        <ul id="filters">
+          <li>
+            <a href="#/" class="selected">All</a>
+          </li>
+          <li>
+            <a href="#/active">Active</a>
+          </li>
+          <li>
+            <a href="#/completed">Completed</a>
+          </li>
+        </ul>
+        <button id="clear-completed">Clear completed</button>
+      </footer>
+    </section>
+
+    <footer id="info">
+      <p>Double-click to edit a todo</p>
+      <p>Part of <a href="http://todomvc.com">TodoMVC</a></p>
+    </footer>
+
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

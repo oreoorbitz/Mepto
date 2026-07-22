@@ -7,8 +7,8 @@
  */
 
 // Core type definitions
+import type { MeptoStatic } from './types'
 export type {
-  MeptoStatic,
   MeptoCollection,
   MeptoElement,
   AjaxSettings,
@@ -39,7 +39,7 @@ import './touch'
 import './gesture'
 
 // Get the global mepto object created by mepto.ts
-const Mepto = (window as unknown as Record<string, unknown>).mepto
+const Mepto = (window as unknown as Record<string, unknown>).mepto as MeptoStatic
 
 // Export the main Mepto object as default and named export
 export default Mepto
