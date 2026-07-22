@@ -5,9 +5,10 @@ import { test, expect, type Page } from '@playwright/test'
  * page at /examples/mlick/. Everything runs locally — no network fixtures are
  * needed. The plugin instance is stored on the DOM element as `.mlick`, which
  * gives tests a direct handle on currentSlide for assertions.
+ *
+ * Every test enters through the root QA directory link, so the directory
+ * listing itself is exercised on each run.
  */
-
-const APP = '/examples/mlick/'
 
 interface MlickInstance {
   currentSlide: number
@@ -31,8 +32,15 @@ const currentSlide = (page: Page, id: string): Promise<number> =>
 const idle = (page: Page, id: string): Promise<boolean> =>
   instance(page, id).then(i => i.animating === false)
 
+/** Navigates from the QA directory to the mlick page via its entry link. */
+const gotoMlick = async (page: Page): Promise<void> => {
+  await page.goto('/')
+  await page.getByRole('link', { name: /Mlick Carousel/ }).click()
+  await page.waitForURL('**/examples/mlick/')
+}
+
 test.beforeEach(async ({ page }) => {
-  await page.goto(APP)
+  await gotoMlick(page)
 })
 
 test('page loads with no console errors', async ({ page }) => {
@@ -41,7 +49,7 @@ test('page loads with no console errors', async ({ page }) => {
   page.on('console', msg => {
     if (msg.type() === 'error') errors.push(msg.text())
   })
-  await page.goto(APP)
+  await gotoMlick(page)
   await expect(page.locator('#carousel-basic')).toHaveClass(/mlick-initialized/)
   expect(errors).toEqual([])
 })

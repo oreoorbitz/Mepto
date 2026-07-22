@@ -2469,7 +2469,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             })
             return arr
           }
-          return argType == 'object' || arg == null || (arg as Node).nodeType !== undefined
+          return argType === 'object' || arg == null || (arg as Node).nodeType !== undefined
             ? arg
             : mepto.fragment(arg as string)
         }) as unknown as (Node | null | undefined)[],
