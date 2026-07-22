@@ -2401,6 +2401,34 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     }
   })
 
+  // Generate the `outerWidth` and `outerHeight` functions. jQuery semantics:
+  // border-box size (offsetWidth/offsetHeight), plus margins when
+  // `includeMargin` is true. Declared in the public MeptoCollection interface.
+  ;['width', 'height'].forEach(dimension => {
+    const dimensionProperty = dimension.replace(/./, m => {
+      return m[0].toUpperCase()
+    })
+    const offsetProperty = ('offset' + dimensionProperty) as 'offsetWidth' | 'offsetHeight'
+    const margins =
+      dimension === 'width'
+        ? (['marginLeft', 'marginRight'] as const)
+        : (['marginTop', 'marginBottom'] as const)
+
+    ;($.fn as unknown as Record<string, unknown>)['outer' + dimensionProperty] = function (
+      this: FnThis,
+      includeMargin?: boolean
+    ): number {
+      const el = this[0] as HTMLElement | undefined
+      if (el?.nodeType !== 1) return 0
+      let size = el[offsetProperty]
+      if (includeMargin) {
+        const style = getComputedStyle(el)
+        size += parseFloat(style[margins[0]]) + parseFloat(style[margins[1]])
+      }
+      return size
+    }
+  })
+
   /**
    * Recursively visits `node` and all its descendants, calling
    * `callback` on each. Used to execute inline `<script>` tags
@@ -2441,7 +2469,9 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             })
             return arr
           }
-          return argType == 'object' || arg == null ? arg : mepto.fragment(arg as string)
+          return argType === 'object' || arg == null || (arg as Node).nodeType !== undefined
+            ? arg
+            : mepto.fragment(arg as string)
         }) as unknown as (Node | null | undefined)[],
         parent: Node | null,
         copyByClone = this.length > 1
