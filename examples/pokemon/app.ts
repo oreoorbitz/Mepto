@@ -64,15 +64,9 @@ function renderCard(p: Pokemon): void {
   $('#card-id').text(`#${p.id}`)
   $('#card-sprite').attr('src', p.sprites.front_default || '')
 
-  $('#card-types').empty()
-  p.types.forEach(t => {
-    $('#card-types').append($('<span class="type-badge"></span>').text(t.type.name))
-  })
-
-  $('#card-stats').empty()
-  p.stats.forEach(s => {
-    $('#card-stats').append($('<li></li>').text(`${s.stat.name}: ${s.base_stat}`))
-  })
+  // One DOM write per group instead of per-item appends
+  $('#card-types').html(p.types.map(t => `<span class="type-badge">${t.type.name}</span>`).join(''))
+  $('#card-stats').html(p.stats.map(s => `<li>${s.stat.name}: ${s.base_stat}</li>`).join(''))
 
   $('#pokemon-card').removeClass('hidden')
 }
@@ -91,16 +85,15 @@ function fetchPokemon(nameOrId: string): void {
 
 function renderList(data: PokemonListResponse): void {
   totalCount = data.count
-  $('#pokemon-list').empty()
-  data.results.forEach(entry => {
-    $('#pokemon-list').append(
-      $('<li></li>').append(
-        $('<button type="button" class="list-item"></button>')
-          .attr('data-name', entry.name)
-          .text(entry.name)
+  // Single DOM write for the whole page of rows
+  $('#pokemon-list').html(
+    data.results
+      .map(
+        entry =>
+          `<li><button type="button" class="list-item" data-name="${entry.name}">${entry.name}</button></li>`
       )
-    )
-  })
+      .join('')
+  )
   $('#page-info').text(`${offset + 1}–${offset + data.results.length} of ${totalCount}`)
   $('#prev-page').prop('disabled', offset === 0)
 }
@@ -109,7 +102,7 @@ function fetchList(): void {
   clearError()
   currentXhr = $.ajax({
     url: `${API}/pokemon`,
-    data: { limit: PAGE_SIZE, offset: offset },
+    data: { limit: PAGE_SIZE, offset },
     dataType: 'json',
     success: data => renderList(data as PokemonListResponse),
     error: ajaxFailed('list'),
@@ -120,13 +113,13 @@ function fetchList(): void {
 
 function buildRandomTeam(): void {
   clearError()
-  $('#team-list').empty()
+  const $teamList = $('#team-list').empty()
   const ids = new Set<number>()
   while (ids.size < 6) ids.add(1 + Math.floor(Math.random() * MAX_ID))
   ids.forEach(id => {
     $.getJSON(`${API}/pokemon/${id}`, undefined, data => {
       const p = data as Pokemon
-      $('#team-list').append($('<li class="team-member"></li>').text(`#${p.id} ${p.name}`))
+      $teamList.append($('<li class="team-member"></li>').text(`#${p.id} ${p.name}`))
     })
   })
 }

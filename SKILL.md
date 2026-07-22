@@ -9,7 +9,7 @@ Action-oriented procedures for working in this repo. For library goals, performa
 The root `index.html` is a QA directory. The unit suite lives at `test/index.html` and loads Mepto from source via ES module imports. Both Vitest and Playwright run directly against source, so no build step is required for testing.
 
 ```bash
-npm test                              # Vitest: 73 tests in jsdom, ~1s
+npm test                              # Vitest: 96 tests in jsdom, ~1s
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # 234 tests in real browser, ~2s
 ```
 
@@ -23,7 +23,7 @@ npm run test:all
 
 | Command                                      | Time | Tests                | What it checks                                      |
 | -------------------------------------------- | ---- | -------------------- | --------------------------------------------------- |
-| `npm test`                                   | ~1s  | 73                   | Vitest in jsdom — fast unit tests                   |
+| `npm test`                                   | ~1s  | 96                   | Vitest in jsdom — fast unit tests                   |
 | `npx playwright test ... --project=chromium` | ~2s  | 234                  | Full suite in real Chromium                         |
 | `npm run test:e2e`                           | ~5s  | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
 

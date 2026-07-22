@@ -17,7 +17,7 @@ When making changes to this codebase, follow this routine to avoid common pitfal
 ### Verify your change (fast path — no build needed)
 
 ```bash
-npm test                              # Vitest: 73 tests in jsdom, ~1s
+npm test                              # Vitest: 96 tests in jsdom, ~1s
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # Playwright: 234 tests in real browser, ~2s
 ```
 
@@ -92,7 +92,7 @@ Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final v
 
 ### What's tested / what's not
 
-The 234-test suite in `test/index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the `test/index.html` suite.
+The 234-test suite in `test/index.html` and the 96-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the `test/index.html` suite.
 
 ---
 
@@ -413,7 +413,7 @@ npm run test:watch    # re-runs on every file save
 Output on success:
 
 ```
-✓ src/mepto.test.ts  (73 tests)
+✓ src/mepto.test.ts  (96 tests)
 Tests  73 passed
 ```
 
@@ -742,6 +742,20 @@ This section governs how LLM agents interact with git and GitHub in this
 repo. It supplements the human-facing `CONTRIBUTING.md`, which remains
 authoritative for project norms (one concern per PR, jQuery-compat, tests
 required, English only).
+
+### Task → PR → review workflow
+
+The standard loop for a task in this repo is:
+
+1. **Do the task** — implement the change and verify it (tests, lint,
+   typecheck as applicable).
+2. **Ask before publishing** — when the work is verified, ask the user
+   whether to commit, push, and open a PR. Do not run these steps without
+   being asked (see the confirmation gate below).
+3. **Wait for CodeRabbit** — after the PR is open, stop. Do not poll for
+   review comments and do not address them preemptively. Wait until the
+   user says the CodeRabbit comments are ready, then review them and fix
+   only the findings that are still valid.
 
 ### Repository layout
 

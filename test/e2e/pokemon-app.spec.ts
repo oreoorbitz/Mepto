@@ -37,7 +37,15 @@ const PIKACHU = {
   ],
 }
 
-function teamMember(id: number) {
+interface PokemonFixture {
+  id: number
+  name: string
+  sprites: { front_default: string | null }
+  types: { type: { name: string } }[]
+  stats: { base_stat: number; stat: { name: string } }[]
+}
+
+function teamMember(id: number): PokemonFixture {
   return {
     id,
     name: `team-poke-${id}`,
@@ -48,7 +56,7 @@ function teamMember(id: number) {
 }
 
 // List endpoint: pathname ends in /pokemon (query string carries limit/offset)
-async function mockList(page: import('@playwright/test').Page) {
+async function mockList(page: import('@playwright/test').Page): Promise<void> {
   await page.route(
     url => url.hostname === 'pokeapi.co' && url.pathname.endsWith('/pokemon'),
     route => {
@@ -63,7 +71,7 @@ async function mockList(page: import('@playwright/test').Page) {
 }
 
 // Detail endpoint: /pokemon/<name-or-id>
-async function mockDetail(page: import('@playwright/test').Page) {
+async function mockDetail(page: import('@playwright/test').Page): Promise<void> {
   await page.route(
     url => url.hostname === 'pokeapi.co' && /\/pokemon\//.test(url.pathname),
     route => {
@@ -108,7 +116,9 @@ test.describe('pokemon app — ajax QA', () => {
       req => new URL(req.url()).pathname.endsWith('/pokemon') && req.url().includes('offset=20')
     )
     await page.click('#next-page')
-    await request
+    const params = new URL((await request).url()).searchParams
+    expect(params.get('limit')).toBe('20')
+    expect(params.get('offset')).toBe('20')
     await expect(page.locator('#pokemon-list .list-item').first()).toHaveText('poke-21')
     await expect(page.locator('#page-info')).toHaveText('21–40 of 100')
     await expect(page.locator('#prev-page')).toBeEnabled()
@@ -186,7 +196,26 @@ test.describe('pokemon app — ajax QA', () => {
   })
 
   test('random team fires 6 concurrent requests', async ({ page }) => {
+    // Hold the detail routes until all six requests are in flight, so the
+    // active counter can only reach 6 if the requests really run concurrently.
+    // Registered after the default detail route, so it takes precedence.
+    let release!: () => void
+    const gate = new Promise<void>(r => (release = r))
+    await page.route(
+      url => url.hostname === 'pokeapi.co' && /\/pokemon\//.test(url.pathname),
+      async route => {
+        await gate
+        const id = Number(route.request().url().split('/pokemon/')[1]) || 1
+        route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify(teamMember(id)),
+        })
+      }
+    )
     await page.click('#random-team')
+    await expect(page.locator('#active-count')).toHaveText('6')
+    release()
     await expect(page.locator('#team-list .team-member')).toHaveCount(6)
     await expect(page.locator('#active-count')).toHaveText('0')
   })
