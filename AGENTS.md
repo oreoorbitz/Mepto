@@ -21,7 +21,7 @@ npm test                              # Vitest: 73 tests in jsdom, ~1s
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # Playwright: 234 tests in real browser, ~2s
 ```
 
-**The root `index.html` loads Mepto from source via ES module imports.** No build step is required for testing. Both Vitest and Playwright work directly against source.
+**The root `index.html` is a QA directory.** The unit suite lives at `test/index.html` and loads Mepto from source via ES module imports. No build step is required for testing. Both Vitest and Playwright work directly against source.
 
 ### One-shot full validation
 
@@ -82,7 +82,7 @@ Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final v
 
 ### How the dev server works
 
-`npm run dev` scans ports 3000–3099, binds to the first available one, and writes it to `.port`. The Playwright config reads `.port` at startup and navigates to `http://localhost:<port>/`. The test page at `/` (root `index.html`) loads Mepto from source and runs 234 assertions.
+`npm run dev` scans ports 3000–3099, binds to the first available one, and writes it to `.port`. The Playwright config reads `.port` at startup. The landing page at `/` (root `index.html`) is a QA directory; the test page at `/test/` (`test/index.html`) loads Mepto from source and runs 234 assertions.
 
 ### Do not edit these files
 
@@ -92,7 +92,7 @@ Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final v
 
 ### What's tested / what's not
 
-The 234-test suite in `index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the root `index.html` suite.
+The 234-test suite in `test/index.html` and the 73-test Vitest suite in `src/mepto.test.ts` cover: type utilities, selectors, DOM manipulation, attributes, CSS, events, form serialization, and dimensions. **Not covered:** AJAX, deferreds/promises, callbacks, animations (fx), touch events, gesture, browser detection, assets, stack methods. When modifying those modules, add tests to the `test/index.html` suite.
 
 ---
 
@@ -197,7 +197,7 @@ npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 
 A clean baseline looks like: `1 passed` (the single Playwright test, which internally asserts 234 pass and 0 fail).
 
-> **Note:** The test suite loads Mepto from source (`/src/meptos.ts` via ES module imports in `index.html`). No build step is needed for testing — editing a `.ts` file and re-running the suite is enough.
+> **Note:** The test suite loads Mepto from source (`/src/meptos.ts` via ES module imports in `test/index.html`). No build step is needed for testing — editing a `.ts` file and re-running the suite is enough.
 
 ---
 
@@ -613,9 +613,11 @@ mepto/
 │   └── llm-test-harness/    # Testing harness for agents
 │       ├── bin/mepto-test.js
 │       └── src/
-├── index.html                # Unit test suite (234 tests, loads from source)
+├── index.html                # QA directory (landing page for dev server)
 ├── test/                     # Test files
+│   ├── index.html           # Unit test suite (234 tests, loads from source)
 │   ├── blank.html           # LLM test harness bridge page
+│   ├── fixture.html         # Minimal Mepto loader for network tests
 │   ├── e2e/                 # Playwright e2e specs
 │   └── functional/          # Manual interactive tests
 ├── vite.config.ts           # Vite configuration
@@ -653,7 +655,7 @@ Write a short spec in `test/e2e/` and run it directly:
 import { test, expect } from '@playwright/test'
 
 test('addClass works', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/test/')
   const result = await page.evaluate(() => $('.test').addClass('active').hasClass('active'))
   expect(result).toBe(true)
 })

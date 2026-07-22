@@ -9,7 +9,7 @@ test.describe('$.ajax', () => {
     await page.route('**/api/hello', route =>
       route.fulfill({ status: 200, contentType: 'text/plain', body: 'world' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -21,7 +21,7 @@ test.describe('$.ajax', () => {
 
   test('basic GET request — returns jqXHR-like object with .status', async ({ page }) => {
     await page.route('**/api/status', route => route.fulfill({ status: 201, body: 'created' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -40,7 +40,7 @@ test.describe('$.ajax', () => {
       capturedHeaders = route.request().headers()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -56,7 +56,7 @@ test.describe('$.ajax', () => {
       capturedHeaders = route.request().headers()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -74,7 +74,7 @@ test.describe('$.ajax', () => {
       capturedHeaders = route.request().headers()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -95,7 +95,7 @@ test.describe('$.ajax', () => {
       capturedHeaders = route.request().headers()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -117,7 +117,7 @@ test.describe('$.ajax', () => {
         body: JSON.stringify({ key: 'value', num: 42 }),
       })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -131,7 +131,7 @@ test.describe('$.ajax', () => {
     await page.route('**/api/json-empty', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: '' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -149,7 +149,7 @@ test.describe('$.ajax', () => {
     await page.route('**/api/error-500', route =>
       route.fulfill({ status: 500, statusText: 'Internal Server Error', body: 'boom' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -165,7 +165,7 @@ test.describe('$.ajax', () => {
 
   test('error callback fires on 404', async ({ page }) => {
     await page.route('**/api/not-found', route => route.fulfill({ status: 404 }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -181,7 +181,7 @@ test.describe('$.ajax', () => {
 
   test('complete callback fires after success', async ({ page }) => {
     await page.route('**/api/complete', route => route.fulfill({ status: 200, body: 'ok' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const order: string[] = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -201,7 +201,7 @@ test.describe('$.ajax', () => {
 
   test('complete callback fires after error', async ({ page }) => {
     await page.route('**/api/complete-error', route => route.fulfill({ status: 500 }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const order: string[] = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -223,7 +223,7 @@ test.describe('$.ajax', () => {
     await page.route('**/api/cancelled', route =>
       route.fulfill({ status: 200, body: 'should not trigger success' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -243,7 +243,7 @@ test.describe('$.ajax', () => {
 
   test('context binding — callbacks receive context as this', async ({ page }) => {
     await page.route('**/api/context', route => route.fulfill({ status: 200, body: 'ok' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -266,7 +266,7 @@ test.describe('$.ajax', () => {
       capturedUrl = route.request().url()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -284,7 +284,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
       capturedMethod = route.request().method()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -300,7 +300,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
       capturedUrl = route.request().url()
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -313,7 +313,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
 
   test('$.get with data and success callback (argument overloading)', async ({ page }) => {
     await page.route('**/api/overloaded*', route => route.fulfill({ status: 200, body: 'got-it' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -331,7 +331,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
       capturedBody = route.request().postData() || ''
       route.fulfill({ status: 200, body: 'ok' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -351,7 +351,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
         body: JSON.stringify({ items: [1, 2, 3] }),
       })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -364,7 +364,7 @@ test.describe('$.get / $.post / $.getJSON', () => {
 
 test.describe('$.param serialization', () => {
   test('serializes flat object', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ a: 1, b: 'hello', c: true }))
     expect(result).toContain('a=1')
     expect(result).toContain('b=hello')
@@ -372,39 +372,39 @@ test.describe('$.param serialization', () => {
   })
 
   test('serializes nested objects with bracket notation', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ a: { b: 2, c: 3 } }))
     expect(result).toContain('a%5Bb%5D=2')
     expect(result).toContain('a%5Bc%5D=3')
   })
 
   test('serializes arrays', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ tags: ['a', 'b'] }))
     expect(result).toContain('tags%5B%5D=a')
     expect(result).toContain('tags%5B%5D=b')
   })
 
   test('traditional: true uses flat keys for arrays', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ tags: ['a', 'b'] }, true))
     expect(result).toBe('tags=a&tags=b')
   })
 
   test('spaces encoded as + not %20', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ q: 'hello world' }))
     expect(result).toBe('q=hello+world')
   })
 
   test('null/undefined values serialize to empty string', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ a: null, b: undefined }))
     expect(result).toBe('a=&b=')
   })
 
   test('function values are called and result serialized', async ({ page }) => {
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(() => $.param({ a: (): string => 'computed' }))
     expect(result).toBe('a=computed')
   })
@@ -414,7 +414,7 @@ test.describe('Global AJAX events', () => {
   test('ajaxStart fires before first request, ajaxStop after last', async ({ page }) => {
     await page.route('**/api/events1', route => route.fulfill({ status: 200, body: 'a' }))
     await page.route('**/api/events2', route => route.fulfill({ status: 200, body: 'b' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const events: string[] = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -449,7 +449,7 @@ test.describe('Global AJAX events', () => {
     await page.route('**/api/success-event', route =>
       route.fulfill({ status: 200, body: 'payload' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const events = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -469,7 +469,7 @@ test.describe('Global AJAX events', () => {
 
   test('ajaxError fires on error, ajaxComplete fires after', async ({ page }) => {
     await page.route('**/api/error-event', route => route.fulfill({ status: 500 }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const events = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -489,7 +489,7 @@ test.describe('Global AJAX events', () => {
 
   test('global: false suppresses global events', async ({ page }) => {
     await page.route('**/api/no-global', route => route.fulfill({ status: 200, body: 'ok' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -505,7 +505,7 @@ test.describe('Global AJAX events', () => {
   test('$.active counter increments and decrements', async ({ page }) => {
     await page.route('**/api/active1', route => route.fulfill({ status: 200, body: 'a' }))
     await page.route('**/api/active2', route => route.fulfill({ status: 200, body: 'b' }))
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -537,7 +537,7 @@ test.describe('$.fn.load', () => {
         body: '<span class="loaded">done</span>',
       })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -559,7 +559,7 @@ test.describe('$.fn.load', () => {
         body: '<div><p class="a">A</p><p class="b">B</p></div>',
       })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -581,7 +581,7 @@ test.describe('Edge cases', () => {
       await new Promise(r => setTimeout(r, 5000))
       route.fulfill({ status: 200, body: 'too late' })
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -602,7 +602,7 @@ test.describe('Edge cases', () => {
       await new Promise(r => setTimeout(r, 5000))
       route.abort('timedout')
     })
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {
@@ -621,7 +621,7 @@ test.describe('Edge cases', () => {
     await page.route('**/api/bad-json', route =>
       route.fulfill({ status: 200, contentType: 'application/json', body: '{invalid' })
     )
-    await page.goto('/')
+    await page.goto('/test/fixture.html')
     const result = await page.evaluate(
       () =>
         new Promise(resolve => {

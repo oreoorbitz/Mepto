@@ -148,8 +148,9 @@ Unit tests (Vitest + jsdom):
 npm test           # or: npm run test:watch
 ```
 
-End-to-end tests in real browsers (Playwright; runs the suite in `index.html`,
-which imports the library straight from source — no build needed):
+End-to-end tests in real browsers (Playwright; runs the suite in
+`test/index.html`, which imports the library straight from source — no build
+needed):
 
 ```sh
 npx playwright test --project=chromium   # quick Chromium run

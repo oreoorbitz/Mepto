@@ -88,8 +88,8 @@ CI.
 ### Where tests live
 
 - **`src/mepto.test.ts`** — Vitest unit tests (jsdom). Add per-method tests here.
-- **`index.html`** (repo root) — the 234-test browser suite. Loaded from source.
-- **`test/e2e/unit-suite.spec.ts`** — drives `index.html` via Playwright.
+- **`test/index.html`** — the 234-test browser suite. Loaded from source.
+- **`test/e2e/unit-suite.spec.ts`** — drives `test/index.html` via Playwright.
 - **`test/e2e/ajax-suite.spec.ts`**, **`event-suite.spec.ts`**,
   **`todo-app.spec.ts`** — feature-specific e2e specs.
 - **`test/functional/`** — manual interactive test pages (touch, gestures, fx).
