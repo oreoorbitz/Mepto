@@ -45,7 +45,30 @@ npx playwright test ...               # Playwright will auto-start a fresh dev s
 - The build **succeeds** (exit code 0) despite the errors
 - `dist/meptos.umd.cjs` and `dist/meptos.js` are produced correctly
 - If you see a flood of red error output from `vite build`, that's normal — ignore it
-- To check if YOU introduced a new error, use `npm run typecheck` (runs `tsc --noEmit`) with a baseline comparison, or just compare build error count
+- To check if YOU introduced a new error, use `npm run typecheck` with a baseline comparison, or just compare build error count
+
+### TypeScript toolchain: two compilers, on purpose
+
+- `npm run typecheck` runs **TypeScript 7** (the Go-native compiler, installed as the `typescript-7` npm alias) — sub-second checks, identical semantics to TS 5.
+- The root `typescript` dependency stays on **5.9.x** because `typescript-eslint` and `vite-plugin-dts` need the TS 5 programmatic API, which TS 7 does not ship (expected in TS 7.1).
+- Never invoke bare `tsc` — with two TypeScript packages installed, `node_modules/.bin/tsc` is whichever npm linked last. The npm scripts (`typecheck`, `typecheck:ts5`, `build:watch`) call each compiler by explicit path.
+
+### Known typecheck failures (ts-transition debt)
+
+`npm run typecheck` currently reports errors in these modules. This is the
+expected baseline — your change should not add NEW errors, but these are not
+yours to fix unless you're working on the transition:
+
+- [ ] `src/ajax.ts` (~18 errors — largest chunk, needs real type rework)
+- [ ] `tools/llm-test-harness/src/index.ts` (6 errors — all TS1205, mechanical `export type` fixes)
+- [ ] `src/mepto.ts` (3 errors)
+- [ ] `src/callbacks.ts` (2 errors)
+- [ ] `src/data.ts` (1 error)
+- [ ] `src/deferred.ts` (1 error)
+- [ ] `src/form.ts` (1 error)
+- [ ] `src/selector.ts` (1 error)
+
+When a module is fixed, check it off here and confirm `npm run typecheck` error count dropped.
 
 ### The three test commands, ranked by speed
 
@@ -666,16 +689,21 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 ## Key Commands
 
-| Command              | Description                                     |
-| -------------------- | ----------------------------------------------- |
-| `npm run dev`        | Start Vite dev server (port written to `.port`) |
-| `cat .port`          | Get the port the dev server is running on       |
-| `npm test`           | Run Vitest unit tests (jsdom, ~1s, no browser)  |
-| `npm run test:watch` | Vitest in watch mode — reruns on every save     |
-| `npm run build`      | Build library to `dist/`                        |
-| `npm run lint`       | Run ESLint                                      |
-| `npm run format`     | Run Prettier                                    |
-| `npm run typecheck`  | Check TypeScript                                |
+| Command                 | Description                                                                                                   |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Start Vite dev server (port written to `.port`)                                                               |
+| `cat .port`             | Get the port the dev server is running on                                                                     |
+| `npm run verify`        | Non-browser gate: typecheck + lint + test + build + size:check (run Playwright separately for full CI parity) |
+| `npm test`              | Run Vitest unit tests (jsdom, ~1s, no browser)                                                                |
+| `npm run test:watch`    | Vitest in watch mode — reruns on every save                                                                   |
+| `npm run lint:fast`     | oxlint — sub-second first-pass lint                                                                           |
+| `npm run lint`          | ESLint — thorough type-aware lint                                                                             |
+| `npm run build`         | Build library to `dist/` (esbuild-minified)                                                                   |
+| `npm run clean`         | Remove `dist/`                                                                                                |
+| `npm run size:check`    | Check bundle size against limit (needs build first)                                                           |
+| `npm run format`        | Run Prettier                                                                                                  |
+| `npm run typecheck`     | Check TypeScript (TS 7 / Go compiler)                                                                         |
+| `npm run typecheck:ts5` | Check TypeScript with TS 5 (used by `vite-plugin-dts`)                                                        |
 
 ### Playwright Commands
 
