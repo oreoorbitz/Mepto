@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mepto Pokémon — AJAX QA</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <header id="header">
+        <h1>Pokédex</h1>
+        <p class="lead">
+          AJAX playground for Mepto — <code>$.ajax</code> / <code>$.getJSON</code> against
+          <a href="https://pokeapi.co" target="_blank" rel="noopener">PokéAPI</a>
+        </p>
+      </header>
+
+      <section id="search-section">
+        <form id="search-form">
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Name or id, e.g. pikachu or 25"
+            autocomplete="off"
+            aria-label="Pokémon name or id"
+          />
+          <button id="search-btn" type="submit">Search</button>
+          <button id="abort-btn" type="button">Abort</button>
+        </form>
+        <div id="status-bar">
+          <span id="loading" class="hidden">Loading…</span>
+          <span id="active-counter">active requests: <span id="active-count">0</span></span>
+        </div>
+        <div id="error-box" class="hidden" role="alert">
+          <span id="error-message"></span>
+        </div>
+      </section>
+
+      <section id="pokemon-card" class="hidden">
+        <img id="card-sprite" alt="Pokémon sprite" />
+        <div class="card-body">
+          <h2><span id="card-name"></span> <span id="card-id"></span></h2>
+          <div id="card-types"></div>
+          <ul id="card-stats"></ul>
+        </div>
+      </section>
+
+      <section id="list-section">
+        <h2>Browse</h2>
+        <ul id="pokemon-list"></ul>
+        <div id="pagination">
+          <button id="prev-page" type="button">← Prev</button>
+          <span id="page-info"></span>
+          <button id="next-page" type="button">Next →</button>
+        </div>
+      </section>
+
+      <section id="team-section">
+        <h2>Random team</h2>
+        <button id="random-team" type="button">Build a team of 6</button>
+        <ul id="team-list"></ul>
+      </section>
+    </main>
+
+    <script type="module" src="./app.ts"></script>
+  </body>
+</html>

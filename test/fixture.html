@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mepto Test Fixture</title>
+  </head>
+  <body>
+    <p>Minimal fixture page with Mepto loaded from source.</p>
+
+    <script type="module">
+      import { $ } from '/src/meptos.ts'
+      window.$ = $
+      window.Mepto = $
+      window.mepto = $
+      console.log('Mepto loaded from source')
+    </script>
+  </body>
+</html>

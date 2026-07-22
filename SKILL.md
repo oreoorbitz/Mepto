@@ -6,11 +6,11 @@ Action-oriented procedures for working in this repo. For library goals, performa
 
 ## Verify a change (fast path — no build needed)
 
-The root `index.html` loads Mepto from source via ES module imports. Both Vitest and Playwright run directly against source, so no build step is required for testing.
+The root `index.html` is a QA directory. The unit suite lives at `test/index.html` and loads Mepto from source via ES module imports. Both Vitest and Playwright run directly against source, so no build step is required for testing.
 
 ```bash
-npm test                              # Vitest: 73 tests in jsdom, ~1s
-npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # 228 tests in real browser, ~2s
+npm test                              # Vitest: 96 tests in jsdom, ~1s
+npx playwright test test/e2e/unit-suite.spec.ts --project=chromium  # 234 tests in real browser, ~2s
 ```
 
 One-shot full validation (kills old servers, runs vitest + playwright):
@@ -23,8 +23,8 @@ npm run test:all
 
 | Command                                      | Time | Tests                | What it checks                                      |
 | -------------------------------------------- | ---- | -------------------- | --------------------------------------------------- |
-| `npm test`                                   | ~1s  | 73                   | Vitest in jsdom — fast unit tests                   |
-| `npx playwright test ... --project=chromium` | ~2s  | 228                  | Full suite in real Chromium                         |
+| `npm test`                                   | ~1s  | 96                   | Vitest in jsdom — fast unit tests                   |
+| `npx playwright test ... --project=chromium` | ~2s  | 234                  | Full suite in real Chromium                         |
 | `npm run test:e2e`                           | ~5s  | All Playwright specs | All browsers (chromium + firefox + webkit + mobile) |
 
 Prefer `npm test` for rapid iteration. Use `npx playwright test ...` for final verification.
@@ -87,7 +87,7 @@ Record the passing test count before changes. Every step must maintain it.
 npx playwright test test/e2e/unit-suite.spec.ts --project=chromium
 ```
 
-Clean baseline: `1 passed` (the single Playwright test internally asserts 228 pass / 0 fail).
+Clean baseline: `1 passed` (the single Playwright test internally asserts 234 pass / 0 fail).
 
 ### Step 1 — Type the IIFE parameter
 
@@ -172,9 +172,9 @@ curl -s -o /dev/null -w "%{http_code}" \
 
 Do **not** use `curl ... && <next command>` without the retry flags — if the server is still starting, `&&` short-circuits and produces blank output, which is ambiguous.
 
-### Landing page is the test suite
+### Landing page is the QA directory
 
-`http://localhost:$(cat .port)/` is the 228-test unit suite, loaded from source.
+`http://localhost:$(cat .port)/` is a QA directory. The 234-test unit suite is at `/test/`, loaded from source.
 
 - `#summary.pass` / `#summary.fail`
 - `document.body.dataset.status` — `"passed"` or `"failed"` (machine-readable)
@@ -191,7 +191,7 @@ Editing a `.ts` file and refreshing re-runs the suite. No `npm run build` needed
 import { test, expect } from '@playwright/test'
 
 test('addClass works', async ({ page }) => {
-  await page.goto('/')
+  await page.goto('/test/')
   const result = await page.evaluate(() => $('.test').addClass('active').hasClass('active'))
   expect(result).toBe(true)
 })
