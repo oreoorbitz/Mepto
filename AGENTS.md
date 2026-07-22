@@ -689,16 +689,21 @@ Do not introduce `@types/` packages or type stubs for legacy browser APIs that d
 
 ## Key Commands
 
-| Command              | Description                                     |
-| -------------------- | ----------------------------------------------- |
-| `npm run dev`        | Start Vite dev server (port written to `.port`) |
-| `cat .port`          | Get the port the dev server is running on       |
-| `npm test`           | Run Vitest unit tests (jsdom, ~1s, no browser)  |
-| `npm run test:watch` | Vitest in watch mode — reruns on every save     |
-| `npm run build`      | Build library to `dist/`                        |
-| `npm run lint`       | Run ESLint                                      |
-| `npm run format`     | Run Prettier                                    |
-| `npm run typecheck`  | Check TypeScript                                |
+| Command                 | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `npm run dev`           | Start Vite dev server (port written to `.port`)         |
+| `cat .port`             | Get the port the dev server is running on               |
+| `npm run verify`        | Full gate: typecheck + lint + test + build + size:check |
+| `npm test`              | Run Vitest unit tests (jsdom, ~1s, no browser)          |
+| `npm run test:watch`    | Vitest in watch mode — reruns on every save             |
+| `npm run lint:fast`     | oxlint — sub-second first-pass lint                     |
+| `npm run lint`          | ESLint — thorough type-aware lint                       |
+| `npm run build`         | Build library to `dist/` (esbuild-minified)             |
+| `npm run clean`         | Remove `dist/`                                          |
+| `npm run size:check`    | Check bundle size against limit (needs build first)     |
+| `npm run format`        | Run Prettier                                            |
+| `npm run typecheck`     | Check TypeScript (TS 7 / Go compiler)                   |
+| `npm run typecheck:ts5` | Check TypeScript with TS 5 (used by `vite-plugin-dts`)  |
 
 ### Playwright Commands
 

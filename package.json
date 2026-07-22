@@ -23,20 +23,18 @@
     "src",
     "tools"
   ],
-  "bin": {
-    "mepto": "./tools/cli/bin/mepto.js"
-  },
   "scripts": {
     "dev": "vite",
+    "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
     "build": "vite build",
-    "build:all": "vite build",
-    "build:watch": "node node_modules/typescript/bin/tsc && vite build --watch",
+    "build:watch": "vite build --watch",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:all": "npm run killports && npm test && npx playwright test test/e2e/unit-suite.spec.ts --project=chromium",
     "lint": "eslint .",
+    "lint:fast": "oxlint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -45,7 +43,9 @@
     "typecheck:ts5": "node node_modules/typescript/bin/tsc --noEmit",
     "prepare": "husky install",
     "size": "npm run build && size-limit",
-    "prepublishOnly": "npm run build && npm test",
+    "size:check": "size-limit",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run build && npm run size:check",
+    "prepublishOnly": "npm run verify",
     "killports": "kill-port $(seq -s ' ' 3000 3099)"
   },
   "keywords": [
@@ -90,6 +90,7 @@
     "husky": "^8.0.3",
     "jsdom": "^29.1.0",
     "lint-staged": "^15.1.0",
+    "oxlint": "^1.0.0",
     "prettier": "^3.1.0",
     "size-limit": "^11.0.0",
     "typescript": "^5.9.0",
@@ -110,6 +111,9 @@
     }
   ],
   "lint-staged": {
+    "*.{ts,tsx,js,cjs,mjs,jsx}": [
+      "oxlint --fix"
+    ],
     "*.{ts,js,json,md,css,html}": [
       "prettier --write"
     ]

@@ -33,7 +33,22 @@ Whew, now that we have that out of the way thanks again!
 `.nvmrc`). Run `nvm use` (or install Node 24) before anything else — `npm`
 runs with `engine-strict`, so any other version will be rejected.
 
-CI runs these on every push and PR. Run the same sequence locally before pushing:
+CI runs these on every push and PR. The fastest way to run the full
+gate sequence locally is the aggregate script:
+
+```sh
+$ npm ci || npm install
+$ npm run verify          # typecheck + lint + test + build + size:check
+```
+
+If you only want fast lint feedback during the inner loop:
+
+```sh
+$ npm run lint:fast       # oxlint — sub-second, catches common issues
+$ npm run lint            # eslint — thorough type-aware gate
+```
+
+To run the same sequence CI runs, step-by-step:
 
 ```sh
 $ npm ci || npm install
@@ -44,7 +59,7 @@ $ npm test
 $ npx playwright install --with-deps chromium
 $ npx playwright test --project=chromium
 $ npm run build
-$ npm run size
+$ npm run size:check      # assumes a fresh build is in dist/
 ```
 
 The first run after this workflow lands will fail on the existing
