@@ -192,6 +192,16 @@ npm run build              # produces dist/ (exits 0 despite known type errors)
 npm run size               # 15 KB budget per bundle
 ```
 
+For faster feedback during the inner loop:
+
+```sh
+npm run lint:fast          # oxlint — sub-second, catches common issues
+npm run verify             # typecheck + lint + test + build + size:check (no browser suite)
+```
+
+`verify` excludes the browser suite — run `npx playwright test --project=chromium`
+separately if you need full CI parity.
+
 A passing PR:
 
 - [ ] Targets one module or one concern

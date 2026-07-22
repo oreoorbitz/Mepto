@@ -10,6 +10,13 @@ no polyfills — and uses native platform APIs throughout.
 The package is published as **`meptos`**. The browser globals are `$` and
 `mepto`, matching jQuery/Zepto.
 
+> **Status: transition in progress.** This repo is an active rewrite of the
+> original Zepto codebase into TypeScript with modern tooling (Vite, Vitest,
+> Playwright). Some modules are fully typed and modernized, others are still
+> close to the original source. `npm run typecheck` and the declaration step of
+> `npm run build` print known type errors from the unconverted modules — this is
+> expected; the build still exits 0 and produces working bundles.
+
 Mepto is licensed under the MIT License, like Zepto itself.
 
 ---
@@ -85,6 +92,10 @@ Mepto bundles these modules in every build — there is no custom-build step:
 | `gesture`    | Pinch gesture events                                                      |
 | `callbacks`  | `$.Callbacks`                                                             |
 | `deferred`   | `$.Deferred` / promise API                                                |
+| `assets`     | Experimental iOS memory cleanup for removed image elements                |
+
+The Zepto-era `ie` and `ios3` modules were dropped along with all legacy
+browser support. `types.ts` holds the shared type definitions.
 
 ## Browser support
 
@@ -126,7 +137,49 @@ The `examples/` directory contains runnable pages served by the dev server:
 | `meptos.umd.cjs` | UMD    | `<script>` tags, CommonJS `require`  |
 | `meptos.d.ts`    | Types  | TypeScript editor/CLI support        |
 
-Both JS bundles are under a 15 KB budget (enforced via `size-limit`).
+plus sourcemaps. Output is minified via esbuild; `npm run size` enforces a
+15 KB budget on each bundle via size-limit.
+
+## Running tests
+
+Unit tests (Vitest + jsdom):
+
+```sh
+npm test           # or: npm run test:watch
+```
+
+End-to-end tests in real browsers (Playwright; runs the suite in `index.html`,
+which imports the library straight from source — no build needed):
+
+```sh
+npx playwright test --project=chromium   # quick Chromium run
+npm run test:e2e                         # all browsers + mobile
+```
+
+Everything at once:
+
+```sh
+npm run test:all
+```
+
+`test/functional/` contains manual test pages for touch, gestures, and effects.
+Other useful checks: `npm run lint`, `npm run lint:fast`, `npm run format:check`,
+`npm run typecheck`, `npm run size`.
+
+### LLM test harness
+
+`tools/llm-test-harness/` is a secure, sandboxed Puppeteer runner that lets
+LLM agents execute JavaScript snippets against Mepto loaded from source, with
+prompt-injection detection and network isolation:
+
+```sh
+cd tools/llm-test-harness && npm install && npm run build && cd ../..
+node tools/llm-test-harness/bin/mepto-test.js --code "return $('div').length"
+node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --compare   # diff against jQuery 3.7
+```
+
+See `tools/llm-test-harness/TODO.md` and `plans/llm-test-harness.md` for
+details.
 
 ## Contributing
 
