@@ -620,9 +620,34 @@ mepto/
 │   ├── fixture.html         # Minimal Mepto loader for network tests
 │   ├── e2e/                 # Playwright e2e specs
 │   └── functional/          # Manual interactive tests
+├── docs/
+│   ├── site/                # Public documentation site (GitHub Pages)
+│   └── superpowers/         # Internal spec docs (not published)
 ├── vite.config.ts           # Vite configuration
 └── tsconfig.json            # TypeScript configuration
 ```
+
+---
+
+## Documentation site
+
+The public documentation site lives in `docs/site/` and is deployed to GitHub
+Pages by `.github/workflows/docs.yml` (which uploads only `docs/site/` as the
+Pages artifact — `docs/superpowers/` stays unpublished).
+
+- **No build step for the site itself** — it is hand-written HTML/CSS/JS. Edit
+  the files directly.
+- **Interactivity must use Mepto itself** — `docs/site/assets/main.js` runs
+  against the vendored `assets/meptos.umd.cjs` bundle (dogfooding). No other
+  libraries, no new npm dependencies.
+- The vendored bundle is rebuilt and re-copied by the Pages workflow on every
+  deploy; when updating it locally, run `npm run build` then
+  `cp dist/meptos.umd.cjs docs/site/assets/`.
+- **Reference entries must match the actual source.** Every documented method
+  must exist in `src/`; cross-check signatures against `src/mepto.ts`,
+  `src/event.ts`, `src/ajax.ts`, and `src/form.ts` before adding or editing an
+  entry. Methods removed from Mepto (e.g. `live`/`die`) must not be
+  documented.
 
 ---
 

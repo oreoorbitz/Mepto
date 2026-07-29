@@ -1,0 +1,359 @@
+/* Mepto documentation site — zeptojs.com-lookalike theme */
+
+:root {
+  --accent: #e80;
+  --accent-dark: #c60;
+  --text: #222;
+  --muted: #666;
+  --bg: #fdfcf8;
+  --sidebar-bg: #f7f5ef;
+  --border: #e3dfd2;
+  --code-bg: #f4f1e8;
+  --sidebar-width: 240px;
+  --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* ---------- Sidebar ---------- */
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: var(--sidebar-width);
+  background: var(--sidebar-bg);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.sidebar-inner {
+  padding: 20px 0 40px;
+}
+
+#sidebar .brand {
+  display: block;
+  padding: 0 20px 16px;
+  font-family: var(--mono);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+
+#sidebar .brand::first-letter {
+  color: var(--accent);
+}
+
+#sidebar h4 {
+  margin: 18px 0 4px;
+  padding: 0 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+#sidebar ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#sidebar li a {
+  display: block;
+  padding: 1px 20px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+  color: #444;
+  text-decoration: none;
+  border-left: 3px solid transparent;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#sidebar li a:hover {
+  color: var(--accent-dark);
+  background: rgba(238, 136, 0, 0.08);
+}
+
+#sidebar li a.active {
+  color: var(--accent-dark);
+  border-left-color: var(--accent);
+  background: rgba(238, 136, 0, 0.12);
+  font-weight: 700;
+}
+
+#sidebar li a em {
+  font-style: normal;
+  color: #999;
+  font-size: 11px;
+}
+
+/* ---------- Content ---------- */
+
+#content {
+  margin-left: var(--sidebar-width);
+  padding: 40px 48px 80px;
+  max-width: calc(960px + var(--sidebar-width));
+}
+
+.hero {
+  border-bottom: 2px solid var(--accent);
+  padding-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.hero h1 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 52px;
+  letter-spacing: -0.02em;
+}
+
+.hero h1::first-letter {
+  color: var(--accent);
+}
+
+.hero .tagline {
+  font-size: 19px;
+  margin: 0 0 4px;
+}
+
+.hero .tagline-sub {
+  font-size: 17px;
+  color: var(--accent-dark);
+  font-weight: 600;
+  margin: 0 0 16px;
+}
+
+h2 {
+  margin: 40px 0 12px;
+  font-size: 26px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 6px;
+}
+
+h2.section-heading {
+  margin-top: 56px;
+  font-size: 30px;
+  color: var(--accent-dark);
+  border-bottom: 2px solid var(--accent);
+}
+
+.method {
+  margin-bottom: 28px;
+}
+
+h3 {
+  margin: 0 0 8px;
+  font-family: var(--mono);
+  font-size: 19px;
+  font-weight: 700;
+}
+
+h3 .sig {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  font-weight: 400;
+  color: var(--muted);
+  background: none;
+  padding: 0;
+}
+
+p {
+  margin: 8px 0;
+}
+
+a {
+  color: var(--accent-dark);
+}
+
+code {
+  font-family: var(--mono);
+  font-size: 0.92em;
+  background: var(--code-bg);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+pre.example {
+  margin: 10px 0;
+  padding: 12px 14px;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 3px;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+pre.example code {
+  background: none;
+  padding: 0;
+}
+
+ul {
+  padding-left: 22px;
+}
+
+li {
+  margin: 3px 0;
+}
+
+.tag {
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 6px;
+  padding: 1px 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+}
+
+.tag.deprecated {
+  background: #999;
+}
+
+/* ---------- Modules table ---------- */
+
+table.modules {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+table.modules th,
+table.modules td {
+  text-align: left;
+  padding: 7px 12px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+table.modules th {
+  background: var(--sidebar-bg);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+table.modules tr:nth-child(even) td {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+footer {
+  margin-top: 48px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ---------- Back to top ---------- */
+
+#back-to-top {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  padding: 8px 14px;
+  background: var(--text);
+  color: #fff;
+  font-family: var(--mono);
+  font-size: 12px;
+  text-decoration: none;
+  border-radius: 4px;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s,
+    visibility 0.2s;
+  z-index: 200;
+}
+
+#back-to-top.visible {
+  opacity: 0.85;
+  visibility: visible;
+}
+
+#back-to-top:hover {
+  background: var(--accent-dark);
+}
+
+/* ---------- Hamburger (mobile only) ---------- */
+
+#menu-toggle {
+  display: none;
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 300;
+  width: 42px;
+  height: 38px;
+  padding: 9px 8px;
+  background: var(--text);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#menu-toggle span {
+  display: block;
+  height: 2px;
+  margin: 4px 0;
+  background: #fff;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 900px) {
+  #menu-toggle {
+    display: block;
+  }
+
+  #sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: none;
+  }
+
+  #sidebar.open {
+    transform: translateX(0);
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.2);
+  }
+
+  #content {
+    margin-left: 0;
+    padding: 24px 20px 64px;
+  }
+
+  .hero h1 {
+    font-size: 40px;
+  }
+}

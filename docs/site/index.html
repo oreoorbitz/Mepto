@@ -1,0 +1,1902 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mepto — the aerogel-weight TypeScript library</title>
+    <meta
+      name="description"
+      content="Mepto is a modern TypeScript rewrite of Zepto — a minimalist JavaScript library for modern browsers with a largely jQuery-compatible API."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23e80'/%3E%3Ctext x='8' y='12' font-size='11' font-family='monospace' font-weight='bold' text-anchor='middle' fill='white'%3EM%3C/text%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="assets/style.css" />
+  </head>
+  <body>
+    <button id="menu-toggle" aria-label="Toggle navigation" aria-controls="sidebar">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <nav id="sidebar">
+      <div class="sidebar-inner">
+        <a class="brand" href="#top">Mepto</a>
+
+        <h4>Overview</h4>
+        <ul>
+          <li><a href="#download">Download &amp; install</a></li>
+          <li><a href="#browser-support">Browser support</a></li>
+          <li><a href="#modules">Modules</a></li>
+          <li><a href="#plugins">Creating plug-ins</a></li>
+        </ul>
+
+        <h4>Core methods</h4>
+        <ul>
+          <li><a href="#$">$()</a></li>
+          <li><a href="#$.camelCase">$.camelCase</a></li>
+          <li><a href="#$.contains">$.contains</a></li>
+          <li><a href="#$.each">$.each</a></li>
+          <li><a href="#$.extend">$.extend</a></li>
+          <li><a href="#$.fn">$.fn</a></li>
+          <li><a href="#$.grep">$.grep</a></li>
+          <li><a href="#$.inArray">$.inArray</a></li>
+          <li><a href="#$.isArray">$.isArray</a></li>
+          <li><a href="#$.isEmptyObject">$.isEmptyObject</a></li>
+          <li><a href="#$.isFunction">$.isFunction</a></li>
+          <li><a href="#$.isNumeric">$.isNumeric</a></li>
+          <li><a href="#$.isPlainObject">$.isPlainObject</a></li>
+          <li><a href="#$.isWindow">$.isWindow</a></li>
+          <li><a href="#$.map">$.map</a></li>
+          <li><a href="#$.noop">$.noop</a></li>
+          <li><a href="#$.parseJSON">$.parseJSON</a></li>
+          <li><a href="#$.trim">$.trim</a></li>
+          <li><a href="#$.type">$.type</a></li>
+          <li><a href="#add">add</a></li>
+          <li><a href="#addClass">addClass</a></li>
+          <li><a href="#after">after</a></li>
+          <li><a href="#append">append</a></li>
+          <li><a href="#appendTo">appendTo</a></li>
+          <li><a href="#attr">attr</a></li>
+          <li><a href="#before">before</a></li>
+          <li><a href="#children">children</a></li>
+          <li><a href="#classList">classList</a></li>
+          <li><a href="#clone">clone</a></li>
+          <li><a href="#closest">closest</a></li>
+          <li><a href="#concat">concat</a></li>
+          <li><a href="#contents">contents</a></li>
+          <li><a href="#css">css</a></li>
+          <li><a href="#data">data</a></li>
+          <li><a href="#detach">detach</a></li>
+          <li><a href="#each">each</a></li>
+          <li><a href="#empty">empty</a></li>
+          <li><a href="#eq">eq</a></li>
+          <li><a href="#filter">filter</a></li>
+          <li><a href="#find">find</a></li>
+          <li><a href="#first">first</a></li>
+          <li><a href="#forEach">forEach</a></li>
+          <li><a href="#get">get</a></li>
+          <li><a href="#has">has</a></li>
+          <li><a href="#hasClass">hasClass</a></li>
+          <li><a href="#height">height</a></li>
+          <li><a href="#hide">hide</a></li>
+          <li><a href="#html">html</a></li>
+          <li><a href="#index">index</a></li>
+          <li><a href="#indexOf">indexOf</a></li>
+          <li><a href="#insertAfter">insertAfter</a></li>
+          <li><a href="#insertBefore">insertBefore</a></li>
+          <li><a href="#is">is</a></li>
+          <li><a href="#last">last</a></li>
+          <li><a href="#map">map</a></li>
+          <li><a href="#next">next</a></li>
+          <li><a href="#not">not</a></li>
+          <li><a href="#offset">offset</a></li>
+          <li><a href="#offsetParent">offsetParent</a></li>
+          <li><a href="#outerWidth">outerWidth</a></li>
+          <li><a href="#parent">parent</a></li>
+          <li><a href="#parents">parents</a></li>
+          <li><a href="#pluck">pluck</a></li>
+          <li><a href="#position">position</a></li>
+          <li><a href="#prepend">prepend</a></li>
+          <li><a href="#prependTo">prependTo</a></li>
+          <li><a href="#prev">prev</a></li>
+          <li><a href="#prop">prop</a></li>
+          <li><a href="#push">push</a></li>
+          <li><a href="#ready">ready</a></li>
+          <li><a href="#reduce">reduce</a></li>
+          <li><a href="#remove">remove</a></li>
+          <li><a href="#removeAttr">removeAttr</a></li>
+          <li><a href="#removeClass">removeClass</a></li>
+          <li><a href="#removeProp">removeProp</a></li>
+          <li><a href="#replaceWith">replaceWith</a></li>
+          <li><a href="#scrollLeft">scrollLeft</a></li>
+          <li><a href="#scrollTop">scrollTop</a></li>
+          <li><a href="#show">show</a></li>
+          <li><a href="#siblings">siblings</a></li>
+          <li><a href="#singleClosest">singleClosest</a></li>
+          <li><a href="#size">size</a></li>
+          <li><a href="#slice">slice</a></li>
+          <li><a href="#sort">sort</a></li>
+          <li><a href="#splice">splice</a></li>
+          <li><a href="#text">text</a></li>
+          <li><a href="#toArray">toArray</a></li>
+          <li><a href="#toggle">toggle</a></li>
+          <li><a href="#toggleClass">toggleClass</a></li>
+          <li><a href="#unwrap">unwrap</a></li>
+          <li><a href="#val">val</a></li>
+          <li><a href="#width">width</a></li>
+          <li><a href="#wrap">wrap</a></li>
+          <li><a href="#wrapAll">wrapAll</a></li>
+          <li><a href="#wrapInner">wrapInner</a></li>
+        </ul>
+
+        <h4>Event handling</h4>
+        <ul>
+          <li><a href="#Event">$.Event</a></li>
+          <li><a href="#proxy">$.proxy</a></li>
+          <li><a href="#event-object">Event object</a></li>
+          <li><a href="#on">on</a></li>
+          <li><a href="#off">off</a></li>
+          <li><a href="#one">one</a></li>
+          <li><a href="#trigger">trigger</a></li>
+          <li><a href="#triggerHandler">triggerHandler</a></li>
+          <li><a href="#shortcut-events">Shortcut methods</a></li>
+          <li>
+            <a href="#bind">bind/unbind <em>(deprecated)</em></a>
+          </li>
+          <li>
+            <a href="#delegate">delegate/undelegate <em>(deprecated)</em></a>
+          </li>
+        </ul>
+
+        <h4>Ajax requests</h4>
+        <ul>
+          <li><a href="#ajax">$.ajax</a></li>
+          <li><a href="#ajax-events">Ajax events</a></li>
+          <li><a href="#ajaxSettings">$.ajaxSettings</a></li>
+          <li><a href="#$.get">$.get</a></li>
+          <li><a href="#$.post">$.post</a></li>
+          <li><a href="#$.getJSON">$.getJSON</a></li>
+          <li><a href="#$.param">$.param</a></li>
+          <li>
+            <a href="#$.ajaxJSONP">$.ajaxJSONP <em>(deprecated)</em></a>
+          </li>
+          <li><a href="#$.active">$.active</a></li>
+          <li><a href="#load">load</a></li>
+        </ul>
+
+        <h4>Form</h4>
+        <ul>
+          <li><a href="#serialize">serialize</a></li>
+          <li><a href="#serializeArray">serializeArray</a></li>
+          <li><a href="#submit">submit</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <main id="content">
+      <header class="hero" id="top">
+        <h1>Mepto</h1>
+        <p class="tagline">
+          Mepto is a modern, TypeScript rewrite of <strong>Zepto</strong> — a minimalist JavaScript
+          library for modern browsers with a largely jQuery-compatible API.
+        </p>
+        <p class="tagline-sub">If you use jQuery, you already know how to use Mepto.</p>
+        <p>
+          The goal is to match jQuery's ergonomics while shedding legacy-browser baggage and
+          reducing browser overhead — fewer reflows, repaints, layout thrashes, and unnecessary DOM
+          queries — so teams can gradually replace jQuery with Mepto without sacrificing
+          performance, and often gaining it.
+        </p>
+      </header>
+
+      <section class="method" id="download">
+        <h2>Download &amp; install</h2>
+        <p>Mepto is published to npm as <code>meptos</code>:</p>
+        <pre class="example"><code>npm install meptos</code></pre>
+        <p>Import it from a bundler or TypeScript project:</p>
+        <pre class="example"><code>import { $ } from 'meptos'
+
+$('#app').addClass('ready').on('click', 'button', handleClick)</code></pre>
+        <p>
+          Or load the UMD build directly in the browser — it exposes <code>window.$</code> and
+          <code>window.mepto</code>:
+        </p>
+        <pre
+          class="example"
+        ><code>&lt;script src="https://cdn.jsdelivr.net/npm/meptos/dist/meptos.umd.cjs"&gt;&lt;/script&gt;
+&lt;script&gt;
+  $(function () {
+    $('#app').addClass('ready')
+  })
+&lt;/script&gt;</code></pre>
+        <p>
+          Unlike Zepto, there is <strong>no custom-build step</strong>: a single build includes
+          every module (events, ajax, form, fx, touch, and more). TypeScript declarations ship in
+          the package (<code>dist/meptos.d.ts</code>), so editor autocomplete and type-checking work
+          out of the box:
+        </p>
+        <pre class="example"><code>import { $, type MeptoCollection } from 'meptos'
+
+const items: MeptoCollection = $('.item').addClass('active')</code></pre>
+      </section>
+
+      <section class="method" id="browser-support">
+        <h2>Browser support</h2>
+        <p>
+          <strong>Evergreen browsers only.</strong> Mepto targets the last few versions of Chrome,
+          Firefox, Safari (14+), and Edge. There is no Internet Explorer or legacy-Edge support and
+          no polyfills: Mepto uses native platform APIs (<code>WeakMap</code>,
+          <code>AbortController</code>, <code>fetch</code>, <code>classList</code>,
+          <code>closest</code>, <code>dataset</code>, <code>requestAnimationFrame</code>, …) freely.
+          If you need to support a legacy browser, Mepto is not the right tool.
+        </p>
+      </section>
+
+      <section class="method" id="modules">
+        <h2>Modules</h2>
+        <p>
+          Every module below is bundled in <em>every</em> build — there is nothing to configure.
+        </p>
+        <table class="modules">
+          <thead>
+            <tr>
+              <th>Module</th>
+              <th>What it gives you</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>mepto</code></td>
+              <td>Core: selectors, DOM manipulation, traversal, attributes, CSS, dimensions</td>
+            </tr>
+            <tr>
+              <td><code>event</code></td>
+              <td>
+                <code>on()</code> / <code>off()</code> / <code>trigger()</code>, event delegation,
+                custom events
+              </td>
+            </tr>
+            <tr>
+              <td><code>ajax</code></td>
+              <td>
+                <code>$.ajax</code>, <code>$.get</code>, <code>$.post</code>,
+                <code>$.getJSON</code>, JSONP (built on <code>fetch</code>)
+              </td>
+            </tr>
+            <tr>
+              <td><code>form</code></td>
+              <td>
+                <code>serializeArray()</code>, <code>serialize()</code>, <code>submit()</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>callbacks</code></td>
+              <td><code>$.Callbacks</code></td>
+            </tr>
+            <tr>
+              <td><code>deferred</code></td>
+              <td><code>$.Deferred</code> / promise API</td>
+            </tr>
+            <tr>
+              <td><code>data</code></td>
+              <td><code>data()</code> storing arbitrary objects (WeakMap-backed, leak-free)</td>
+            </tr>
+            <tr>
+              <td><code>detect</code></td>
+              <td><code>$.os</code> and <code>$.browser</code> device/browser sniffing</td>
+            </tr>
+            <tr>
+              <td><code>fx</code></td>
+              <td><code>animate()</code></td>
+            </tr>
+            <tr>
+              <td><code>fx_methods</code></td>
+              <td>
+                Animated <code>show()</code> / <code>hide()</code> / <code>toggle()</code> /
+                <code>fade*()</code>
+              </td>
+            </tr>
+            <tr>
+              <td><code>selector</code></td>
+              <td>
+                jQuery CSS pseudo extensions: <code>:first</code>, <code>:visible</code>, etc.
+              </td>
+            </tr>
+            <tr>
+              <td><code>stack</code></td>
+              <td><code>end()</code>, <code>andSelf()</code> chaining helpers</td>
+            </tr>
+            <tr>
+              <td><code>touch</code></td>
+              <td>Tap &amp; swipe events on touch devices</td>
+            </tr>
+            <tr>
+              <td><code>gesture</code></td>
+              <td>Pinch gesture events</td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          The Zepto-era <code>ie</code> and <code>ios3</code> modules were dropped along with all
+          legacy browser support.
+        </p>
+      </section>
+
+      <section class="method" id="plugins">
+        <h2>Creating plug-ins</h2>
+        <p>
+          Add methods to all Mepto collections by extending <code>$.fn</code>. Return
+          <code>this</code> (or a new collection) so your plug-in stays chainable:
+        </p>
+        <pre class="example"><code>;(function ($) {
+  $.fn.reverse = function () {
+    return $(this.get().reverse())
+  }
+})(mepto)
+
+$('ul li').reverse().appendTo('ul')</code></pre>
+        <p>
+          The same pattern in TypeScript — augment the <code>MeptoCollection</code> interface so the
+          new method type-checks everywhere:
+        </p>
+        <pre class="example"><code>import { $, type MeptoCollection } from 'meptos'
+
+declare module 'meptos' {
+  interface MeptoCollection {
+    reverse(): MeptoCollection
+  }
+}
+
+$.fn.reverse = function (this: MeptoCollection): MeptoCollection {
+  return $(this.get().reverse()) as MeptoCollection
+}</code></pre>
+        <p>
+          Static utilities can be attached directly to <code>$</code>. Inside collection methods,
+          <code>this</code> is the current Mepto collection; inside per-element callbacks
+          (<code>each</code>, event handlers), <code>this</code> is the DOM element.
+        </p>
+      </section>
+
+      <h2 class="section-heading">Core methods</h2>
+
+      <section class="method" id="$">
+        <h3>
+          $() <code class="sig">$(selector, [context]) ⇒ collection</code>
+          <code class="sig">$(collection) ⇒ same collection</code>
+          <code class="sig">$(DOM nodes) ⇒ collection</code>
+          <code class="sig">$(htmlString) ⇒ collection</code>
+          <code class="sig">$(htmlString, attributes) ⇒ collection</code>
+          <code class="sig">$(function(){ ... }) ⇒ collection</code>
+        </h3>
+        <p>
+          The main Mepto function. With a CSS selector and an optional context node it returns the
+          matching elements; with an HTML fragment string it creates new (detached) DOM elements;
+          with a DOM node, array of nodes, or another collection it wraps it for chaining; with a
+          function it registers a DOM-ready callback.
+        </p>
+        <pre class="example"><code>$('div')              // all DIV elements on the page
+$('#foo')             // element with ID "foo"
+$('&lt;p&gt;Hello&lt;/p&gt;')    // a new, detached P element
+$(document.body)      // wrap an existing element
+$(function () {       // run when the DOM is ready
+  $('body').addClass('ready')
+})</code></pre>
+        <p>
+          When creating elements from HTML you may pass an object of attributes as the second
+          argument. Keys that name collection methods (such as <code>text</code>, <code>html</code>,
+          <code>val</code>, <code>css</code>, <code>addClass</code>) invoke the method; everything
+          else is set as an attribute:
+        </p>
+        <pre class="example"><code>$('&lt;li&gt;foo&lt;/li&gt;', {
+  text: 'Hello list',
+  addClass: 'greeting',
+  css: { color: '#e80' },
+  id: 'greeting'
+})</code></pre>
+      </section>
+
+      <section class="method" id="$.camelCase">
+        <h3>$.camelCase <code class="sig">$.camelCase(string) ⇒ string</code></h3>
+        <p>Converts a dash-separated string into camelCase. Memoized for repeated calls.</p>
+        <pre class="example"><code>$.camelCase('hello-there')  //⇒ "helloThere"
+$.camelCase('data-id')      //⇒ "dataId"</code></pre>
+      </section>
+
+      <section class="method" id="$.contains">
+        <h3>$.contains <code class="sig">$.contains(parent, node) ⇒ boolean</code></h3>
+        <p>
+          Checks if the parent node contains the given DOM node. Returns <code>false</code> if both
+          are the same node.
+        </p>
+      </section>
+
+      <section class="method" id="$.each">
+        <h3>
+          $.each
+          <code class="sig">$.each(collection, function(index, item){ ... }) ⇒ collection</code>
+        </h3>
+        <p>
+          Iterate over array elements or object key-value pairs. Returning <code>false</code> from
+          the iterator function stops the loop.
+        </p>
+        <pre class="example"><code>$.each(['a', 'b', 'c'], function (index, item) {
+  console.log('item %d is: %s', index, item)
+})
+
+var hash = { name: 'mepto', size: 'micro' }
+$.each(hash, function (key, value) {
+  console.log('%s: %s', key, value)
+})</code></pre>
+      </section>
+
+      <section class="method" id="$.extend">
+        <h3>
+          $.extend <code class="sig">$.extend(target, [source, [source2, ...]]) ⇒ target</code>
+          <code class="sig">$.extend(true, target, [source, ...]) ⇒ target</code>
+        </h3>
+        <p>
+          Extend the target object with properties from each source object. When the first argument
+          is <code>true</code>, plain objects and arrays are merged recursively (deep extend).
+          Properties with <code>undefined</code> values are always skipped.
+        </p>
+        <pre class="example"><code>var target = { one: 'patridge' }
+var source = { two: 'turtle doves' }
+
+$.extend(target, source)
+//⇒ { one: 'patridge', two: 'turtle doves' }</code></pre>
+      </section>
+
+      <section class="method" id="$.fn">
+        <h3>$.fn</h3>
+        <p>
+          <code>$.fn</code> is the prototype object shared by all Mepto collections. Extend it to
+          add methods to every collection — see <a href="#plugins">Creating plug-ins</a>.
+        </p>
+      </section>
+
+      <section class="method" id="$.grep">
+        <h3>$.grep <code class="sig">$.grep(items, function(item, index){ ... }) ⇒ array</code></h3>
+        <p>
+          Returns a new array containing only the items for which the callback returned a truthy
+          value.
+        </p>
+        <pre class="example"><code>$.grep([1, 2, 3], function (item) {
+  return item &gt; 1
+})  //⇒ [2, 3]</code></pre>
+      </section>
+
+      <section class="method" id="$.inArray">
+        <h3>$.inArray <code class="sig">$.inArray(element, array, [fromIndex]) ⇒ number</code></h3>
+        <p>
+          Returns the index of the given element in an array, or <code>-1</code> if it is not found.
+        </p>
+      </section>
+
+      <section class="method" id="$.isArray">
+        <h3>$.isArray <code class="sig">$.isArray(object) ⇒ boolean</code></h3>
+        <p>
+          Returns true if the object is an array. Alias of the native <code>Array.isArray</code>.
+        </p>
+      </section>
+
+      <section class="method" id="$.isEmptyObject">
+        <h3>$.isEmptyObject <code class="sig">$.isEmptyObject(object) ⇒ boolean</code></h3>
+        <p>Returns true if the object has no enumerable properties of its own.</p>
+      </section>
+
+      <section class="method" id="$.isFunction">
+        <h3>$.isFunction <code class="sig">$.isFunction(object) ⇒ boolean</code></h3>
+        <p>Returns true if the object is a function.</p>
+      </section>
+
+      <section class="method" id="$.isNumeric">
+        <h3>$.isNumeric <code class="sig">$.isNumeric(value) ⇒ boolean</code></h3>
+        <p>
+          Returns true if the value represents a finite number — accepts numbers and numeric
+          strings, rejects <code>NaN</code>, <code>Infinity</code>, and non-numeric values.
+        </p>
+      </section>
+
+      <section class="method" id="$.isPlainObject">
+        <h3>$.isPlainObject <code class="sig">$.isPlainObject(object) ⇒ boolean</code></h3>
+        <p>
+          Returns true if the object is a "plain" object created by <code>{}</code> or
+          <code>new Object</code>, as opposed to a DOM node, window, or a class instance.
+        </p>
+        <pre class="example"><code>$.isPlainObject({})          //⇒ true
+$.isPlainObject(new Object()) //⇒ true
+$.isPlainObject(window)       //⇒ false
+$.isPlainObject(document.body) //⇒ false</code></pre>
+      </section>
+
+      <section class="method" id="$.isWindow">
+        <h3>$.isWindow <code class="sig">$.isWindow(object) ⇒ boolean</code></h3>
+        <p>Returns true if the object is a window object.</p>
+      </section>
+
+      <section class="method" id="$.map">
+        <h3>
+          $.map <code class="sig">$.map(elements, function(item, index){ ... }) ⇒ array</code>
+        </h3>
+        <p>
+          Iterate over elements of a collection (arrays and array-likes) and produce a new,
+          flattened array of the callback return values. <code>null</code> and
+          <code>undefined</code> results are dropped.
+        </p>
+        <pre class="example"><code>$.map([1, 2, 3], function (n) {
+  return n * 2
+})  //⇒ [2, 4, 6]</code></pre>
+      </section>
+
+      <section class="method" id="$.noop">
+        <h3>$.noop <code class="sig">$.noop() ⇒ undefined</code></h3>
+        <p>An empty function, useful as a placeholder callback.</p>
+      </section>
+
+      <section class="method" id="$.parseJSON">
+        <h3>$.parseJSON <code class="sig">$.parseJSON(string) ⇒ object</code></h3>
+        <p>
+          Parses a JSON string into a JavaScript value. Alias of the native
+          <code>JSON.parse</code>; throws on malformed input.
+        </p>
+      </section>
+
+      <section class="method" id="$.trim">
+        <h3>$.trim <code class="sig">$.trim(string) ⇒ string</code></h3>
+        <p>Removes whitespace from the beginning and end of a string.</p>
+      </section>
+
+      <section class="method" id="$.type">
+        <h3>$.type <code class="sig">$.type(object) ⇒ string</code></h3>
+        <p>
+          Returns the internal JavaScript class of an object as a lowercase string:
+          <code>"null"</code>, <code>"undefined"</code>, <code>"boolean"</code>,
+          <code>"number"</code>, <code>"string"</code>, <code>"function"</code>,
+          <code>"array"</code>, <code>"date"</code>, <code>"regexp"</code>, <code>"window"</code>,
+          <code>"document"</code>, <code>"element"</code>, or <code>"object"</code>.
+        </p>
+        <pre class="example"><code>$.type(null)      //⇒ "null"
+$.type([1, 2])    //⇒ "array"
+$.type($('div'))  //⇒ "object"</code></pre>
+        <p>
+          <code>$.uuid</code> (a counter for unique ids), <code>$.support</code>, and
+          <code>$.expr</code> (the pseudo-selector bucket filled by the
+          <code>selector</code> module) also exist on <code>$</code> for plug-in authors.
+        </p>
+      </section>
+
+      <section class="method" id="add">
+        <h3>add <code class="sig">add(selector, [context]) ⇒ self</code></h3>
+        <p>
+          Adds more elements to the current collection, matched against an optional context, and
+          returns a new collection with duplicates removed.
+        </p>
+        <pre class="example"><code>$(this).add('li').addClass('item')</code></pre>
+      </section>
+
+      <section class="method" id="addClass">
+        <h3>
+          addClass <code class="sig">addClass(name) ⇒ self</code>
+          <code class="sig">addClass(function(index, oldClassName){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Adds the CSS class name(s) to each element. Multiple class names can be given in a
+          space-separated string.
+        </p>
+        <pre class="example"><code>$('form input').addClass('required')
+$('form input').addClass('required stable')</code></pre>
+      </section>
+
+      <section class="method" id="after">
+        <h3>after <code class="sig">after(content) ⇒ self</code></h3>
+        <p>
+          Insert content after each element in the collection. Content can be an HTML string, a DOM
+          node, or an array of nodes. When the collection holds several elements, the content is
+          cloned for each target.
+        </p>
+        <pre
+          class="example"
+        ><code>$('form label').after('&lt;p&gt;A note below the label&lt;/p&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="append">
+        <h3>append <code class="sig">append(content) ⇒ self</code></h3>
+        <p>
+          Append content to the DOM inside each element in the collection. Content can be an HTML
+          string, a DOM node, or an array of nodes.
+        </p>
+        <pre class="example"><code>$('ul').append('&lt;li&gt;new list item&lt;/li&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="appendTo">
+        <h3>appendTo <code class="sig">appendTo(target) ⇒ self</code></h3>
+        <p>
+          Append the elements of the current collection to the target element(s). The inverse of
+          <a href="#append">append</a>.
+        </p>
+        <pre
+          class="example"
+        ><code>$('&lt;li&gt;new list item&lt;/li&gt;').appendTo('ul')</code></pre>
+      </section>
+
+      <section class="method" id="attr">
+        <h3>
+          attr <code class="sig">attr(name) ⇒ string</code>
+          <code class="sig">attr(name, value) ⇒ self</code>
+          <code class="sig">attr(name, function(index, oldValue){ ... }) ⇒ self</code>
+          <code class="sig">attr({ name: value, name2: value2, ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Read or set DOM attributes. When no value is given, returns the attribute of the first
+          element. When a value is given, sets the attribute on all elements. Setting the value to
+          <code>null</code> removes the attribute (like <a href="#removeAttr">removeAttr</a>).
+          Multiple attributes can be set at once with an object.
+        </p>
+        <pre class="example"><code>var name = $('form').attr('name')
+$('input').attr('type', 'checkbox')
+$('input').attr({ type: 'checkbox', checked: 'checked' })
+$('input').attr('disabled', null)  // remove the attribute</code></pre>
+      </section>
+
+      <section class="method" id="before">
+        <h3>before <code class="sig">before(content) ⇒ self</code></h3>
+        <p>
+          Insert content before each element in the collection. Content can be an HTML string, a DOM
+          node, or an array of nodes.
+        </p>
+        <pre
+          class="example"
+        ><code>$('table td').before('&lt;td&gt;new cell&lt;/td&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="children">
+        <h3>children <code class="sig">children([selector]) ⇒ collection</code></h3>
+        <p>
+          Get the immediate children of each element in the collection, optionally filtered by a
+          selector.
+        </p>
+        <pre class="example"><code>$('ol').children('*:nth-child(2n)')
+//⇒ every other list item from every ordered list</code></pre>
+      </section>
+
+      <section class="method" id="classList">
+        <h3>classList <span class="tag">Mepto extra</span></h3>
+        <p>
+          A <code>DOMTokenList</code>-compatible bridge to the native
+          <code>Element.classList</code>, exposed on every collection. Mutating methods
+          (<code>add</code>, <code>remove</code>, <code>toggle</code>, <code>replace</code>) return
+          the collection so calls stay chainable; read methods (<code>contains</code>,
+          <code>item</code>, <code>length</code>, <code>value</code>, <code>toString()</code>) read
+          from the first element.
+        </p>
+        <pre class="example"><code>$('.item').classList.add('active').classList.remove('stale')
+$('.item').classList.contains('active')  //⇒ true | false
+$('.item').classList.toString()          //⇒ "foo bar baz"</code></pre>
+        <p>
+          This is a migration bridge: <code>$('.x').addClass('y')</code> →
+          <code>$('.x').classList.add('y')</code> → <code>el.classList.add('y')</code> without any
+          conceptual leap.
+        </p>
+      </section>
+
+      <section class="method" id="clone">
+        <h3>clone <code class="sig">clone() ⇒ collection</code></h3>
+        <p>
+          Duplicate all elements in the collection via deep clone. Event handlers attached with
+          Mepto are <em>not</em> copied to the clones.
+        </p>
+      </section>
+
+      <section class="method" id="closest">
+        <h3>
+          closest <code class="sig">closest(selector, [context]) ⇒ collection</code>
+          <code class="sig">closest(collection) ⇒ collection</code>
+          <code class="sig">closest(element) ⇒ collection</code>
+        </h3>
+        <p>
+          Get the first element that matches the selector by traversing upwards from the current
+          element through its ancestors. Traversal stops at <code>context</code> if given, or at the
+          document root. String selectors go through the native <code>Element.closest()</code>.
+        </p>
+        <pre class="example"><code>var input = $('input[type=text]')
+input.closest('form')</code></pre>
+      </section>
+
+      <section class="method" id="concat">
+        <h3>concat <code class="sig">concat(nodes, [node2, ...]) ⇒ array</code></h3>
+        <p>
+          Concatenate elements, arrays, or Mepto collections into a new plain array, modifying the
+          collection in place like the native <code>Array.prototype.concat</code>. Collection
+          arguments are flattened to their element arrays first.
+        </p>
+      </section>
+
+      <section class="method" id="contents">
+        <h3>contents <code class="sig">contents() ⇒ collection</code></h3>
+        <p>
+          Get the children of each element in the collection, including text and comment nodes. For
+          an <code>iframe</code>, returns its content document.
+        </p>
+      </section>
+
+      <section class="method" id="css">
+        <h3>
+          css <code class="sig">css(property) ⇒ value</code>
+          <code class="sig">css([property1, property2, ...]) ⇒ object</code>
+          <code class="sig">css(property, value) ⇒ self</code>
+          <code class="sig">css({ property: value, property2: value2, ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Read or set CSS properties on DOM elements. With a single property name, returns the
+          computed value of the first element. With an array of property names, returns an object of
+          name/value pairs. When a value is given it is set on all elements; setting a value to
+          <code>null</code> or an empty string removes the property. A number is automatically
+          suffixed with <code>px</code> for dimensional properties.
+        </p>
+        <pre class="example"><code>var elem = $('h1')
+elem.css('background-color')           //⇒ read a property
+elem.css('background-color', '#369')   //⇒ set a property
+elem.css('background-color', '')       //⇒ remove a property
+elem.css({ backgroundColor: '#8EE', fontSize: 28 })</code></pre>
+      </section>
+
+      <section class="method" id="data">
+        <h3>
+          data <code class="sig">data(name) ⇒ value</code>
+          <code class="sig">data(name, value) ⇒ self</code>
+        </h3>
+        <p>
+          Read or write <code>data-*</code> DOM attributes. Attribute names are dasherized
+          automatically (<code>data('myVal')</code> reads <code>data-my-val</code>). When reading,
+          values are deserialized: <code>"true"</code>/<code>"false"</code> become booleans, numeric
+          strings become numbers, and JSON strings are parsed.
+        </p>
+        <p>
+          The bundled <code>data</code> module upgrades this method to store arbitrary objects:
+          values are kept off the DOM node in a WeakMap-backed store, so they are garbage-collected
+          when the node is removed — no leaks and no expando properties visible on elements.
+        </p>
+        <pre class="example"><code>$("#foo").data('count', 1)
+$("#foo").data('count')  //⇒ 1</code></pre>
+      </section>
+
+      <section class="method" id="detach">
+        <h3>
+          detach <code class="sig">detach() ⇒ self</code> <span class="tag">Mepto extra</span>
+        </h3>
+        <p>
+          Alias of <a href="#remove">remove</a>, provided for jQuery compatibility: removes the
+          elements from the DOM and returns the (now detached) collection so it can be re-inserted
+          later.
+        </p>
+      </section>
+
+      <section class="method" id="each">
+        <h3>each <code class="sig">each(function(index, item){ ... }) ⇒ self</code></h3>
+        <p>
+          Iterate through every element of the collection. Inside the iterator function,
+          <code>this</code> refers to the current item. Returning <code>false</code> from the
+          iterator stops the loop.
+        </p>
+        <pre class="example"><code>$('form input').each(function (index) {
+  console.log('input %d is: %o', index, this)
+})</code></pre>
+      </section>
+
+      <section class="method" id="empty">
+        <h3>empty <code class="sig">empty() ⇒ self</code></h3>
+        <p>Clear the DOM contents of each element in the collection.</p>
+      </section>
+
+      <section class="method" id="eq">
+        <h3>eq <code class="sig">eq(index) ⇒ collection</code></h3>
+        <p>
+          Get the element at the given index as a new collection. Negative indices count from the
+          end of the collection.
+        </p>
+        <pre class="example"><code>$('li').eq(0)   //⇒ first list item
+$('li').eq(-1)  //⇒ last list item</code></pre>
+      </section>
+
+      <section class="method" id="filter">
+        <h3>
+          filter <code class="sig">filter(selector) ⇒ collection</code>
+          <code class="sig">filter(function(index){ ... }) ⇒ collection</code>
+        </h3>
+        <p>
+          Filter the collection to contain only items that match the CSS selector. If a function is
+          given, return only the elements for which the function returns a truthy value.
+        </p>
+      </section>
+
+      <section class="method" id="find">
+        <h3>
+          find <code class="sig">find(selector) ⇒ collection</code>
+          <code class="sig">find(collection) ⇒ collection</code>
+          <code class="sig">find(element) ⇒ collection</code>
+        </h3>
+        <p>
+          Find elements that match a CSS selector, searching within the descendants of each element
+          in the current collection. When given a collection or element, returns only the given
+          nodes that are descendants of the current collection.
+        </p>
+        <pre class="example"><code>var form = $('#myform')
+form.find('input, select')</code></pre>
+      </section>
+
+      <section class="method" id="first">
+        <h3>first <code class="sig">first() ⇒ collection</code></h3>
+        <p>Get the first element of the current collection.</p>
+        <pre class="example"><code>$('form').first()</code></pre>
+      </section>
+
+      <section class="method" id="forEach">
+        <h3>
+          forEach <code class="sig">forEach(function(item, index, array){ ... }, [context])</code>
+        </h3>
+        <p>
+          Iterate over every element of the collection with native
+          <code>Array.prototype.forEach</code> semantics: <code>this</code> inside the callback is
+          the optional context argument (not the element), and returning <code>false</code> does
+          <em>not</em> stop the loop. For jQuery-style iteration use <a href="#each">each</a>.
+        </p>
+      </section>
+
+      <section class="method" id="get">
+        <h3>
+          get <code class="sig">get() ⇒ array</code> <code class="sig">get(index) ⇒ DOM node</code>
+        </h3>
+        <p>
+          Get all elements as a plain array, or a single element by index. Negative indices count
+          from the end: <code>get(-1)</code> returns the last element.
+        </p>
+        <pre class="example"><code>var elements = $('h2')
+elements.get()   //⇒ array of all H2 nodes
+elements.get(0)  //⇒ the first H2 node</code></pre>
+      </section>
+
+      <section class="method" id="has">
+        <h3>
+          has <code class="sig">has(selector) ⇒ collection</code>
+          <code class="sig">has(node) ⇒ collection</code>
+        </h3>
+        <p>
+          Filter the collection to only elements that have a descendant matching the selector, or
+          that contain the given DOM node.
+        </p>
+        <pre class="example"><code>$('ol &gt; li').has('a[href]')
+//⇒ only list items that contain a link</code></pre>
+      </section>
+
+      <section class="method" id="hasClass">
+        <h3>
+          hasClass <code class="sig">hasClass(name) ⇒ boolean</code>
+          <code class="sig">hasClass(name, [name2, ...]) ⇒ boolean</code>
+        </h3>
+        <p>
+          Check if any element of the collection has the specified class name. When multiple class
+          names are given (space-separated), every one of them must be present.
+        </p>
+      </section>
+
+      <section class="method" id="height">
+        <h3>
+          height <code class="sig">height() ⇒ number</code>
+          <code class="sig">height(value) ⇒ self</code>
+          <code class="sig">height(function(index, oldHeight){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get the height of the first element in the collection, or set the height of all elements.
+          Applied to <code>window</code> it returns the viewport height; applied to
+          <code>document</code> it returns the full document height. See also
+          <a href="#outerWidth">outerHeight</a> for the border-box size.
+        </p>
+        <pre class="example"><code>$('#foo').height()     //⇒ 123
+$(window).height()     //⇒ 838 (viewport height)
+$(document).height()   //⇒ 22302</code></pre>
+      </section>
+
+      <section class="method" id="hide">
+        <h3>hide <code class="sig">hide() ⇒ self</code></h3>
+        <p>
+          Hide the elements by setting their <code>display</code> style property to
+          <code>none</code>. For an animated version, see the <code>fx_methods</code> module.
+        </p>
+      </section>
+
+      <section class="method" id="html">
+        <h3>
+          html <code class="sig">html() ⇒ string</code>
+          <code class="sig">html(content) ⇒ self</code>
+          <code class="sig">html(function(index, oldHtml){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get or set the HTML contents of elements. With no argument, returns the inner HTML of the
+          first element; with content, sets it on all elements (replacing existing content).
+        </p>
+        <pre class="example"><code>// autolink everything that looks like a Twitter username
+$('.comment p').html(function (idx, oldHtml) {
+  return oldHtml.replace(/(^|\W)@(\w{1,15})/g,
+    '$1@&lt;a href="https://twitter.com/$2"&gt;$2&lt;/a&gt;')
+})</code></pre>
+      </section>
+
+      <section class="method" id="index">
+        <h3>index <code class="sig">index([element]) ⇒ number</code></h3>
+        <p>
+          Get the position of an element. When no argument is given, returns the position of the
+          first element among its siblings. When an element is given, returns its position within
+          the current collection (or <code>-1</code> if not found).
+        </p>
+        <pre class="example"><code>$('li:nth-child(2)').index()  //⇒ 1</code></pre>
+      </section>
+
+      <section class="method" id="indexOf">
+        <h3>indexOf <code class="sig">indexOf(element, [fromIndex]) ⇒ number</code></h3>
+        <p>
+          Get the position of an element inside the current collection, with native
+          <code>Array.prototype.indexOf</code> semantics.
+        </p>
+      </section>
+
+      <section class="method" id="insertAfter">
+        <h3>insertAfter <code class="sig">insertAfter(target) ⇒ self</code></h3>
+        <p>
+          Insert elements of the current collection after the target element in the DOM. The inverse
+          of <a href="#after">after</a>.
+        </p>
+        <pre
+          class="example"
+        ><code>$('&lt;p&gt;Emphasis mine.&lt;/p&gt;').insertAfter('blockquote')</code></pre>
+      </section>
+
+      <section class="method" id="insertBefore">
+        <h3>insertBefore <code class="sig">insertBefore(target) ⇒ self</code></h3>
+        <p>
+          Insert elements of the current collection before the target element in the DOM. The
+          inverse of <a href="#before">before</a>.
+        </p>
+        <pre
+          class="example"
+        ><code>$('&lt;p&gt;See the following table:&lt;/p&gt;').insertBefore('table')</code></pre>
+      </section>
+
+      <section class="method" id="is">
+        <h3>is <code class="sig">is(selector) ⇒ boolean</code></h3>
+        <p>Check if the first element of the current collection matches the CSS selector.</p>
+        <pre class="example"><code>var input = $('input[type=text]')
+input.is('#username')  //⇒ boolean</code></pre>
+      </section>
+
+      <section class="method" id="last">
+        <h3>last <code class="sig">last() ⇒ collection</code></h3>
+        <p>Get the last element of the current collection.</p>
+        <pre class="example"><code>$('li').last()</code></pre>
+      </section>
+
+      <section class="method" id="map">
+        <h3>map <code class="sig">map(function(index, item){ ... }) ⇒ collection</code></h3>
+        <p>
+          Iterate through all elements and collect the return values of the iterator function into a
+          new Mepto collection. Inside the iterator, <code>this</code> refers to the current item.
+          <code>null</code> and <code>undefined</code> results are excluded.
+        </p>
+        <pre class="example"><code>// get text contents of all buttons
+$('button').map(function () {
+  return $(this).text()
+}).get().join(', ')</code></pre>
+      </section>
+
+      <section class="method" id="next">
+        <h3>
+          next <code class="sig">next() ⇒ collection</code>
+          <code class="sig">next(selector) ⇒ collection</code>
+        </h3>
+        <p>Get the next sibling of each element, optionally filtered by a selector.</p>
+        <pre class="example"><code>$('dl dt').next()  //⇒ the DD elements</code></pre>
+      </section>
+
+      <section class="method" id="not">
+        <h3>
+          not <code class="sig">not(selector) ⇒ collection</code>
+          <code class="sig">not(collection) ⇒ collection</code>
+          <code class="sig">not(function(index){ ... }) ⇒ collection</code>
+        </h3>
+        <p>
+          Filter the current collection to get a new collection of elements that don't match the CSS
+          selector, aren't in the given collection, or for which the function returns a falsy value.
+          The inverse of <a href="#filter">filter</a>.
+        </p>
+        <pre class="example"><code>$('input').not('[type=hidden]')</code></pre>
+      </section>
+
+      <section class="method" id="offset">
+        <h3>
+          offset <code class="sig">offset() ⇒ object</code>
+          <code class="sig">offset(coordinates) ⇒ self</code>
+          <code class="sig">offset(function(index, oldOffset){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get the position of the first element in the document, or set the position of every
+          element relative to the document. The returned object has <code>left</code>,
+          <code>top</code>, <code>width</code>, and <code>height</code> properties. When setting,
+          pass an object with <code>top</code> and <code>left</code> properties (numbers are treated
+          as pixels).
+        </p>
+        <pre class="example"><code>// position a tooltip relative to the document
+$('#tooltip').offset({ top: 100, left: 200 })</code></pre>
+      </section>
+
+      <section class="method" id="offsetParent">
+        <h3>offsetParent <code class="sig">offsetParent() ⇒ collection</code></h3>
+        <p>
+          Find the first positioned ancestor element of each element in the collection — the element
+          that <code>top</code> and <code>left</code> coordinates are relative to.
+        </p>
+      </section>
+
+      <section class="method" id="outerWidth">
+        <h3>
+          outerWidth <code class="sig">outerWidth([includeMargin]) ⇒ number</code>
+          <code class="sig">outerHeight([includeMargin]) ⇒ number</code>
+          <span class="tag">Mepto extra</span>
+        </h3>
+        <p>
+          Get the border-box width or height of the first element (its
+          <code>offsetWidth</code>/<code>offsetHeight</code>). Pass <code>true</code> to include
+          margins. jQuery-compatible additions not present in Zepto.
+        </p>
+      </section>
+
+      <section class="method" id="parent">
+        <h3>parent <code class="sig">parent([selector]) ⇒ collection</code></h3>
+        <p>
+          Get immediate parents of each element in the collection, optionally filtered by a
+          selector.
+        </p>
+        <pre
+          class="example"
+        ><code>$('input[type=text]').parent()  //⇒ parent form fields</code></pre>
+      </section>
+
+      <section class="method" id="parents">
+        <h3>parents <code class="sig">parents([selector]) ⇒ collection</code></h3>
+        <p>
+          Get all ancestors of each element in the collection, optionally filtered by a selector.
+          For the <em>first</em> matching ancestor, use <a href="#closest">closest</a> instead.
+        </p>
+        <pre
+          class="example"
+        ><code>$('.highlight').parents('div')  //⇒ all DIV ancestors</code></pre>
+      </section>
+
+      <section class="method" id="pluck">
+        <h3>pluck <code class="sig">pluck(property) ⇒ array</code></h3>
+        <p>
+          Read values of a property from each element of the collection, returning a plain array.
+          <code>null</code> and <code>undefined</code> values are filtered out.
+        </p>
+        <pre class="example"><code>$('body &gt; *').pluck('nodeName')  //⇒ [DIV, SCRIPT, P]
+$('li').pluck('class')              //⇒ things like ["item", "selected"]</code></pre>
+      </section>
+
+      <section class="method" id="position">
+        <h3>position <code class="sig">position() ⇒ object</code></h3>
+        <p>
+          Get the position of the first element relative to its
+          <a href="#offsetParent">offset parent</a>. The returned object has <code>top</code> and
+          <code>left</code> properties. Returns <code>undefined</code> for an empty collection.
+        </p>
+      </section>
+
+      <section class="method" id="prepend">
+        <h3>prepend <code class="sig">prepend(content) ⇒ self</code></h3>
+        <p>
+          Prepend content to the DOM inside each element in the collection. Content can be an HTML
+          string, a DOM node, or an array of nodes.
+        </p>
+        <pre
+          class="example"
+        ><code>$('ul').prepend('&lt;li&gt;first list item&lt;/li&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="prependTo">
+        <h3>prependTo <code class="sig">prependTo(target) ⇒ self</code></h3>
+        <p>
+          Prepend the elements of the current collection to the target element(s). The inverse of
+          <a href="#prepend">prepend</a>.
+        </p>
+        <pre
+          class="example"
+        ><code>$('&lt;li&gt;first list item&lt;/li&gt;').prependTo('ul')</code></pre>
+      </section>
+
+      <section class="method" id="prev">
+        <h3>
+          prev <code class="sig">prev() ⇒ collection</code>
+          <code class="sig">prev(selector) ⇒ collection</code>
+        </h3>
+        <p>Get the previous sibling of each element, optionally filtered by a selector.</p>
+      </section>
+
+      <section class="method" id="prop">
+        <h3>
+          prop <code class="sig">prop(name) ⇒ value</code>
+          <code class="sig">prop(name, value) ⇒ self</code>
+          <code class="sig">prop(name, function(index, oldValue){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Read or set properties of DOM elements. Prefer this over
+          <a href="#attr">attr</a> for properties like <code>checked</code> or
+          <code>selectedIndex</code>, whose values live on the node rather than in markup.
+        </p>
+        <pre class="example"><code>$('input[type=checkbox]').prop('checked', true)</code></pre>
+      </section>
+
+      <section class="method" id="push">
+        <h3>push <code class="sig">push(element, [element2, ...]) ⇒ number</code></h3>
+        <p>
+          Add elements to the end of the collection in place, with native
+          <code>Array.prototype.push</code> semantics. See also <a href="#sort">sort</a> and
+          <a href="#splice">splice</a>.
+        </p>
+      </section>
+
+      <section class="method" id="ready">
+        <h3>ready <code class="sig">ready(function($){ ... }) ⇒ self</code></h3>
+        <p>
+          Attach an event handler that is executed when the DOM is ready. The handler receives the
+          <code>$</code> factory as its first argument.
+        </p>
+        <pre class="example"><code>$(document).ready(function () {
+  // $('body') and friends are safe to use here
+})</code></pre>
+      </section>
+
+      <section class="method" id="reduce">
+        <h3>
+          reduce
+          <code class="sig"
+            >reduce(function(memo, item, index, array){ ... }, [initial]) ⇒ value</code
+          >
+        </h3>
+        <p>
+          Identical to the native <code>Array.prototype.reduce</code> method, iterating over the
+          elements of the collection.
+        </p>
+        <pre class="example"><code>var total = $('input[type=number]').reduce(function (sum, el) {
+  return sum + (Number(el.value) || 0)
+}, 0)</code></pre>
+      </section>
+
+      <section class="method" id="remove">
+        <h3>remove <code class="sig">remove() ⇒ self</code></h3>
+        <p>Remove the elements of the current collection from the document.</p>
+        <pre class="example"><code>$('button').remove()  //⇒ remove all buttons</code></pre>
+      </section>
+
+      <section class="method" id="removeAttr">
+        <h3>removeAttr <code class="sig">removeAttr(name) ⇒ self</code></h3>
+        <p>
+          Remove the specified attribute from all elements in the collection. Multiple attribute
+          names can be given in a space-separated string.
+        </p>
+      </section>
+
+      <section class="method" id="removeClass">
+        <h3>
+          removeClass <code class="sig">removeClass(name) ⇒ self</code>
+          <code class="sig">removeClass(function(index, oldClassName){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Remove the specified CSS class name(s) from all elements in the collection. Multiple class
+          names can be given in a space-separated string.
+        </p>
+        <pre class="example"><code>$('.selected').removeClass('selected')
+$('#form').removeClass('edit focus')</code></pre>
+      </section>
+
+      <section class="method" id="removeProp">
+        <h3>removeProp <code class="sig">removeProp(name) ⇒ self</code></h3>
+        <p>Deletes the specified property from every element in the collection.</p>
+      </section>
+
+      <section class="method" id="replaceWith">
+        <h3>replaceWith <code class="sig">replaceWith(content) ⇒ self</code></h3>
+        <p>
+          Replace each element in the collection with the given content — an HTML string, DOM node,
+          or collection. Returns the original (now detached) elements.
+        </p>
+        <pre
+          class="example"
+        ><code>$('.replace').replaceWith('&lt;span&gt;new content&lt;/span&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="scrollLeft">
+        <h3>
+          scrollLeft <code class="sig">scrollLeft() ⇒ number</code>
+          <code class="sig">scrollLeft(value) ⇒ self</code>
+        </h3>
+        <p>
+          Gets or sets how many pixels the content of the first element (or the window) is scrolled
+          horizontally.
+        </p>
+      </section>
+
+      <section class="method" id="scrollTop">
+        <h3>
+          scrollTop <code class="sig">scrollTop() ⇒ number</code>
+          <code class="sig">scrollTop(value) ⇒ self</code>
+        </h3>
+        <p>
+          Gets or sets how many pixels the content of the first element (or the window) is scrolled
+          vertically.
+        </p>
+      </section>
+
+      <section class="method" id="show">
+        <h3>show <code class="sig">show() ⇒ self</code></h3>
+        <p>
+          Restore the default <code>display</code> property of each element, un-hiding them. For an
+          animated version, see the <code>fx_methods</code> module.
+        </p>
+      </section>
+
+      <section class="method" id="siblings">
+        <h3>siblings <code class="sig">siblings([selector]) ⇒ collection</code></h3>
+        <p>
+          Get all sibling nodes of each element in the collection, optionally filtered by a
+          selector.
+        </p>
+      </section>
+
+      <section class="method" id="singleClosest">
+        <h3>
+          singleClosest <code class="sig">singleClosest(selector, [context]) ⇒ collection</code>
+          <span class="tag">Mepto extra</span>
+        </h3>
+        <p>
+          Like <a href="#closest">closest</a>, but only consults the <em>first</em> element of the
+          collection and returns at most one element — mirroring the native
+          <code>Element.closest()</code> semantics. A bridge toward vanilla JS.
+        </p>
+      </section>
+
+      <section class="method" id="size">
+        <h3>size <code class="sig">size() ⇒ number</code></h3>
+        <p>
+          Get the number of elements in this collection. Same as reading the
+          <code>length</code> property.
+        </p>
+      </section>
+
+      <section class="method" id="slice">
+        <h3>slice <code class="sig">slice(start, [end]) ⇒ collection</code></h3>
+        <p>
+          Extract a subset of the collection, starting at index <code>start</code> and ending
+          (optionally) before index <code>end</code>. Negative indices count from the end.
+        </p>
+      </section>
+
+      <section class="method" id="sort">
+        <h3>sort <code class="sig">sort([compareFunction]) ⇒ self</code></h3>
+        <p>
+          Sort the elements of the collection in place, with native
+          <code>Array.prototype.sort</code> semantics.
+        </p>
+      </section>
+
+      <section class="method" id="splice">
+        <h3>splice <code class="sig">splice(start, deleteCount, [items...]) ⇒ array</code></h3>
+        <p>
+          Remove or replace elements of the collection in place, with native
+          <code>Array.prototype.splice</code> semantics.
+        </p>
+      </section>
+
+      <section class="method" id="text">
+        <h3>
+          text <code class="sig">text() ⇒ string</code>
+          <code class="sig">text(content) ⇒ self</code>
+          <code class="sig">text(function(index, oldText){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get or set the text contents of elements. With no argument, returns the concatenated text
+          of all elements; with content, sets the text (escaping any HTML) on all elements.
+        </p>
+        <pre class="example"><code>$('#foo').text('Hello!')
+$('#foo').text()  //⇒ "Hello!"</code></pre>
+      </section>
+
+      <section class="method" id="toArray">
+        <h3>toArray <code class="sig">toArray() ⇒ array</code></h3>
+        <p>
+          Get all elements of the collection as a plain array. Same as calling
+          <a href="#get">get()</a> without arguments.
+        </p>
+      </section>
+
+      <section class="method" id="toggle">
+        <h3>toggle <code class="sig">toggle([setting]) ⇒ self</code></h3>
+        <p>
+          Toggle between showing and hiding each element, based on its current
+          <code>display</code> value. If <code>setting</code> is given, force show
+          (<code>true</code>) or hide (<code>false</code>). For an animated version, see the
+          <code>fx_methods</code> module.
+        </p>
+      </section>
+
+      <section class="method" id="toggleClass">
+        <h3>
+          toggleClass <code class="sig">toggleClass(names, [when]) ⇒ self</code>
+          <code class="sig">toggleClass(function(index, oldClassName){ ... }, [when]) ⇒ self</code>
+        </h3>
+        <p>
+          Toggle the given CSS class name(s) on each element: present names are removed, missing
+          ones are added. If <code>when</code> is given, force adding (<code>true</code>) or
+          removing (<code>false</code>) instead of toggling.
+        </p>
+      </section>
+
+      <section class="method" id="unwrap">
+        <h3>unwrap <code class="sig">unwrap() ⇒ self</code></h3>
+        <p>
+          Remove the parents of each element, effectively putting the elements in place of their
+          parent.
+        </p>
+        <pre
+          class="example"
+        ><code>$(document.body).append('&lt;div id=wrapper&gt;&lt;p&gt;Content&lt;/p&gt;&lt;/div&gt;')
+$('#wrapper p').unwrap().parents()  //⇒ [body, html]</code></pre>
+      </section>
+
+      <section class="method" id="val">
+        <h3>
+          val <code class="sig">val() ⇒ string | array</code>
+          <code class="sig">val(value) ⇒ self</code>
+          <code class="sig">val(function(index, oldValue){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get or set the value of form elements. With no argument, returns the value of the first
+          element — for <code>&lt;select multiple&gt;</code>, an array of the selected values.
+        </p>
+        <pre class="example"><code>$('input:text').val('hello')  // set
+$('input:text').val()         // read</code></pre>
+      </section>
+
+      <section class="method" id="width">
+        <h3>
+          width <code class="sig">width() ⇒ number</code>
+          <code class="sig">width(value) ⇒ self</code>
+          <code class="sig">width(function(index, oldWidth){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Get the width of the first element in the collection, or set the width of all elements.
+          Applied to <code>window</code> it returns the viewport width; applied to
+          <code>document</code> it returns the full document width. See also
+          <a href="#outerWidth">outerWidth</a> for the border-box size.
+        </p>
+        <pre class="example"><code>$('#foo').width()    //⇒ 123
+$(window).width()    //⇒ 768 (viewport width)
+$(document).width()  //⇒ 768</code></pre>
+      </section>
+
+      <section class="method" id="wrap">
+        <h3>
+          wrap <code class="sig">wrap(structure) ⇒ self</code>
+          <code class="sig">wrap(function(index){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Wrap each element of the collection separately inside the given DOM structure. The
+          structure can be a single element, nested elements, an HTML string, or a function
+          returning one of those.
+        </p>
+        <pre class="example"><code>// wrap each button in a separate span
+$('.buttons a').wrap('&lt;span&gt;')
+
+// wrap each code block in a div and pre
+$('code').wrap('&lt;div class=highlight&gt;&lt;pre /&gt;&lt;/div&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="wrapAll">
+        <h3>wrapAll <code class="sig">wrapAll(structure) ⇒ self</code></h3>
+        <p>
+          Wrap all elements of the collection, together, inside a single structure inserted before
+          the first element.
+        </p>
+        <pre class="example"><code>// wrap all buttons in a single div
+$('a.button').wrapAll('&lt;div id=buttons /&gt;')</code></pre>
+      </section>
+
+      <section class="method" id="wrapInner">
+        <h3>
+          wrapInner <code class="sig">wrapInner(structure) ⇒ self</code>
+          <code class="sig">wrapInner(function(index){ ... }) ⇒ self</code>
+        </h3>
+        <p>Wrap the contents of each element separately inside the given structure.</p>
+        <pre class="example"><code>$('.nav a').wrapInner('&lt;span&gt;')
+$('ol li').wrapInner('&lt;p&gt;&lt;em /&gt;&lt;/p&gt;')</code></pre>
+      </section>
+
+      <h2 class="section-heading">Event handling</h2>
+
+      <section class="method" id="Event">
+        <h3>$.Event <code class="sig">$.Event(type, [properties]) ⇒ event</code></h3>
+        <p>
+          Create and initialize a DOM event of the specified type. If a properties object is given,
+          use it to extend the new event object. By default, events are set to bubble; this can be
+          turned off by setting <code>bubbles: false</code>.
+        </p>
+        <pre class="example"><code>$.Event('mylib:change', { bubbles: false })</code></pre>
+      </section>
+
+      <section class="method" id="proxy">
+        <h3>
+          $.proxy <code class="sig">$.proxy(fn, context) ⇒ function</code>
+          <code class="sig">$.proxy(fn, context, [additionalArguments...]) ⇒ function</code>
+          <code class="sig">$.proxy(context, property) ⇒ function</code>
+          <code class="sig">$.proxy(context, property, [additionalArguments...]) ⇒ function</code>
+        </h3>
+        <p>
+          Get a function that ensures that the value of <code>this</code> inside the original
+          function is the given context object. Additional arguments are prepended to the arguments
+          the proxy is later called with. In the second form, <code>property</code> names a method
+          on the context object.
+        </p>
+        <pre class="example"><code>var obj = { name: 'mepto' }
+var handler = function (greeting) {
+  console.log(greeting + ' ' + this.name)
+}
+$(document).on('click', $.proxy(handler, obj, 'hello from'))</code></pre>
+      </section>
+
+      <section class="method" id="event-object">
+        <h3>Event object</h3>
+        <p>
+          Mepto event handlers receive a native DOM event, normalized with jQuery-style helpers:
+        </p>
+        <ul>
+          <li><code>event.preventDefault()</code> — cancel the default action</li>
+          <li><code>event.isDefaultPrevented() ⇒ boolean</code></li>
+          <li><code>event.stopPropagation()</code> — stop the event from bubbling</li>
+          <li><code>event.isPropagationStopped() ⇒ boolean</code></li>
+          <li>
+            <code>event.stopImmediatePropagation()</code> — also stop remaining handlers on the same
+            element
+          </li>
+          <li><code>event.isImmediatePropagationStopped() ⇒ boolean</code></li>
+          <li>
+            <code>event.data</code> — extra data passed as the <code>data</code> argument to
+            <a href="#on">on()</a>
+          </li>
+        </ul>
+        <p>
+          Returning <code>false</code> from a handler is equivalent to calling both
+          <code>preventDefault()</code> and <code>stopPropagation()</code>.
+        </p>
+      </section>
+
+      <section class="method" id="on">
+        <h3>
+          on <code class="sig">on(type, function(e){ ... }) ⇒ self</code>
+          <code class="sig">on(type, [data], function(e){ ... }) ⇒ self</code>
+          <code class="sig">on(type, selector, [data], function(e){ ... }) ⇒ self</code>
+          <code class="sig"
+            >on({ type: handler, type2: handler2, ... }, [selector], [data]) ⇒ self</code
+          >
+        </h3>
+        <p>
+          Add event handlers to the elements of the collection. Multiple event types can be passed
+          in a space-separated string, or as an object mapping event types to handlers. Events can
+          be namespaced (<code>'click.mepto'</code>) for selective removal.
+        </p>
+        <p>
+          When a selector is given, the handler is only invoked when an event from an element
+          matching the selector bubbles up to the element in the collection — this is event
+          delegation, and inside the handler <code>this</code> refers to the matching descendant.
+        </p>
+        <pre class="example"><code>$('#elem').on('click', function (e) {
+  // handle clicks on the element
+})
+
+// delegate: handles clicks on current and future &lt;li&gt; items
+$('#list').on('click', 'li', function (e) {
+  console.log('clicked', $(this).text())
+})</code></pre>
+      </section>
+
+      <section class="method" id="off">
+        <h3>
+          off <code class="sig">off(type, [selector], function(e){ ... }) ⇒ self</code>
+          <code class="sig">off({ type: handler, type2: handler2, ... }, [selector]) ⇒ self</code>
+          <code class="sig">off(type, [selector]) ⇒ self</code>
+          <code class="sig">off() ⇒ self</code>
+        </h3>
+        <p>
+          Detach event handlers added with <a href="#on">on</a>. To detach a specific handler, the
+          same function reference must be passed. With no arguments, all handlers are removed;
+          namespaces (<code>'.mepto'</code>) let you remove whole groups.
+        </p>
+      </section>
+
+      <section class="method" id="one">
+        <h3>
+          one <code class="sig">one(type, [data], function(e){ ... }) ⇒ self</code>
+          <code class="sig">one(type, selector, [data], function(e){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Add an event handler that only fires <em>once</em> on each element and is then removed.
+          Accepts the same arguments as <a href="#on">on</a>.
+        </p>
+      </section>
+
+      <section class="method" id="trigger">
+        <h3>trigger <code class="sig">trigger(event, [args]) ⇒ self</code></h3>
+        <p>
+          Trigger the specified event on elements of the collection, as if it had occurred
+          naturally: the event bubbles and default actions apply. The event can be a string type or
+          an event object created with <a href="#Event">$.Event</a>. Extra <code>args</code> are
+          passed to the handler after the event object.
+        </p>
+        <pre class="example"><code>$(document.body).trigger('click')
+$(document).trigger('mylib:change', ['first argument', 'second'])</code></pre>
+      </section>
+
+      <section class="method" id="triggerHandler">
+        <h3>triggerHandler <code class="sig">triggerHandler(event, [args]) ⇒ value</code></h3>
+        <p>
+          Like <a href="#trigger">trigger</a>, but only calls the handlers registered via Mepto: no
+          actual event is dispatched, the event doesn't bubble, and default actions (such as form
+          submission or link navigation) don't occur. Returns the value of the last invoked handler.
+        </p>
+      </section>
+
+      <section class="method" id="shortcut-events">
+        <h3>Shortcut methods</h3>
+        <p>
+          Shorthand methods for binding the most common event types are available on every
+          collection:
+        </p>
+        <pre
+          class="example"
+        ><code>focusin focusout focus blur load resize scroll unload click dblclick
+mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave
+change select keydown keypress keyup error</code></pre>
+        <p>
+          Called with a function argument, they bind a handler (like
+          <a href="#on">on</a>); called with no arguments, they trigger the event (like
+          <a href="#trigger">trigger</a>):
+        </p>
+        <pre class="example"><code>$('form').submit(function (e) {
+  e.preventDefault()
+})
+$('#save').click()  //⇒ trigger a click</code></pre>
+      </section>
+
+      <section class="method" id="bind">
+        <h3>
+          bind / unbind <span class="tag deprecated">deprecated</span>
+          <code class="sig">bind(type, [data], function(e){ ... }) ⇒ self</code>
+          <code class="sig">unbind(type, function(e){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Deprecated jQuery-style aliases of <a href="#on">on</a> and <a href="#off">off</a>, kept
+          for compatibility. Use <code>on</code>/<code>off</code> in new code.
+        </p>
+      </section>
+
+      <section class="method" id="delegate">
+        <h3>
+          delegate / undelegate <span class="tag deprecated">deprecated</span>
+          <code class="sig">delegate(selector, type, function(e){ ... }) ⇒ self</code>
+          <code class="sig">undelegate(selector, type, function(e){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Deprecated jQuery-style aliases of delegated <a href="#on">on</a> and
+          <a href="#off">off</a>. Use <code>on(type, selector, fn)</code> in new code.
+        </p>
+        <p>
+          Note: Zepto's <code>live()</code> and <code>die()</code> were <strong>removed</strong> in
+          Mepto — use delegated <code>on</code>/<code>off</code> instead.
+        </p>
+      </section>
+
+      <h2 class="section-heading">Ajax requests</h2>
+
+      <section class="method" id="ajax">
+        <h3>$.ajax <code class="sig">$.ajax(options) ⇒ XMLHttpRequest</code></h3>
+        <p>
+          Perform an Ajax request. This is the most generic method; all the Ajax shortcuts below go
+          through it. In Mepto the transport is built on <code>fetch</code> rather than
+          <code>XMLHttpRequest</code>; the returned object is an XHR-shaped shim (with
+          <code>abort()</code>, <code>status</code>, <code>responseText</code>, and
+          <code>getResponseHeader()</code>) that is also a promise.
+        </p>
+        <p>Options (all optional, defaults in <a href="#ajaxSettings">$.ajaxSettings</a>):</p>
+        <ul>
+          <li><code>type</code> (default: <code>"GET"</code>): HTTP request method</li>
+          <li><code>url</code> (default: current URL): request URL</li>
+          <li><code>data</code> (default: none): object, array, or string sent with the request</li>
+          <li>
+            <code>processData</code> (default: <code>true</code>): serialize non-string
+            <code>data</code> with <a href="#$.param">$.param</a>
+          </li>
+          <li>
+            <code>contentType</code> (default: <code>"application/x-www-form-urlencoded"</code>):
+            content type of the request body
+          </li>
+          <li><code>mimeType</code>: override the response MIME type</li>
+          <li>
+            <code>dataType</code>: how to parse the response — <code>"json"</code>,
+            <code>"jsonp"</code>, <code>"script"</code>, <code>"xml"</code>, <code>"html"</code>, or
+            <code>"text"</code> (default: inferred from the response MIME type)
+          </li>
+          <li>
+            <code>jsonp</code> (default: <code>"callback"</code>): name of the JSONP query parameter
+          </li>
+          <li>
+            <code>jsonpCallback</code>: name (or function returning a name) for the JSONP callback
+            function
+          </li>
+          <li>
+            <code>timeout</code> (default: <code>0</code>): request timeout in milliseconds;
+            <code>0</code> disables it
+          </li>
+          <li><code>headers</code>: object of additional HTTP headers</li>
+          <li>
+            <code>async</code> (default: <code>true</code>): reserved for API compatibility —
+            <code>fetch</code> is always asynchronous
+          </li>
+          <li>
+            <code>global</code> (default: <code>true</code>): trigger global
+            <a href="#ajax-events">Ajax events</a>
+          </li>
+          <li><code>context</code>: the value of <code>this</code> inside callbacks</li>
+          <li>
+            <code>traditional</code> (default: <code>false</code>): serialize arrays/objects flat
+            instead of nested
+          </li>
+          <li>
+            <code>cache</code> (default: <code>true</code>): allow the browser to cache GET
+            responses
+          </li>
+          <li>
+            <code>xhrFields</code>: object of fetch-era tweaks —
+            <code>withCredentials: true</code> sends credentials cross-origin;
+            <code>responseType: "arraybuffer" | "blob"</code>
+            reads the body as binary
+          </li>
+          <li><code>username</code> / <code>password</code>: HTTP basic auth credentials</li>
+        </ul>
+        <p>Callbacks:</p>
+        <ul>
+          <li>
+            <code>beforeSend(xhr, settings)</code>: called before the request is sent; return
+            <code>false</code> to cancel it
+          </li>
+          <li><code>success(data, status, xhr)</code>: called when the request succeeds</li>
+          <li>
+            <code>error(xhr, errorType, error)</code>: called on failure — <code>errorType</code> is
+            <code>"timeout"</code>, <code>"error"</code>, <code>"abort"</code>, or
+            <code>"parsererror"</code>
+          </li>
+          <li><code>complete(xhr, status)</code>: called after success or failure</li>
+        </ul>
+        <p>
+          The returned object also implements the promise interface — because the
+          <code>callbacks</code> and <code>deferred</code> modules are always bundled,
+          <code>done</code>, <code>fail</code>, <code>always</code>, and <code>then</code> are
+          available:
+        </p>
+        <pre class="example"><code>$.ajax({
+  type: 'POST',
+  url: '/api/items',
+  data: { name: 'frobnicator' },
+  dataType: 'json',
+  success: function (data) {
+    console.log('created', data)
+  }
+})
+
+// promise style
+$.ajax('/api/items')
+  .done(function (data) { console.log(data) })
+  .fail(function (xhr, type) { console.error('failed:', type) })</code></pre>
+        <p>
+          To cancel a request in flight, call <code>abort()</code> on the returned object; the
+          <code>error</code> callback fires with type <code>"abort"</code>.
+        </p>
+      </section>
+
+      <section class="method" id="ajax-events">
+        <h3>Ajax events</h3>
+        <p>
+          When <code>global: true</code> (the default), Ajax requests trigger these events on the
+          <code>context</code> element (or on <code>document</code> when no context is set). Use
+          them for activity indicators and global error handling:
+        </p>
+        <ul>
+          <li><code>ajaxStart</code>: the first request in a batch is sent</li>
+          <li><code>ajaxBeforeSend</code> (xhr, settings): before send; cancelable</li>
+          <li><code>ajaxSend</code> (xhr, settings): request sent</li>
+          <li><code>ajaxSuccess</code> (xhr, settings, data): request succeeded</li>
+          <li><code>ajaxError</code> (xhr, settings, error): request failed</li>
+          <li><code>ajaxComplete</code> (xhr, settings): request finished</li>
+          <li><code>ajaxStop</code>: no requests remain active</li>
+        </ul>
+        <pre class="example"><code>$(document).on('ajaxStart', function () {
+  $('#spinner').show()
+}).on('ajaxStop', function () {
+  $('#spinner').hide()
+})</code></pre>
+      </section>
+
+      <section class="method" id="ajaxSettings">
+        <h3>$.ajaxSettings</h3>
+        <p>
+          Object containing the default settings for <a href="#ajax">$.ajax</a>. Most defaults
+          should be set per-request, but this is the place for app-wide defaults such as timeouts,
+          headers, or disabling global events.
+        </p>
+        <pre class="example"><code>$.ajaxSettings.timeout = 5000</code></pre>
+      </section>
+
+      <section class="method" id="$.get">
+        <h3>
+          $.get
+          <code class="sig">$.get(url, function(data, status, xhr){ ... }) ⇒ XMLHttpRequest</code>
+          <code class="sig">$.get(url, [data], [success], [dataType]) ⇒ XMLHttpRequest</code>
+        </h3>
+        <p>Perform an Ajax GET request. Shorthand for <a href="#ajax">$.ajax</a>.</p>
+        <pre class="example"><code>$.get('/whatevs.html', function (response) {
+  $(document.body).append(response)
+})</code></pre>
+      </section>
+
+      <section class="method" id="$.post">
+        <h3>
+          $.post
+          <code class="sig"
+            >$.post(url, [data], function(data, status, xhr){ ... }, [dataType]) ⇒
+            XMLHttpRequest</code
+          >
+        </h3>
+        <p>
+          Perform an Ajax POST request. When <code>dataType</code> is <code>"json"</code>, the
+          response is parsed before being passed to the success callback.
+        </p>
+        <pre class="example"><code>$.post('/form', { email: 'ssoojj@example.com' }, function () {
+  console.log('sent')
+})</code></pre>
+      </section>
+
+      <section class="method" id="$.getJSON">
+        <h3>
+          $.getJSON
+          <code class="sig"
+            >$.getJSON(url, function(data, status, xhr){ ... }) ⇒ XMLHttpRequest</code
+          >
+          <code class="sig">$.getJSON(url, [data], [success]) ⇒ XMLHttpRequest</code>
+        </h3>
+        <p>Perform an Ajax GET request and parse the response as JSON.</p>
+        <pre class="example"><code>$.getJSON('/awesome.json', function (data) {
+  console.log(data)
+})
+
+// fetch JSON data from another domain with JSONP
+$.getJSON('//example.com/awesome.json?callback=?', function (remoteData) {
+  console.log(remoteData)
+})</code></pre>
+      </section>
+
+      <section class="method" id="$.param">
+        <h3>$.param <code class="sig">$.param(object, [traditional]) ⇒ string</code></h3>
+        <p>
+          Serialize an object into a URL-encoded string for use in Ajax query strings. Nested
+          objects and arrays are serialized recursively unless <code>traditional</code> is
+          <code>true</code>.
+        </p>
+        <pre class="example"><code>$.param({ foo: { one: 1, two: 2 } })
+//⇒ "foo[one]=1&amp;foo[two]=2"
+
+$.param({ ids: [1, 2, 3] })
+//⇒ "ids[]=1&amp;ids[]=2&amp;ids[]=3"
+
+$.param({ ids: [1, 2, 3] }, true)
+//⇒ "ids=1&amp;ids=2&amp;ids=3"</code></pre>
+      </section>
+
+      <section class="method" id="$.ajaxJSONP">
+        <h3>
+          $.ajaxJSONP <span class="tag deprecated">deprecated</span>
+          <code class="sig">$.ajaxJSONP(options) ⇒ mock XMLHttpRequest object</code>
+        </h3>
+        <p>
+          Perform a JSONP request via a dynamically inserted <code>&lt;script&gt;</code> tag.
+          Deprecated: prefer <a href="#ajax">$.ajax</a> with <code>dataType: "jsonp"</code>, or
+          CORS-enabled JSON endpoints where the server allows them.
+        </p>
+      </section>
+
+      <section class="method" id="$.active">
+        <h3>$.active <code class="sig">$.active ⇒ number</code></h3>
+        <p>
+          The number of Ajax requests currently in flight. The
+          <a href="#ajax-events">ajaxStart/ajaxStop</a> events are derived from this counter.
+        </p>
+      </section>
+
+      <section class="method" id="load">
+        <h3>load <code class="sig">load(url, function(data, status, xhr){ ... }) ⇒ self</code></h3>
+        <p>
+          Set the html contents of the current element(s) to the result of a GET Ajax call to the
+          given URL. Optionally, a CSS selector can be specified in the URL, like so, to use only
+          the matching content:
+        </p>
+        <pre class="example"><code>$('#some_element').load('/foo.html #bar')</code></pre>
+        <p>
+          If no CSS selector is given, the complete response text is used instead. Note that any
+          examples loaded this way will not execute inline JavaScript — <code>&lt;script&gt;</code>
+          tags are stripped when a selector is used.
+        </p>
+      </section>
+
+      <h2 class="section-heading">Form</h2>
+
+      <section class="method" id="serialize">
+        <h3>serialize <code class="sig">serialize() ⇒ string</code></h3>
+        <p>
+          Serialize form values to a URL-encoded string for use in Ajax post requests. Fields that
+          are disabled, of button/submit/reset/file type, or unchecked radio/checkbox inputs are
+          skipped.
+        </p>
+        <pre class="example"><code>$('form').serialize()
+//⇒ "name=mepto&amp;version=2.0&amp;target_browser=modern"</code></pre>
+      </section>
+
+      <section class="method" id="serializeArray">
+        <h3>serializeArray <code class="sig">serializeArray() ⇒ array</code></h3>
+        <p>
+          Serialize form values into an array of objects with <code>name</code> and
+          <code>value</code> properties. Disabled controls, button/submit/reset/file inputs, and
+          unchecked checkboxes/radio buttons are skipped. Does not serialize the form itself —
+          select the fields or a form element with fields in it.
+        </p>
+        <pre class="example"><code>$('form').serializeArray()
+//⇒ [{ name: 'greeting', value: 'hello' }, { name: 'num', value: 42 }]</code></pre>
+      </section>
+
+      <section class="method" id="submit">
+        <h3>
+          submit <code class="sig">submit() ⇒ self</code>
+          <code class="sig">submit(function(e){ ... }) ⇒ self</code>
+        </h3>
+        <p>
+          Trigger or bind the <code>submit</code> event. When called with a callback, binds it (like
+          <code>on('submit', fn)</code>); with no arguments, triggers the submit event on the first
+          form and, unless it was cancelled, submits the form natively.
+        </p>
+        <pre class="example"><code>$('form').submit(function (e) {
+  e.preventDefault()
+  $.post('/form', $(this).serialize())
+})</code></pre>
+      </section>
+
+      <footer>
+        <p>
+          Mepto is a fork of <a href="https://zeptojs.com/">Zepto.js</a>, relicensed nothing — both
+          are MIT-licensed. Source, issues, and contributions:
+          <a href="https://github.com/oreoorbitz/Mepto">github.com/oreoorbitz/Mepto</a>.
+        </p>
+      </footer>
+    </main>
+
+    <a id="back-to-top" href="#top">Back to top ↑</a>
+
+    <script src="assets/meptos.umd.cjs"></script>
+    <script src="assets/main.js"></script>
+  </body>
+</html>

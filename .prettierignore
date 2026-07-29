@@ -6,5 +6,7 @@ test-results/
 playwright-report/
 package-lock.json
 *.min.js
+# minified Mepto bundle vendored into the docs site
+docs/site/assets/meptos.umd.cjs
 *.log
 .port

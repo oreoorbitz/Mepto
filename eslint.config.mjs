@@ -12,6 +12,8 @@ export default tseslint.config(
       'playwright-report/**',
       // third-party-derived plugin, legacy style — prettier formats it via lint-staged
       'plugins/**',
+      // minified Mepto bundle vendored into the docs site
+      'docs/site/assets/meptos.umd.cjs',
       '*.config.js',
       '*.config.ts',
       '*.config.mjs',
