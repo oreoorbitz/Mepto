@@ -547,82 +547,67 @@ import $ from '../src/meptos'
 
   Mlick.prototype.checkResponsive = function (initial, forceUpdate) {
     const _ = this
-    let breakpoint
-    let targetBreakpoint
-    let respondToWidth
-    let triggerBreakpoint = false
     const sliderWidth = _.$slider.width()
     const windowWidth = window.innerWidth || $(window).width()
 
-    if (_.respondTo === 'window') {
-      respondToWidth = windowWidth
-    } else if (_.respondTo === 'slider') {
-      respondToWidth = sliderWidth
-    } else if (_.respondTo === 'min') {
-      respondToWidth = Math.min(windowWidth, sliderWidth)
+    const respondToWidth = {
+      window: () => windowWidth,
+      slider: () => sliderWidth,
+      min: () => Math.min(windowWidth, sliderWidth),
+    }[_.respondTo]?.()
+
+    if (!_.options.responsive || !_.options.responsive.length || _.options.responsive === null) {
+      return
     }
 
-    if (_.options.responsive && _.options.responsive.length && _.options.responsive !== null) {
-      targetBreakpoint = null
-
-      for (breakpoint in _.breakpoints) {
-        if (_.breakpoints.hasOwnProperty(breakpoint)) {
-          if (_.originalSettings.mobileFirst === false) {
-            if (respondToWidth < _.breakpoints[breakpoint]) {
-              targetBreakpoint = _.breakpoints[breakpoint]
-            }
-          } else {
-            if (respondToWidth > _.breakpoints[breakpoint]) {
-              targetBreakpoint = _.breakpoints[breakpoint]
-            }
-          }
-        }
+    // The smallest/largest matching breakpoint wins; iteration keeps the last
+    // match, mirroring the original for...in accumulation.
+    const mobileFirst = _.originalSettings.mobileFirst
+    const matches = bp => (mobileFirst === false ? respondToWidth < bp : respondToWidth > bp)
+    let targetBreakpoint = null
+    for (const bp of Object.values(_.breakpoints)) {
+      if (matches(bp)) {
+        targetBreakpoint = bp
       }
+    }
 
-      if (targetBreakpoint !== null) {
-        if (_.activeBreakpoint !== null) {
-          if (targetBreakpoint !== _.activeBreakpoint || forceUpdate) {
-            _.activeBreakpoint = targetBreakpoint
-            if (_.breakpointSettings[targetBreakpoint] === 'unmlick') {
-              _.unmlick(targetBreakpoint)
-            } else {
-              _.options = $.extend({}, _.originalSettings, _.breakpointSettings[targetBreakpoint])
-              if (initial === true) {
-                _.currentSlide = _.options.initialSlide
-              }
-              _.refresh(initial)
-            }
-            triggerBreakpoint = targetBreakpoint
-          }
-        } else {
-          _.activeBreakpoint = targetBreakpoint
-          if (_.breakpointSettings[targetBreakpoint] === 'unmlick') {
-            _.unmlick(targetBreakpoint)
-          } else {
-            _.options = $.extend({}, _.originalSettings, _.breakpointSettings[targetBreakpoint])
-            if (initial === true) {
-              _.currentSlide = _.options.initialSlide
-            }
-            _.refresh(initial)
-          }
-          triggerBreakpoint = targetBreakpoint
-        }
-      } else {
-        if (_.activeBreakpoint !== null) {
-          _.activeBreakpoint = null
-          _.options = _.originalSettings
-          if (initial === true) {
-            _.currentSlide = _.options.initialSlide
-          }
-          _.refresh(initial)
-          triggerBreakpoint = targetBreakpoint
-        }
+    // Applies the breakpoint's settings (or tears the carousel down for the
+    // 'unmlick' sentinel) and refreshes.
+    const applySettings = bp => {
+      _.activeBreakpoint = bp
+      if (_.breakpointSettings[bp] === 'unmlick') {
+        _.unmlick(bp)
+        return
       }
+      _.options = $.extend({}, _.originalSettings, _.breakpointSettings[bp])
+      if (initial === true) {
+        _.currentSlide = _.options.initialSlide
+      }
+      _.refresh(initial)
+    }
 
-      // only trigger breakpoints during an actual break. not on initialize.
-      if (!initial && triggerBreakpoint !== false) {
-        _.$slider.trigger('breakpoint', [_, triggerBreakpoint])
+    let triggerBreakpoint = false
+
+    if (targetBreakpoint !== null) {
+      // Activate on a changed breakpoint, or re-apply when forced.
+      if (targetBreakpoint !== _.activeBreakpoint || forceUpdate) {
+        applySettings(targetBreakpoint)
+        triggerBreakpoint = targetBreakpoint
       }
+    } else if (_.activeBreakpoint !== null) {
+      // No matching breakpoint: restore the original settings.
+      _.activeBreakpoint = null
+      _.options = _.originalSettings
+      if (initial === true) {
+        _.currentSlide = _.options.initialSlide
+      }
+      _.refresh(initial)
+      triggerBreakpoint = targetBreakpoint
+    }
+
+    // only trigger breakpoints during an actual break. not on initialize.
+    if (!initial && triggerBreakpoint !== false) {
+      _.$slider.trigger('breakpoint', [_, triggerBreakpoint])
     }
   }
 
@@ -2302,13 +2287,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.slideHandler = function (index, sync, dontAnimate) {
-    let targetSlide
-    let animSlide
-    let oldSlide
-    let slideLeft
-    let targetLeft = null
     const _ = this
-    let navTarget
 
     sync = sync || false
 
@@ -2324,62 +2303,53 @@ import $ from '../src/meptos'
       _.asNavFor(index)
     }
 
-    targetSlide = index
-    targetLeft = _.getLeft(targetSlide)
-    slideLeft = _.getLeft(_.currentSlide)
+    // Shared tail: animate to `left` (unless dontAnimate or too few slides),
+    // then settle on `target`. Used by both the out-of-bounds clamp and the
+    // normal path.
+    const finish = (target, left) => {
+      if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
+        _.animateSlide(left, () => {
+          _.postSlide(target)
+        })
+      } else {
+        _.postSlide(target)
+      }
+    }
+
+    let targetSlide = index
+    const targetLeft = _.getLeft(targetSlide)
+    const slideLeft = _.getLeft(_.currentSlide)
 
     _.currentLeft = _.swipeLeft === null ? slideLeft : _.swipeLeft
 
-    if (
-      _.options.infinite === false &&
-      _.options.centerMode === false &&
-      (index < 0 || index > _.getDotCount() * _.options.slidesToScroll)
-    ) {
-      if (_.options.fade === false) {
-        targetSlide = _.currentSlide
-        if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-          _.animateSlide(slideLeft, () => {
-            _.postSlide(targetSlide)
-          })
-        } else {
-          _.postSlide(targetSlide)
+    // Non-infinite out-of-bounds: clamp back to the current slide. The upper
+    // bound differs between centerMode and the default layout.
+    if (_.options.infinite === false) {
+      const upperBound =
+        _.options.centerMode === true
+          ? _.slideCount - _.options.slidesToScroll
+          : _.getDotCount() * _.options.slidesToScroll
+
+      if (index < 0 || index > upperBound) {
+        if (_.options.fade === false) {
+          targetSlide = _.currentSlide
+          finish(targetSlide, slideLeft)
         }
+        return
       }
-      return
-    } else if (
-      _.options.infinite === false &&
-      _.options.centerMode === true &&
-      (index < 0 || index > _.slideCount - _.options.slidesToScroll)
-    ) {
-      if (_.options.fade === false) {
-        targetSlide = _.currentSlide
-        if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-          _.animateSlide(slideLeft, () => {
-            _.postSlide(targetSlide)
-          })
-        } else {
-          _.postSlide(targetSlide)
-        }
-      }
-      return
     }
 
     if (_.options.autoplay) {
       clearInterval(_.autoPlayTimer)
     }
 
+    // Normalize the requested slide into the wrapped animSlide index.
+    let animSlide
+    const remainder = _.slideCount % _.options.slidesToScroll
     if (targetSlide < 0) {
-      if (_.slideCount % _.options.slidesToScroll !== 0) {
-        animSlide = _.slideCount - (_.slideCount % _.options.slidesToScroll)
-      } else {
-        animSlide = _.slideCount + targetSlide
-      }
+      animSlide = remainder !== 0 ? _.slideCount - remainder : _.slideCount + targetSlide
     } else if (targetSlide >= _.slideCount) {
-      if (_.slideCount % _.options.slidesToScroll !== 0) {
-        animSlide = 0
-      } else {
-        animSlide = targetSlide - _.slideCount
-      }
+      animSlide = remainder !== 0 ? 0 : targetSlide - _.slideCount
     } else {
       animSlide = targetSlide
     }
@@ -2388,13 +2358,13 @@ import $ from '../src/meptos'
 
     _.$slider.trigger('beforeChange', [_, _.currentSlide, animSlide])
 
-    oldSlide = _.currentSlide
+    const oldSlide = _.currentSlide
     _.currentSlide = animSlide
 
     _.setSlideClasses(_.currentSlide)
 
     if (_.options.asNavFor) {
-      navTarget = _.getNavTarget()
+      let navTarget = _.getNavTarget()
       navTarget = navTarget.mlick('getMlick')
 
       if (navTarget.slideCount <= navTarget.options.slidesToShow) {
@@ -2419,13 +2389,7 @@ import $ from '../src/meptos'
       return
     }
 
-    if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-      _.animateSlide(targetLeft, () => {
-        _.postSlide(animSlide)
-      })
-    } else {
-      _.postSlide(animSlide)
-    }
+    finish(animSlide, targetLeft)
   }
 
   Mlick.prototype.startLoad = function () {

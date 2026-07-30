@@ -136,6 +136,144 @@ test('setSlideClasses marks exactly slidesToShow slides active with aria-hidden=
   expect(activeIndexes).toEqual([2, 3, 4])
 })
 
+// ---- branch coverage for the complexity refactor (slideHandler + checkResponsive)
+
+test('slideHandler non-infinite: out-of-bounds navigation clamps to current slide', async ({
+  page,
+}) => {
+  await build(page, {
+    id: 'perf-edge',
+    slides: 6,
+    opts: { slidesToShow: 2, slidesToScroll: 1, infinite: false, dots: false },
+  })
+  const cur = () =>
+    page.evaluate(
+      () => (document.querySelector('#perf-edge') as unknown as { mlick: any }).mlick.currentSlide
+    )
+  expect(await cur()).toBe(0)
+
+  // prev at index 0 -> out of bounds (< 0), must clamp back to 0 (not wrap)
+  await page.evaluate(() => {
+    const $m = (window as unknown as { $: (s: string) => any }).$
+    $m('#perf-edge').mlick('mlickPrev')
+  })
+  await expect.poll(cur).toBe(0)
+
+  // navigate to the last valid index (slideCount - slidesToShow = 4), then next -> clamp at 4
+  await page.evaluate(() => {
+    const $m = (window as unknown as { $: (s: string) => any }).$
+    $m('#perf-edge').mlick('mlickGoTo', 4)
+  })
+  await expect.poll(cur).toBe(4)
+
+  await page.evaluate(() => {
+    const $m = (window as unknown as { $: (s: string) => any }).$
+    $m('#perf-edge').mlick('mlickNext')
+  })
+  await expect.poll(cur).toBe(4)
+})
+
+test('slideHandler infinite: wraps past last slide to first (current behavior)', async ({
+  page,
+}) => {
+  await build(page, {
+    id: 'perf-inf',
+    slides: 4,
+    opts: { slidesToShow: 1, slidesToScroll: 1, infinite: true, dots: false },
+  })
+  const cur = () =>
+    page.evaluate(
+      () => (document.querySelector('#perf-inf') as unknown as { mlick: any }).mlick.currentSlide
+    )
+  // wait until the running transition finishes (mlickNext is dropped while animating)
+  const idle = () =>
+    page.evaluate(
+      () =>
+        (document.querySelector('#perf-inf') as unknown as { mlick: any }).mlick.animating === false
+    )
+  // go to last, then next should wrap to 0
+  await page.evaluate(() => {
+    const $m = (window as unknown as { $: (s: string) => any }).$
+    $m('#perf-inf').mlick('mlickGoTo', 3)
+  })
+  await expect.poll(cur).toBe(3)
+  await expect.poll(idle).toBe(true)
+  await page.evaluate(() => {
+    const $m = (window as unknown as { $: (s: string) => any }).$
+    $m('#perf-inf').mlick('mlickNext')
+  })
+  await expect.poll(cur).toBe(0)
+})
+
+test('checkResponsive: activates breakpoint settings when window shrinks below breakpoint', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 900, height: 700 })
+  await build(page, {
+    id: 'perf-resp',
+    slides: 6,
+    opts: {
+      slidesToShow: 4,
+      slidesToScroll: 1,
+      infinite: false,
+      dots: false,
+      responsive: [{ breakpoint: 600, settings: { slidesToShow: 2 } }],
+    },
+  })
+  const show = () =>
+    page.evaluate(
+      () =>
+        (document.querySelector('#perf-resp') as unknown as { mlick: any }).mlick.options
+          .slidesToShow
+    )
+  const active = () =>
+    page.evaluate(
+      () =>
+        (document.querySelector('#perf-resp') as unknown as { mlick: any }).mlick.activeBreakpoint
+    )
+
+  // wide window: desktop settings (4), no active breakpoint
+  expect(await show()).toBe(4)
+  expect(await active()).toBe(null)
+
+  // shrink below 600: breakpoint activates, slidesToShow becomes 2
+  await page.setViewportSize({ width: 500, height: 700 })
+  await expect.poll(show).toBe(2)
+  expect(await active()).toBe(600)
+
+  // grow back: returns to desktop settings, breakpoint cleared
+  await page.setViewportSize({ width: 900, height: 700 })
+  await expect.poll(show).toBe(4)
+  expect(await active()).toBe(null)
+})
+
+test('checkResponsive mobileFirst: breakpoint activates as window grows past it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 500, height: 700 })
+  await build(page, {
+    id: 'perf-mf',
+    slides: 6,
+    opts: {
+      slidesToShow: 1,
+      mobileFirst: true,
+      infinite: false,
+      dots: false,
+      responsive: [{ breakpoint: 600, settings: { slidesToShow: 3 } }],
+    },
+  })
+  const show = () =>
+    page.evaluate(
+      () =>
+        (document.querySelector('#perf-mf') as unknown as { mlick: any }).mlick.options.slidesToShow
+    )
+  // narrow (mobile-first base): 1
+  expect(await show()).toBe(1)
+  // grow past breakpoint: 3
+  await page.setViewportSize({ width: 900, height: 700 })
+  await expect.poll(show).toBe(3)
+})
+
 test('swipeMove math: horizontal drag drives a left swipe to next slide', async ({ page }) => {
   // Reuse the proven-draggable #carousel-basic fixture (slidesToShow: 1). The
   // swipeMove swipeLength computation must convert a left drag into next-slide.
