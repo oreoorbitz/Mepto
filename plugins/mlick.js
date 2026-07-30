@@ -507,6 +507,7 @@ import $ from '../src/meptos'
       a,
       b,
       c,
+      leafSlides,
       newSlides,
       numOfSlides,
       originalSlides,
@@ -514,6 +515,7 @@ import $ from '../src/meptos'
 
     newSlides = document.createDocumentFragment()
     originalSlides = _.$slider.children()
+    leafSlides = []
 
     if (_.options.rows > 0) {
       slidesPerSection = _.options.slidesPerRow * _.options.rows
@@ -525,8 +527,10 @@ import $ from '../src/meptos'
           var row = document.createElement('div')
           for (c = 0; c < _.options.slidesPerRow; c++) {
             var target = a * slidesPerSection + (b * _.options.slidesPerRow + c)
-            if (originalSlides.get(target)) {
-              row.appendChild(originalSlides.get(target))
+            var leaf = originalSlides.get(target)
+            if (leaf) {
+              row.appendChild(leaf)
+              leafSlides.push(leaf)
             }
           }
           slide.appendChild(row)
@@ -535,14 +539,10 @@ import $ from '../src/meptos'
       }
 
       _.$slider.empty().append(newSlides)
-      _.$slider
-        .children()
-        .children()
-        .children()
-        .css({
-          width: 100 / _.options.slidesPerRow + '%',
-          display: 'inline-block',
-        })
+      $(leafSlides).css({
+        width: 100 / _.options.slidesPerRow + '%',
+        display: 'inline-block',
+      })
     }
   }
 

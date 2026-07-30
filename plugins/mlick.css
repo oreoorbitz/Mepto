@@ -1,0 +1,94 @@
+/* Slider — structural styles the mlick layout math depends on.
+ *
+ * These rules are required for plugins/mlick.js to size and position slides
+ * correctly: float-based slides, a hidden-overflow list, and a clearfixed
+ * track. Theming (arrows, dots, colors) lives in mlick-theme.css.
+ *
+ * Targets evergreen browsers only — no vendor prefixes, no legacy fallbacks.
+ */
+
+.mlick-slider {
+  position: relative;
+  display: block;
+  box-sizing: border-box;
+  user-select: none;
+  touch-action: pan-y;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mlick-list {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+}
+.mlick-list:focus {
+  outline: none;
+}
+.mlick-list.draggable {
+  cursor: grab;
+}
+.mlick-list.dragging {
+  cursor: grabbing;
+}
+
+.mlick-slider .mlick-track,
+.mlick-slider .mlick-list {
+  transform: translate3d(0, 0, 0);
+}
+
+.mlick-track {
+  position: relative;
+  top: 0;
+  left: 0;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+/* clearfix: the track's float-based slides would otherwise collapse it */
+.mlick-track::before,
+.mlick-track::after {
+  content: '';
+  display: table;
+}
+.mlick-track::after {
+  clear: both;
+}
+.mlick-loading .mlick-track {
+  visibility: hidden;
+}
+
+.mlick-slide {
+  display: none;
+  float: left;
+  height: 100%;
+  min-height: 1px;
+}
+[dir='rtl'] .mlick-slide {
+  float: right;
+}
+.mlick-slide img {
+  display: block;
+}
+.mlick-slide.mlick-loading img {
+  display: none;
+}
+.mlick-slide.dragging img {
+  pointer-events: none;
+}
+.mlick-initialized .mlick-slide {
+  display: block;
+}
+.mlick-loading .mlick-slide {
+  visibility: hidden;
+}
+.mlick-vertical .mlick-slide {
+  display: block;
+  height: auto;
+  border: 1px solid transparent;
+}
+
+.mlick-arrow.mlick-hidden {
+  display: none;
+}

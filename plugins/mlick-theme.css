@@ -1,0 +1,155 @@
+@charset "UTF-8";
+/* Slider — default theme (arrows + dots) for plugins/mlick.js.
+ *
+ * Structural/layout styles live in mlick.css; this file is purely cosmetic and
+ * can be omitted or overridden. Colors and sizes are exposed as custom
+ * properties so a page can re-theme without forking the selectors.
+ *
+ * Targets evergreen browsers only — no vendor prefixes, no legacy fallbacks.
+ */
+
+/* Icons */
+@font-face {
+  font-family: 'mlick';
+  src: url(./fonts/mlick.woff2) format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Arrows */
+.mlick-prev,
+.mlick-next {
+  position: absolute;
+  top: 50%;
+  transform: translate(0, -50%);
+  display: block;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+.mlick-prev:hover,
+.mlick-prev:focus,
+.mlick-next:hover,
+.mlick-next:focus {
+  outline: none;
+  background: transparent;
+  color: transparent;
+}
+.mlick-prev:hover::before,
+.mlick-prev:focus::before,
+.mlick-next:hover::before,
+.mlick-next:focus::before {
+  opacity: 1;
+}
+.mlick-prev.mlick-disabled::before,
+.mlick-next.mlick-disabled::before {
+  opacity: 0.25;
+}
+.mlick-prev::before,
+.mlick-next::before {
+  font-family: 'mlick';
+  font-size: 20px;
+  line-height: 1;
+  color: var(--mlick-arrow-color, white);
+  opacity: 0.75;
+}
+
+.mlick-prev {
+  left: -25px;
+}
+[dir='rtl'] .mlick-prev {
+  left: auto;
+  right: -25px;
+}
+.mlick-prev::before {
+  content: '←';
+}
+[dir='rtl'] .mlick-prev::before {
+  content: '→';
+}
+
+.mlick-next {
+  right: -25px;
+}
+[dir='rtl'] .mlick-next {
+  left: -25px;
+  right: auto;
+}
+.mlick-next::before {
+  content: '→';
+}
+[dir='rtl'] .mlick-next::before {
+  content: '←';
+}
+
+/* Dots */
+.mlick-dotted.mlick-slider {
+  margin-bottom: 30px;
+}
+
+.mlick-dots {
+  position: absolute;
+  bottom: -25px;
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+.mlick-dots li {
+  position: relative;
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  margin: 0 5px;
+  padding: 0;
+  cursor: pointer;
+}
+.mlick-dots li button {
+  display: block;
+  width: 20px;
+  height: 20px;
+  padding: 5px;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  line-height: 0;
+  cursor: pointer;
+}
+.mlick-dots li button:hover,
+.mlick-dots li button:focus {
+  outline: none;
+}
+.mlick-dots li button:hover::before,
+.mlick-dots li button:focus::before {
+  opacity: 1;
+}
+.mlick-dots li button::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: '•';
+  width: 20px;
+  height: 20px;
+  font-family: 'mlick';
+  font-size: 6px;
+  line-height: 20px;
+  text-align: center;
+  color: var(--mlick-dot-color, black);
+  opacity: 0.25;
+}
+.mlick-dots li.mlick-active button::before {
+  color: var(--mlick-dot-active-color, var(--mlick-dot-color, black));
+  opacity: 0.75;
+}
