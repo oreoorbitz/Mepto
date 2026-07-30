@@ -1010,13 +1010,19 @@ import $ from '../src/meptos'
   Mlick.prototype.getLeft = function (slideIndex) {
     var _ = this,
       targetLeft,
-      verticalHeight,
+      verticalHeight = 0,
       verticalOffset = 0,
       targetSlide,
       coef
 
     _.slideOffset = 0
-    verticalHeight = _.$slides.first().outerHeight(true)
+    // perf: only read slide outerHeight (a forced layout) when the vertical
+    // math actually consumes it. In horizontal mode `verticalHeight` never
+    // feeds the returned value, so the read was pure layout thrash — and
+    // getLeft runs on every swipe move and animation frame.
+    if (_.options.vertical === true) {
+      verticalHeight = _.$slides.first().outerHeight(true)
+    }
 
     if (_.options.infinite === true) {
       if (_.slideCount > _.options.slidesToShow) {
@@ -1929,7 +1935,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setDimensions = function () {
-    var _ = this
+    var _ = this,
+      // perf: cache the first-slide wrapper and the track-slide collection —
+      // both were re-allocated/re-queried several times per call below.
+      firstSlide = _.$slides.first(),
+      trackSlides = _.$slideTrack.children('.mlick-slide')
 
     if (_.options.vertical === false) {
       if (_.options.centerMode === true) {
@@ -1938,7 +1948,7 @@ import $ from '../src/meptos'
         })
       }
     } else {
-      _.$list.height(_.$slides.first().outerHeight(true) * _.options.slidesToShow)
+      _.$list.height(firstSlide.outerHeight(true) * _.options.slidesToShow)
       if (_.options.centerMode === true) {
         _.$list.css({
           padding: _.options.centerPadding + ' 0px',
@@ -1951,21 +1961,20 @@ import $ from '../src/meptos'
 
     if (_.options.vertical === false && _.options.variableWidth === false) {
       _.slideWidth = Math.ceil(_.listWidth / _.options.slidesToShow)
-      _.$slideTrack.width(Math.ceil(_.slideWidth * _.$slideTrack.children('.mlick-slide').length))
+      _.$slideTrack.width(Math.ceil(_.slideWidth * trackSlides.length))
     } else if (_.options.variableWidth === true) {
       _.$slideTrack.width(5000 * _.slideCount)
     } else {
       _.slideWidth = Math.ceil(_.listWidth)
-      _.$slideTrack.height(
-        Math.ceil(
-          _.$slides.first().outerHeight(true) * _.$slideTrack.children('.mlick-slide').length
-        )
-      )
+      _.$slideTrack.height(Math.ceil(firstSlide.outerHeight(true) * trackSlides.length))
     }
 
-    var offset = _.$slides.first().outerWidth(true) - _.$slides.first().width()
-    if (_.options.variableWidth === false)
-      _.$slideTrack.children('.mlick-slide').width(_.slideWidth - offset)
+    // perf: the margin offset is only consumed when variableWidth is false, so
+    // only pay the two layout reads (outerWidth + width) in that branch.
+    if (_.options.variableWidth === false) {
+      var offset = firstSlide.outerWidth(true) - firstSlide.width()
+      trackSlides.width(_.slideWidth - offset)
+    }
   }
 
   Mlick.prototype.setFade = function () {
@@ -2588,13 +2597,12 @@ import $ from '../src/meptos'
     _.touchObject.curX = touches !== undefined ? touches[0].pageX : event.clientX
     _.touchObject.curY = touches !== undefined ? touches[0].pageY : event.clientY
 
-    _.touchObject.swipeLength = Math.round(
-      Math.sqrt(Math.pow(_.touchObject.curX - _.touchObject.startX, 2))
-    )
+    // perf: |d| — curX/curY/startX/startY are integers from pointer events, so
+    // Math.round(Math.sqrt(Math.pow(d, 2))) is exactly Math.abs(d). Runs on
+    // every pointermove during a drag.
+    _.touchObject.swipeLength = Math.abs(_.touchObject.curX - _.touchObject.startX)
 
-    verticalSwipeLength = Math.round(
-      Math.sqrt(Math.pow(_.touchObject.curY - _.touchObject.startY, 2))
-    )
+    verticalSwipeLength = Math.abs(_.touchObject.curY - _.touchObject.startY)
 
     if (!_.options.verticalSwiping && !_.swiping && verticalSwipeLength > 4) {
       _.scrolling = true
@@ -2635,7 +2643,9 @@ import $ from '../src/meptos'
     if (_.options.vertical === false) {
       _.swipeLeft = curLeft + swipeLength * positionOffset
     } else {
-      _.swipeLeft = curLeft + swipeLength * (_.$list.height() / _.listWidth) * positionOffset
+      // perf: use the cached list height (kept current by setDimensions on
+      // init/resize/setPosition) instead of forcing a layout read per move.
+      _.swipeLeft = curLeft + swipeLength * (_.listHeight / _.listWidth) * positionOffset
     }
     if (_.options.verticalSwiping === true) {
       _.swipeLeft = curLeft + swipeLength * positionOffset
