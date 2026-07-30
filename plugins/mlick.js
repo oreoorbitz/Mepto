@@ -15,14 +15,14 @@
 import $ from '../src/meptos'
 ;(function ($) {
   'use strict'
-  var Mlick = window.Mlick || {}
+  let Mlick = window.Mlick || {}
 
   Mlick = (function () {
-    var instanceUid = 0
+    let instanceUid = 0
 
     function Mlick(element, settings) {
-      var _ = this,
-        dataSettings
+      const _ = this
+      let dataSettings
 
       _.defaults = {
         accessibility: true,
@@ -165,7 +165,7 @@ import $ from '../src/meptos'
   })()
 
   Mlick.prototype.activateADA = function () {
-    var _ = this
+    const _ = this
 
     _.$slideTrack
       .find('.mlick-active')
@@ -180,7 +180,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.addSlide = Mlick.prototype.mlickAdd = function (markup, index, addBefore) {
-    var _ = this
+    const _ = this
 
     if (typeof index === 'boolean') {
       addBefore = index
@@ -213,7 +213,7 @@ import $ from '../src/meptos'
 
     _.$slideTrack.append(_.$slides)
 
-    _.$slides.each(function (index, element) {
+    _.$slides.each((index, element) => {
       $(element).attr('data-mlick-index', index)
     })
 
@@ -223,13 +223,13 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.animateHeight = function () {
-    var _ = this
+    const _ = this
     if (
       _.options.slidesToShow === 1 &&
       _.options.adaptiveHeight === true &&
       _.options.vertical === false
     ) {
-      var targetHeight = _.$slides.eq(_.currentSlide).outerHeight(true)
+      const targetHeight = _.$slides.eq(_.currentSlide).outerHeight(true)
       _.$list.animate(
         {
           height: targetHeight,
@@ -240,8 +240,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.animateSlide = function (targetLeft, callback) {
-    var animProps = {},
-      _ = this
+    const animProps = {}
+    const _ = this
 
     _.animateHeight()
 
@@ -285,10 +285,10 @@ import $ from '../src/meptos'
             step: function (now) {
               now = Math.ceil(now)
               if (_.options.vertical === false) {
-                animProps[_.animType] = 'translate(' + now + 'px, 0)'
+                animProps[_.animType] = `translate(${now}px, 0)`
                 _.$slideTrack.css(animProps)
               } else {
-                animProps[_.animType] = 'translate(0, ' + now + 'px)'
+                animProps[_.animType] = `translate(0, ${now}px)`
                 _.$slideTrack.css(animProps)
               }
             },
@@ -304,14 +304,14 @@ import $ from '../src/meptos'
         targetLeft = Math.ceil(targetLeft)
 
         if (_.options.vertical === false) {
-          animProps[_.animType] = 'translate3d(' + targetLeft + 'px, 0, 0)'
+          animProps[_.animType] = `translate3d(${targetLeft}px, 0, 0)`
         } else {
-          animProps[_.animType] = 'translate3d(0, ' + targetLeft + 'px, 0)'
+          animProps[_.animType] = `translate3d(0, ${targetLeft}px, 0)`
         }
         _.$slideTrack.css(animProps)
 
         if (callback) {
-          setTimeout(function () {
+          setTimeout(() => {
             _.disableTransition()
 
             callback.call()
@@ -322,8 +322,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.getNavTarget = function () {
-    var _ = this,
-      asNavFor = _.options.asNavFor
+    const _ = this
+    let asNavFor = _.options.asNavFor
 
     if (asNavFor && asNavFor !== null) {
       asNavFor = $(asNavFor).not(_.$slider)
@@ -333,12 +333,12 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.asNavFor = function (index) {
-    var _ = this,
-      asNavFor = _.getNavTarget()
+    const _ = this
+    const asNavFor = _.getNavTarget()
 
     if (asNavFor !== null && typeof asNavFor === 'object') {
       asNavFor.each(function () {
-        var target = $(this).mlick('getMlick')
+        const target = $(this).mlick('getMlick')
         if (!target.unmlicked) {
           target.slideHandler(index, true)
         }
@@ -347,14 +347,13 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.applyTransition = function (slide) {
-    var _ = this,
-      transition = {}
+    const _ = this
+    const transition = {}
 
     if (_.options.fade === false) {
-      transition[_.transitionType] =
-        _.transformType + ' ' + _.options.speed + 'ms ' + _.options.cssEase
+      transition[_.transitionType] = `${_.transformType} ${_.options.speed}ms ${_.options.cssEase}`
     } else {
-      transition[_.transitionType] = 'opacity ' + _.options.speed + 'ms ' + _.options.cssEase
+      transition[_.transitionType] = `opacity ${_.options.speed}ms ${_.options.cssEase}`
     }
 
     if (_.options.fade === false) {
@@ -365,7 +364,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.autoPlay = function () {
-    var _ = this
+    const _ = this
 
     _.autoPlayClear()
 
@@ -375,7 +374,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.autoPlayClear = function () {
-    var _ = this
+    const _ = this
 
     if (_.autoPlayTimer) {
       clearInterval(_.autoPlayTimer)
@@ -383,8 +382,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.autoPlayIterator = function () {
-    var _ = this,
-      slideTo = _.currentSlide + _.options.slidesToScroll
+    const _ = this
+    let slideTo = _.currentSlide + _.options.slidesToScroll
 
     if (!_.paused && !_.interrupted && !_.focussed) {
       if (_.options.infinite === false) {
@@ -404,7 +403,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.buildArrows = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.arrows === true) {
       _.$prevArrow = $(_.options.prevArrow).addClass('mlick-arrow')
@@ -439,9 +438,9 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.buildDots = function () {
-    var _ = this,
-      i,
-      dot
+    const _ = this
+    let i
+    let dot
 
     if (_.options.dots === true && _.slideCount > _.options.slidesToShow) {
       _.$slider.addClass('mlick-dotted')
@@ -459,13 +458,13 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.buildOut = function () {
-    var _ = this
+    const _ = this
 
-    _.$slides = _.$slider.children(_.options.slide + ':not(.mlick-cloned)').addClass('mlick-slide')
+    _.$slides = _.$slider.children(`${_.options.slide}:not(.mlick-cloned)`).addClass('mlick-slide')
 
     _.slideCount = _.$slides.length
 
-    _.$slides.each(function (index, element) {
+    _.$slides.each((index, element) => {
       $(element)
         .attr('data-mlick-index', index)
         .data('originalStyling', $(element).attr('style') || '')
@@ -503,15 +502,15 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.buildRows = function () {
-    var _ = this,
-      a,
-      b,
-      c,
-      leafSlides,
-      newSlides,
-      numOfSlides,
-      originalSlides,
-      slidesPerSection
+    const _ = this
+    let a
+    let b
+    let c
+    let leafSlides
+    let newSlides
+    let numOfSlides
+    let originalSlides
+    let slidesPerSection
 
     newSlides = document.createDocumentFragment()
     originalSlides = _.$slider.children()
@@ -522,12 +521,12 @@ import $ from '../src/meptos'
       numOfSlides = Math.ceil(originalSlides.length / slidesPerSection)
 
       for (a = 0; a < numOfSlides; a++) {
-        var slide = document.createElement('div')
+        const slide = document.createElement('div')
         for (b = 0; b < _.options.rows; b++) {
-          var row = document.createElement('div')
+          const row = document.createElement('div')
           for (c = 0; c < _.options.slidesPerRow; c++) {
-            var target = a * slidesPerSection + (b * _.options.slidesPerRow + c)
-            var leaf = originalSlides.get(target)
+            const target = a * slidesPerSection + (b * _.options.slidesPerRow + c)
+            const leaf = originalSlides.get(target)
             if (leaf) {
               row.appendChild(leaf)
               leafSlides.push(leaf)
@@ -540,20 +539,20 @@ import $ from '../src/meptos'
 
       _.$slider.empty().append(newSlides)
       $(leafSlides).css({
-        width: 100 / _.options.slidesPerRow + '%',
+        width: `${100 / _.options.slidesPerRow}%`,
         display: 'inline-block',
       })
     }
   }
 
   Mlick.prototype.checkResponsive = function (initial, forceUpdate) {
-    var _ = this,
-      breakpoint,
-      targetBreakpoint,
-      respondToWidth,
-      triggerBreakpoint = false
-    var sliderWidth = _.$slider.width()
-    var windowWidth = window.innerWidth || $(window).width()
+    const _ = this
+    let breakpoint
+    let targetBreakpoint
+    let respondToWidth
+    let triggerBreakpoint = false
+    const sliderWidth = _.$slider.width()
+    const windowWidth = window.innerWidth || $(window).width()
 
     if (_.respondTo === 'window') {
       respondToWidth = windowWidth
@@ -628,11 +627,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.changeSlide = function (event, dontAnimate) {
-    var _ = this,
-      $target = $(event.currentTarget),
-      indexOffset,
-      slideOffset,
-      unevenOffset
+    const _ = this
+    let $target = $(event.currentTarget)
+    let indexOffset
+    let slideOffset
+    let unevenOffset
 
     // If target is a link, prevent default action.
     if ($target.is('a')) {
@@ -663,8 +662,8 @@ import $ from '../src/meptos'
         }
         break
 
-      case 'index':
-        var index =
+      case 'index': {
+        const index =
           event.data.index === 0
             ? 0
             : event.data.index || $target.index() * _.options.slidesToScroll
@@ -672,6 +671,7 @@ import $ from '../src/meptos'
         _.slideHandler(_.checkNavigable(index), false, dontAnimate)
         $target.children().trigger('focus')
         break
+      }
 
       default:
         return
@@ -679,16 +679,16 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.checkNavigable = function (index) {
-    var _ = this,
-      navigables,
-      prevNavigable
+    const _ = this
+    let navigables
+    let prevNavigable
 
     navigables = _.getNavigableIndexes()
     prevNavigable = 0
     if (index > navigables[navigables.length - 1]) {
       index = navigables[navigables.length - 1]
     } else {
-      for (var n in navigables) {
+      for (const n in navigables) {
         if (index < navigables[n]) {
           index = prevNavigable
           break
@@ -701,7 +701,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.cleanUpEvents = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.dots && _.$dots !== null) {
       $('li', _.$dots)
@@ -745,25 +745,25 @@ import $ from '../src/meptos'
       $(_.$slideTrack).children().off('click.mlick', _.selectHandler)
     }
 
-    $(window).off('orientationchange.mlick.mlick-' + _.instanceUid, _.orientationChange)
+    $(window).off(`orientationchange.mlick.mlick-${_.instanceUid}`, _.orientationChange)
 
-    $(window).off('resize.mlick.mlick-' + _.instanceUid, _.resize)
+    $(window).off(`resize.mlick.mlick-${_.instanceUid}`, _.resize)
 
     $(":not([draggable='true'])", _.$slideTrack).off('dragstart', _.preventDefault)
 
-    $(window).off('load.mlick.mlick-' + _.instanceUid, _.setPosition)
+    $(window).off(`load.mlick.mlick-${_.instanceUid}`, _.setPosition)
   }
 
   Mlick.prototype.cleanUpSlideEvents = function () {
-    var _ = this
+    const _ = this
 
     _.$list.off('mouseenter.mlick', $.proxy(_.interrupt, _, true))
     _.$list.off('mouseleave.mlick', $.proxy(_.interrupt, _, false))
   }
 
   Mlick.prototype.cleanUpRows = function () {
-    var _ = this,
-      originalSlides
+    const _ = this
+    let originalSlides
 
     if (_.options.rows > 0) {
       originalSlides = _.$slides.children().children()
@@ -773,7 +773,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.clickHandler = function (event) {
-    var _ = this
+    const _ = this
 
     if (_.shouldClick === false) {
       event.stopImmediatePropagation()
@@ -783,7 +783,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.destroy = function (refresh) {
-    var _ = this
+    const _ = this
 
     _.autoPlayClear()
 
@@ -851,8 +851,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.disableTransition = function (slide) {
-    var _ = this,
-      transition = {}
+    const _ = this
+    const transition = {}
 
     transition[_.transitionType] = ''
 
@@ -864,7 +864,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.fadeSlide = function (slideIndex, callback) {
-    var _ = this
+    const _ = this
 
     if (_.cssTransitions === false) {
       _.$slides.eq(slideIndex).css({
@@ -888,7 +888,7 @@ import $ from '../src/meptos'
       })
 
       if (callback) {
-        setTimeout(function () {
+        setTimeout(() => {
           _.disableTransition(slideIndex)
 
           callback.call()
@@ -898,7 +898,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.fadeSlideOut = function (slideIndex) {
-    var _ = this
+    const _ = this
 
     if (_.cssTransitions === false) {
       _.$slides.eq(slideIndex).animate(
@@ -920,7 +920,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.filterSlides = Mlick.prototype.mlickFilter = function (filter) {
-    var _ = this
+    const _ = this
 
     if (filter !== null) {
       _.$slidesCache = _.$slides
@@ -936,15 +936,15 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.focusHandler = function () {
-    var _ = this
+    const _ = this
 
     // If any child element receives focus within the slider we need to pause the autoplay
     _.$slider
       .off('focus.mlick blur.mlick')
       .on('focus.mlick', '*', function (event) {
-        var $sf = $(this)
+        const $sf = $(this)
 
-        setTimeout(function () {
+        setTimeout(() => {
           if (_.options.pauseOnFocus) {
             if ($sf.is(':focus')) {
               _.focussed = true
@@ -954,7 +954,7 @@ import $ from '../src/meptos'
         }, 0)
       })
       .on('blur.mlick', '*', function (event) {
-        var $sf = $(this)
+        const $sf = $(this)
 
         // When a blur occurs on any elements within the slider we become unfocused
         if (_.options.pauseOnFocus) {
@@ -965,16 +965,16 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.getCurrent = Mlick.prototype.mlickCurrentSlide = function () {
-    var _ = this
+    const _ = this
     return _.currentSlide
   }
 
   Mlick.prototype.getDotCount = function () {
-    var _ = this
+    const _ = this
 
-    var breakPoint = 0
-    var counter = 0
-    var pagerQty = 0
+    let breakPoint = 0
+    let counter = 0
+    let pagerQty = 0
 
     if (_.options.infinite === true) {
       if (_.slideCount <= _.options.slidesToShow) {
@@ -1008,12 +1008,12 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.getLeft = function (slideIndex) {
-    var _ = this,
-      targetLeft,
-      verticalHeight = 0,
-      verticalOffset = 0,
-      targetSlide,
-      coef
+    const _ = this
+    let targetLeft
+    let verticalHeight = 0
+    let verticalOffset = 0
+    let targetSlide
+    let coef
 
     _.slideOffset = 0
     // perf: only read slide outerHeight (a forced layout) when the vertical
@@ -1128,17 +1128,17 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.getOption = Mlick.prototype.mlickGetOption = function (option) {
-    var _ = this
+    const _ = this
 
     return _.options[option]
   }
 
   Mlick.prototype.getNavigableIndexes = function () {
-    var _ = this,
-      breakPoint = 0,
-      counter = 0,
-      indexes = [],
-      max
+    const _ = this
+    let breakPoint = 0
+    let counter = 0
+    const indexes = []
+    let max
 
     if (_.options.infinite === false) {
       max = _.slideCount
@@ -1165,18 +1165,20 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.getSlideCount = function () {
-    var _ = this,
-      slidesTraversed,
-      swipedSlide,
-      swipeTarget,
-      centerOffset
+    const _ = this
+    let slidesTraversed
+    let swipedSlide
+    let swipeTarget
+    let centerOffset
 
     centerOffset = _.options.centerMode === true ? Math.floor(_.$list.width() / 2) : 0
     swipeTarget = _.swipeLeft * -1 + centerOffset
 
     if (_.options.swipeToSlide === true) {
-      _.$slideTrack.find('.mlick-slide').each(function (index, slide) {
-        var slideOuterWidth, slideOffset, slideRightBoundary
+      _.$slideTrack.find('.mlick-slide').each((index, slide) => {
+        let slideOuterWidth
+        let slideOffset
+        let slideRightBoundary
         slideOuterWidth = $(slide).outerWidth()
         slideOffset = slide.offsetLeft
         if (_.options.centerMode !== true) {
@@ -1200,7 +1202,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.goTo = Mlick.prototype.mlickGoTo = function (slide, dontAnimate) {
-    var _ = this
+    const _ = this
 
     _.changeSlide(
       {
@@ -1214,7 +1216,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.init = function (creation) {
-    var _ = this
+    const _ = this
 
     if (!$(_.$slider).hasClass('mlick-initialized')) {
       $(_.$slider).addClass('mlick-initialized')
@@ -1246,11 +1248,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.initADA = function () {
-    var _ = this,
-      numDotGroups = Math.ceil(_.slideCount / _.options.slidesToScroll),
-      tabControlIndexes = _.getNavigableIndexes().filter(function (val) {
-        return val >= 0 && val < _.slideCount
-      })
+    const _ = this
+    const numDotGroups = Math.ceil(_.slideCount / _.options.slidesToScroll)
+    const tabControlIndexes = _.getNavigableIndexes().filter(val => {
+      return val >= 0 && val < _.slideCount
+    })
 
     _.$slides
       .add(_.$slideTrack.find('.mlick-cloned'))
@@ -1265,17 +1267,17 @@ import $ from '../src/meptos'
 
     if (_.$dots !== null) {
       _.$slides.not(_.$slideTrack.find('.mlick-cloned')).each(function (i) {
-        var slideControlIndex = tabControlIndexes.indexOf(i)
+        const slideControlIndex = tabControlIndexes.indexOf(i)
 
         $(this).attr({
           role: 'tabpanel',
-          id: 'mlick-slide' + _.instanceUid + i,
+          id: `mlick-slide${_.instanceUid}${i}`,
           tabindex: -1,
         })
 
         if (slideControlIndex !== -1) {
-          var ariaButtonControl = 'mlick-slide-control' + _.instanceUid + slideControlIndex
-          if ($('#' + ariaButtonControl).length) {
+          const ariaButtonControl = `mlick-slide-control${_.instanceUid}${slideControlIndex}`
+          if ($(`#${ariaButtonControl}`).length) {
             $(this).attr({
               'aria-describedby': ariaButtonControl,
             })
@@ -1287,7 +1289,7 @@ import $ from '../src/meptos'
         .attr('role', 'tablist')
         .find('li')
         .each(function (i) {
-          var mappedSlideIndex = tabControlIndexes[i]
+          const mappedSlideIndex = tabControlIndexes[i]
 
           $(this).attr({
             role: 'presentation',
@@ -1298,9 +1300,9 @@ import $ from '../src/meptos'
             .first()
             .attr({
               role: 'tab',
-              id: 'mlick-slide-control' + _.instanceUid + i,
-              'aria-controls': 'mlick-slide' + _.instanceUid + mappedSlideIndex,
-              'aria-label': i + 1 + ' / ' + numDotGroups,
+              id: `mlick-slide-control${_.instanceUid}${i}`,
+              'aria-controls': `mlick-slide${_.instanceUid}${mappedSlideIndex}`,
+              'aria-label': `${i + 1} / ${numDotGroups}`,
               'aria-selected': null,
               tabindex: '-1',
             })
@@ -1313,7 +1315,7 @@ import $ from '../src/meptos'
         })
     }
 
-    for (var i = _.currentSlide, max = i + _.options.slidesToShow; i < max; i++) {
+    for (let i = _.currentSlide, max = i + _.options.slidesToShow; i < max; i++) {
       if (_.options.focusOnChange) {
         _.$slides.eq(i).attr({ tabindex: '0' })
       } else {
@@ -1325,7 +1327,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.initArrowEvents = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.arrows === true && _.slideCount > _.options.slidesToShow) {
       _.$prevArrow.off('click.mlick').on(
@@ -1351,7 +1353,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.initDotEvents = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.dots === true && _.slideCount > _.options.slidesToShow) {
       $('li', _.$dots).on(
@@ -1379,7 +1381,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.initSlideEvents = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.pauseOnHover) {
       _.$list.on('mouseenter.mlick', $.proxy(_.interrupt, _, true))
@@ -1388,7 +1390,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.initializeEvents = function () {
-    var _ = this
+    const _ = this
 
     _.initArrowEvents()
 
@@ -1436,18 +1438,18 @@ import $ from '../src/meptos'
       $(_.$slideTrack).children().on('click.mlick', _.selectHandler)
     }
 
-    $(window).on('orientationchange.mlick.mlick-' + _.instanceUid, $.proxy(_.orientationChange, _))
+    $(window).on(`orientationchange.mlick.mlick-${_.instanceUid}`, $.proxy(_.orientationChange, _))
 
-    $(window).on('resize.mlick.mlick-' + _.instanceUid, $.proxy(_.resize, _))
+    $(window).on(`resize.mlick.mlick-${_.instanceUid}`, $.proxy(_.resize, _))
 
     $(":not([draggable='true'])", _.$slideTrack).on('dragstart', _.preventDefault)
 
-    $(window).on('load.mlick.mlick-' + _.instanceUid, _.setPosition)
+    $(window).on(`load.mlick.mlick-${_.instanceUid}`, _.setPosition)
     $(_.setPosition)
   }
 
   Mlick.prototype.initUI = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.arrows === true && _.slideCount > _.options.slidesToShow) {
       _.$prevArrow.show()
@@ -1460,7 +1462,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.keyHandler = function (event) {
-    var _ = this
+    const _ = this
     //Dont slide if the cursor is inside the form fields and arrow keys are pressed
     if (!event.target.tagName.match('TEXTAREA|INPUT|SELECT')) {
       if (event.keyCode === 37 && _.options.accessibility === true) {
@@ -1480,22 +1482,22 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.lazyLoad = function () {
-    var _ = this,
-      loadRange,
-      cloneRange,
-      rangeStart,
-      rangeEnd
+    const _ = this
+    let loadRange
+    let cloneRange
+    let rangeStart
+    let rangeEnd
 
     function loadImages(imagesScope) {
       $('img[data-lazy]', imagesScope).each(function () {
-        var image = $(this),
-          imageSource = $(this).attr('data-lazy'),
-          imageSrcSet = $(this).attr('data-srcset'),
-          imageSizes = $(this).attr('data-sizes') || _.$slider.attr('data-sizes'),
-          imageToLoad = document.createElement('img')
+        const image = $(this)
+        const imageSource = $(this).attr('data-lazy')
+        const imageSrcSet = $(this).attr('data-srcset')
+        const imageSizes = $(this).attr('data-sizes') || _.$slider.attr('data-sizes')
+        const imageToLoad = document.createElement('img')
 
         imageToLoad.onload = function () {
-          image.animate({ opacity: 0 }, 100, function () {
+          image.animate({ opacity: 0 }, 100, () => {
             if (imageSrcSet) {
               image.attr('srcset', imageSrcSet)
 
@@ -1504,7 +1506,7 @@ import $ from '../src/meptos'
               }
             }
 
-            image.attr('src', imageSource).animate({ opacity: 1 }, 200, function () {
+            image.attr('src', imageSource).animate({ opacity: 1 }, 200, () => {
               image.removeAttr('data-lazy data-srcset data-sizes').removeClass('mlick-loading')
             })
             _.$slider.trigger('lazyLoaded', [_, image, imageSource])
@@ -1544,11 +1546,11 @@ import $ from '../src/meptos'
     loadRange = _.$slider.find('.mlick-slide').slice(rangeStart, rangeEnd)
 
     if (_.options.lazyLoad === 'anticipated') {
-      var prevSlide = rangeStart - 1,
-        nextSlide = rangeEnd,
-        $slides = _.$slider.find('.mlick-slide')
+      let prevSlide = rangeStart - 1
+      let nextSlide = rangeEnd
+      const $slides = _.$slider.find('.mlick-slide')
 
-      for (var i = 0; i < _.options.slidesToScroll; i++) {
+      for (let i = 0; i < _.options.slidesToScroll; i++) {
         if (prevSlide < 0) prevSlide = _.slideCount - 1
         loadRange = loadRange.add($slides.eq(prevSlide))
         loadRange = loadRange.add($slides.eq(nextSlide))
@@ -1572,7 +1574,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.loadSlider = function () {
-    var _ = this
+    const _ = this
 
     _.setPosition()
 
@@ -1590,7 +1592,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.next = Mlick.prototype.mlickNext = function () {
-    var _ = this
+    const _ = this
 
     _.changeSlide({
       data: {
@@ -1600,21 +1602,21 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.orientationChange = function () {
-    var _ = this
+    const _ = this
 
     _.checkResponsive()
     _.setPosition()
   }
 
   Mlick.prototype.pause = Mlick.prototype.mlickPause = function () {
-    var _ = this
+    const _ = this
 
     _.autoPlayClear()
     _.paused = true
   }
 
   Mlick.prototype.play = Mlick.prototype.mlickPlay = function () {
-    var _ = this
+    const _ = this
 
     _.autoPlay()
     _.options.autoplay = true
@@ -1624,7 +1626,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.postSlide = function (index) {
-    var _ = this
+    const _ = this
 
     if (!_.unmlicked) {
       _.$slider.trigger('afterChange', [_, index])
@@ -1645,7 +1647,7 @@ import $ from '../src/meptos'
         _.initADA()
 
         if (_.options.focusOnChange) {
-          var $currentSlide = $(_.$slides.get(_.currentSlide))
+          const $currentSlide = $(_.$slides.get(_.currentSlide))
           $currentSlide.attr('tabindex', 0).trigger('focus')
         }
       }
@@ -1653,7 +1655,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.prev = Mlick.prototype.mlickPrev = function () {
-    var _ = this
+    const _ = this
 
     _.changeSlide({
       data: {
@@ -1669,13 +1671,13 @@ import $ from '../src/meptos'
   Mlick.prototype.progressiveLazyLoad = function (tryCount) {
     tryCount = tryCount || 1
 
-    var _ = this,
-      $imgsToLoad = $('img[data-lazy]', _.$slider),
-      image,
-      imageSource,
-      imageSrcSet,
-      imageSizes,
-      imageToLoad
+    const _ = this
+    const $imgsToLoad = $('img[data-lazy]', _.$slider)
+    let image
+    let imageSource
+    let imageSrcSet
+    let imageSizes
+    let imageToLoad
 
     if ($imgsToLoad.length) {
       image = $imgsToLoad.first()
@@ -1713,7 +1715,7 @@ import $ from '../src/meptos'
            * leave a slight delay so we don't get
            * servers blocking the request.
            */
-          setTimeout(function () {
+          setTimeout(() => {
             _.progressiveLazyLoad(tryCount + 1)
           }, 500)
         } else {
@@ -1735,9 +1737,9 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.refresh = function (initializing) {
-    var _ = this,
-      currentSlide,
-      lastVisibleIndex
+    const _ = this
+    let currentSlide
+    let lastVisibleIndex
 
     lastVisibleIndex = _.slideCount - _.options.slidesToShow
 
@@ -1774,11 +1776,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.registerBreakpoints = function () {
-    var _ = this,
-      breakpoint,
-      currentBreakpoint,
-      l,
-      responsiveSettings = _.options.responsive || null
+    const _ = this
+    let breakpoint
+    let currentBreakpoint
+    let l
+    const responsiveSettings = _.options.responsive || null
 
     if (Array.isArray(responsiveSettings) && responsiveSettings.length) {
       _.respondTo = _.options.respondTo || 'window'
@@ -1803,14 +1805,14 @@ import $ from '../src/meptos'
         }
       }
 
-      _.breakpoints.sort(function (a, b) {
+      _.breakpoints.sort((a, b) => {
         return _.options.mobileFirst ? a - b : b - a
       })
     }
   }
 
   Mlick.prototype.reinit = function () {
-    var _ = this
+    const _ = this
 
     _.$slides = _.$slideTrack.children(_.options.slide).addClass('mlick-slide')
 
@@ -1855,11 +1857,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.resize = function () {
-    var _ = this
+    const _ = this
 
     if ($(window).width() !== _.windowWidth) {
       clearTimeout(_.windowDelay)
-      _.windowDelay = window.setTimeout(function () {
+      _.windowDelay = window.setTimeout(() => {
         _.windowWidth = $(window).width()
         _.checkResponsive()
         if (!_.unmlicked) {
@@ -1874,7 +1876,7 @@ import $ from '../src/meptos'
     removeBefore,
     removeAll
   ) {
-    var _ = this
+    const _ = this
 
     if (typeof index === 'boolean') {
       removeBefore = index
@@ -1907,16 +1909,16 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setCSS = function (position) {
-    var _ = this,
-      positionProps = {},
-      x,
-      y
+    const _ = this
+    let positionProps = {}
+    let x
+    let y
 
     if (_.options.rtl === true) {
       position = -position
     }
-    x = _.positionProp == 'left' ? Math.ceil(position) + 'px' : '0'
-    y = _.positionProp == 'top' ? Math.ceil(position) + 'px' : '0'
+    x = _.positionProp == 'left' ? `${Math.ceil(position)}px` : '0'
+    y = _.positionProp == 'top' ? `${Math.ceil(position)}px` : '0'
 
     positionProps[_.positionProp] = position
 
@@ -1925,33 +1927,31 @@ import $ from '../src/meptos'
     } else {
       positionProps = {}
       if (_.cssTransitions === false) {
-        positionProps[_.animType] = 'translate(' + x + ', ' + y + ')'
+        positionProps[_.animType] = `translate(${x}, ${y})`
         _.$slideTrack.css(positionProps)
       } else {
-        positionProps[_.animType] = 'translate3d(' + x + ', ' + y + ', 0)'
+        positionProps[_.animType] = `translate3d(${x}, ${y}, 0)`
         _.$slideTrack.css(positionProps)
       }
     }
   }
 
   Mlick.prototype.setDimensions = function () {
-    var _ = this,
-      // perf: cache the first-slide wrapper and the track-slide collection —
-      // both were re-allocated/re-queried several times per call below.
-      firstSlide = _.$slides.first(),
-      trackSlides = _.$slideTrack.children('.mlick-slide')
+    const _ = this
+    const firstSlide = _.$slides.first()
+    const trackSlides = _.$slideTrack.children('.mlick-slide')
 
     if (_.options.vertical === false) {
       if (_.options.centerMode === true) {
         _.$list.css({
-          padding: '0px ' + _.options.centerPadding,
+          padding: `0px ${_.options.centerPadding}`,
         })
       }
     } else {
       _.$list.height(firstSlide.outerHeight(true) * _.options.slidesToShow)
       if (_.options.centerMode === true) {
         _.$list.css({
-          padding: _.options.centerPadding + ' 0px',
+          padding: `${_.options.centerPadding} 0px`,
         })
       }
     }
@@ -1972,16 +1972,16 @@ import $ from '../src/meptos'
     // perf: the margin offset is only consumed when variableWidth is false, so
     // only pay the two layout reads (outerWidth + width) in that branch.
     if (_.options.variableWidth === false) {
-      var offset = firstSlide.outerWidth(true) - firstSlide.width()
+      const offset = firstSlide.outerWidth(true) - firstSlide.width()
       trackSlides.width(_.slideWidth - offset)
     }
   }
 
   Mlick.prototype.setFade = function () {
-    var _ = this,
-      targetLeft
+    const _ = this
+    let targetLeft
 
-    _.$slides.each(function (index, element) {
+    _.$slides.each((index, element) => {
       targetLeft = _.slideWidth * index * -1
       if (_.options.rtl === true) {
         $(element).css({
@@ -2009,15 +2009,15 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setHeight = function () {
-    var _ = this
+    const _ = this
 
     if (
       _.options.slidesToShow === 1 &&
       _.options.adaptiveHeight === true &&
       _.options.vertical === false
     ) {
-      var targetHeight = _.$slides.eq(_.currentSlide).outerHeight(true)
-      _.$list.css('height', targetHeight + 'px')
+      const targetHeight = _.$slides.eq(_.currentSlide).outerHeight(true)
+      _.$list.css('height', `${targetHeight}px`)
     }
   }
 
@@ -2035,13 +2035,13 @@ import $ from '../src/meptos'
      *     .mlick("setOption", { 'option': value, ... }, refresh )
      */
 
-    var _ = this,
-      l,
-      item,
-      option,
-      value,
-      refresh = false,
-      type
+    const _ = this
+    let l
+    let item
+    let option
+    let value
+    let refresh = false
+    let type
 
     if ($.isPlainObject(arguments[0])) {
       option = arguments[0]
@@ -2062,7 +2062,7 @@ import $ from '../src/meptos'
     if (type === 'single') {
       _.options[option] = value
     } else if (type === 'multiple') {
-      $.each(option, function (opt, val) {
+      $.each(option, (opt, val) => {
         _.options[opt] = val
       })
     } else if (type === 'responsive') {
@@ -2093,7 +2093,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setPosition = function () {
-    var _ = this
+    const _ = this
 
     _.setDimensions()
 
@@ -2109,8 +2109,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setProps = function () {
-    var _ = this,
-      bodyStyle = document.body.style
+    const _ = this
+    const bodyStyle = document.body.style
 
     _.positionProp = _.options.vertical === true ? 'top' : 'left'
 
@@ -2145,11 +2145,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setSlideClasses = function (index) {
-    var _ = this,
-      centerOffset,
-      allSlides,
-      indexOffset,
-      remainder
+    const _ = this
+    let centerOffset
+    let allSlides
+    let indexOffset
+    let remainder
 
     allSlides = _.$slider
       .find('.mlick-slide')
@@ -2159,7 +2159,7 @@ import $ from '../src/meptos'
     _.$slides.eq(index).addClass('mlick-current')
 
     if (_.options.centerMode === true) {
-      var evenCoef
+      let evenCoef
 
       if (_.options.slidesToShow >= _.$slides.length) {
         evenCoef = -1
@@ -2226,10 +2226,10 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.setupInfinite = function () {
-    var _ = this,
-      i,
-      slideIndex,
-      infiniteCount
+    const _ = this
+    let i
+    let slideIndex
+    let infiniteCount
 
     if (_.options.fade === true) {
       _.options.centerMode = false
@@ -2274,7 +2274,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.interrupt = function (toggle) {
-    var _ = this
+    const _ = this
 
     if (!toggle) {
       _.autoPlay()
@@ -2283,13 +2283,13 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.selectHandler = function (event) {
-    var _ = this
+    const _ = this
 
-    var targetElement = $(event.target).is('.mlick-slide')
+    const targetElement = $(event.target).is('.mlick-slide')
       ? $(event.target)
       : $(event.target).parents('.mlick-slide')
 
-    var index = parseInt(targetElement.attr('data-mlick-index'))
+    let index = parseInt(targetElement.attr('data-mlick-index'))
 
     if (!index) index = 0
 
@@ -2302,13 +2302,13 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.slideHandler = function (index, sync, dontAnimate) {
-    var targetSlide,
-      animSlide,
-      oldSlide,
-      slideLeft,
-      targetLeft = null,
-      _ = this,
-      navTarget
+    let targetSlide
+    let animSlide
+    let oldSlide
+    let slideLeft
+    let targetLeft = null
+    const _ = this
+    let navTarget
 
     sync = sync || false
 
@@ -2338,7 +2338,7 @@ import $ from '../src/meptos'
       if (_.options.fade === false) {
         targetSlide = _.currentSlide
         if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-          _.animateSlide(slideLeft, function () {
+          _.animateSlide(slideLeft, () => {
             _.postSlide(targetSlide)
           })
         } else {
@@ -2354,7 +2354,7 @@ import $ from '../src/meptos'
       if (_.options.fade === false) {
         targetSlide = _.currentSlide
         if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-          _.animateSlide(slideLeft, function () {
+          _.animateSlide(slideLeft, () => {
             _.postSlide(targetSlide)
           })
         } else {
@@ -2409,7 +2409,7 @@ import $ from '../src/meptos'
       if (dontAnimate !== true) {
         _.fadeSlideOut(oldSlide)
 
-        _.fadeSlide(animSlide, function () {
+        _.fadeSlide(animSlide, () => {
           _.postSlide(animSlide)
         })
       } else {
@@ -2420,7 +2420,7 @@ import $ from '../src/meptos'
     }
 
     if (dontAnimate !== true && _.slideCount > _.options.slidesToShow) {
-      _.animateSlide(targetLeft, function () {
+      _.animateSlide(targetLeft, () => {
         _.postSlide(animSlide)
       })
     } else {
@@ -2429,7 +2429,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.startLoad = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.arrows === true && _.slideCount > _.options.slidesToShow) {
       _.$prevArrow.hide()
@@ -2444,11 +2444,11 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.swipeDirection = function () {
-    var xDist,
-      yDist,
-      r,
-      swipeAngle,
-      _ = this
+    let xDist
+    let yDist
+    let r
+    let swipeAngle
+    const _ = this
 
     xDist = _.touchObject.startX - _.touchObject.curX
     yDist = _.touchObject.startY - _.touchObject.curY
@@ -2480,9 +2480,9 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.swipeEnd = function (event) {
-    var _ = this,
-      slideCount,
-      direction
+    const _ = this
+    let slideCount
+    let direction
 
     _.dragging = false
     _.swiping = false
@@ -2544,7 +2544,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.swipeHandler = function (event) {
-    var _ = this
+    const _ = this
 
     if (_.options.swipe === false || ('ontouchend' in document && _.options.swipe === false)) {
       return
@@ -2552,7 +2552,7 @@ import $ from '../src/meptos'
       return
     }
 
-    var swipeTouches = event.touches || (event.originalEvent && event.originalEvent.touches)
+    const swipeTouches = event.touches || (event.originalEvent && event.originalEvent.touches)
     _.touchObject.fingerCount = swipeTouches ? swipeTouches.length : 1
 
     _.touchObject.minSwipe = _.listWidth / _.options.touchThreshold
@@ -2577,14 +2577,14 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.swipeMove = function (event) {
-    var _ = this,
-      edgeWasHit = false,
-      curLeft,
-      swipeDirection,
-      swipeLength,
-      positionOffset,
-      touches,
-      verticalSwipeLength
+    const _ = this
+    const edgeWasHit = false
+    let curLeft
+    let swipeDirection
+    let swipeLength
+    let positionOffset
+    let touches
+    let verticalSwipeLength
 
     touches = event.touches || (event.originalEvent && event.originalEvent.touches) || undefined
 
@@ -2664,8 +2664,8 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.swipeStart = function (event) {
-    var _ = this,
-      touches
+    const _ = this
+    let touches
 
     _.interrupted = true
 
@@ -2674,7 +2674,7 @@ import $ from '../src/meptos'
       return false
     }
 
-    var startTouches = event.touches || (event.originalEvent && event.originalEvent.touches)
+    const startTouches = event.touches || (event.originalEvent && event.originalEvent.touches)
     if (startTouches && startTouches.length) {
       touches = startTouches[0]
     }
@@ -2688,7 +2688,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.unfilterSlides = Mlick.prototype.mlickUnfilter = function () {
-    var _ = this
+    const _ = this
 
     if (_.$slidesCache !== null) {
       _.unload()
@@ -2702,7 +2702,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.unload = function () {
-    var _ = this
+    const _ = this
 
     $('.mlick-cloned', _.$slider).remove()
 
@@ -2725,14 +2725,14 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.unmlick = function (fromBreakpoint) {
-    var _ = this
+    const _ = this
     _.$slider.trigger('unmlick', [_, fromBreakpoint])
     _.destroy()
   }
 
   Mlick.prototype.updateArrows = function () {
-    var _ = this,
-      centerOffset
+    const _ = this
+    let centerOffset
 
     centerOffset = Math.floor(_.options.slidesToShow / 2)
 
@@ -2757,7 +2757,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.updateDots = function () {
-    var _ = this
+    const _ = this
 
     if (_.$dots !== null) {
       _.$dots.find('li').removeClass('mlick-active')
@@ -2770,7 +2770,7 @@ import $ from '../src/meptos'
   }
 
   Mlick.prototype.visibility = function () {
-    var _ = this
+    const _ = this
 
     if (_.options.autoplay) {
       if (document[_.hidden]) {
@@ -2782,12 +2782,12 @@ import $ from '../src/meptos'
   }
 
   $.fn.mlick = function () {
-    var _ = this,
-      opt = arguments[0],
-      args = Array.prototype.slice.call(arguments, 1),
-      l = _.length,
-      i,
-      ret
+    const _ = this
+    const opt = arguments[0]
+    const args = Array.prototype.slice.call(arguments, 1)
+    const l = _.length
+    let i
+    let ret
     for (i = 0; i < l; i++) {
       if (typeof opt == 'object' || typeof opt == 'undefined') _[i].mlick = new Mlick(_[i], opt)
       else ret = _[i].mlick[opt].apply(_[i].mlick, args)

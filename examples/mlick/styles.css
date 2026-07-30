@@ -1,8 +1,12 @@
-/* Mepto Mlick — QA page styles.
+/* Mepto Mlick — QA page demo theming.
  *
- * The first block is the structural CSS the plugin's layout math depends on
- * (float-based slides, hidden list overflow, clearfixed track). It mirrors
- * slick.css semantics with renamed classes. The rest is demo theming.
+ * Structural CSS (float slides, hidden list overflow, clearfixed track) and
+ * the default arrow/dot theme are NOT here — they come from the vendored
+ * plugin stylesheets linked in index.html:
+ *   ../../plugins/mlick.css        (structural, required by plugins/mlick.js)
+ *   ../../plugins/mlick-theme.css  (default arrows + dots)
+ * This file only styles the QA demo page itself (layout, cards, slide colors,
+ * event log, API panel).
  */
 
 :root {
@@ -24,152 +28,6 @@
     --border: #333;
   }
 }
-
-/* ---- structural (required by plugins/mlick.js) ---- */
-
-.mlick-slider {
-  position: relative;
-  display: block;
-  box-sizing: border-box;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  -webkit-tap-highlight-color: transparent;
-}
-.mlick-list {
-  position: relative;
-  display: block;
-  overflow: hidden;
-  margin: 0;
-  padding: 0;
-}
-.mlick-list:focus {
-  outline: none;
-}
-.mlick-list.dragging {
-  cursor: pointer;
-}
-.mlick-slider .mlick-track,
-.mlick-slider .mlick-list {
-  transform: translate3d(0, 0, 0);
-}
-.mlick-track {
-  position: relative;
-  top: 0;
-  left: 0;
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-}
-.mlick-track::before,
-.mlick-track::after {
-  display: table;
-  content: '';
-}
-.mlick-track::after {
-  clear: both;
-}
-.mlick-loading .mlick-track {
-  visibility: hidden;
-}
-.mlick-slide {
-  display: none;
-  float: left;
-  height: 100%;
-  min-height: 1px;
-}
-.mlick-initialized .mlick-slide {
-  display: block;
-}
-.mlick-loading .mlick-slide {
-  visibility: hidden;
-}
-.mlick-vertical .mlick-slide {
-  display: block;
-  height: auto;
-  border: 1px solid transparent;
-}
-.mlick-arrow.mlick-hidden {
-  display: none;
-}
-
-/* ---- arrows + dots ---- */
-
-.mlick-prev,
-.mlick-next {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  z-index: 2;
-  display: block;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  background: var(--card);
-  color: var(--text);
-  font-size: 0;
-  line-height: 0;
-  cursor: pointer;
-}
-.mlick-prev {
-  left: -18px;
-}
-.mlick-next {
-  right: -18px;
-}
-.mlick-prev::before,
-.mlick-next::before {
-  font-size: 18px;
-  line-height: 1;
-}
-.mlick-prev::before {
-  content: '‹';
-}
-.mlick-next::before {
-  content: '›';
-}
-.mlick-prev:hover,
-.mlick-next:hover {
-  background: var(--accent);
-  color: #fff;
-}
-.mlick-prev.mlick-disabled,
-.mlick-next.mlick-disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.mlick-dots {
-  display: block;
-  width: 100%;
-  margin: 12px 0 0;
-  padding: 0;
-  list-style: none;
-  text-align: center;
-}
-.mlick-dots li {
-  display: inline-block;
-  margin: 0 4px;
-}
-.mlick-dots li button {
-  display: block;
-  width: 12px;
-  height: 12px;
-  padding: 0;
-  border: 1px solid var(--muted);
-  border-radius: 50%;
-  background: transparent;
-  font-size: 0;
-  cursor: pointer;
-}
-.mlick-dots li.mlick-active button {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-/* ---- demo theme ---- */
 
 * {
   box-sizing: border-box;
