@@ -401,6 +401,43 @@ describe('attributes', () => {
     d.removeAttr('data-test')
     expect(d.attr('data-test')).toBeUndefined()
   })
+
+  it('.attrs bridge: get/set/remove, object map, whitespace-tolerant remove', () => {
+    $('<i class="at"></i><b class="at"></b>').appendTo(fixture)
+    const both = $('.at')
+
+    // set(name, value) applies to every element; get reads the first
+    both.attrs.set('role', 'tab')
+    both.each(function (this: Element) {
+      expect(this.getAttribute('role')).toBe('tab')
+    })
+    expect(both.attrs.get('role')).toBe('tab')
+
+    // object-map form, with number coercion and a null that removes
+    both.attrs.set({ 'aria-selected': 'true', tabindex: 0 })
+    both.each(function (this: Element) {
+      expect(this.getAttribute('aria-selected')).toBe('true')
+      expect(this.getAttribute('tabindex')).toBe('0')
+    })
+
+    // chaining: set returns the collection
+    const chained = both.attrs.set('data-x', '1').attrs.set('data-y', '2')
+    expect(chained.attrs.get('data-y')).toBe('2')
+
+    // null value removes instead of writing the string "null"
+    both.attrs.set('data-x', null)
+    expect(both.attrs.get('data-x')).toBeUndefined()
+
+    // whitespace-tolerant multi-remove
+    both.attrs.remove('role  aria-selected')
+    both.each(function (this: Element) {
+      expect(this.getAttribute('role')).toBeNull()
+      expect(this.getAttribute('aria-selected')).toBeNull()
+    })
+
+    // get on an empty collection is undefined, not a throw
+    expect($('.does-not-exist').attrs.get('role')).toBeUndefined()
+  })
 })
 
 // ─── Properties ───────────────────────────────────────────────────────────────
@@ -491,6 +528,47 @@ describe('classes', () => {
     expect(d.hasClass('z')).toBe(true)
     d.toggleClass('z', false)
     expect(d.hasClass('z')).toBe(false)
+  })
+
+  it('.classList bridge: whitespace-tolerant, iterates the collection', () => {
+    $('<div class="x"></div><span class="x"></span>').appendTo(fixture)
+    const both = $('.x')
+
+    expect(both.length).toBe(2)
+
+    // multi-class string add across every element in the collection
+    both.classList.add('a b')
+    both.each(function (this: Element) {
+      expect(this.classList.contains('a')).toBe(true)
+      expect(this.classList.contains('b')).toBe(true)
+    })
+
+    // multi-class string remove
+    both.classList.remove('a b')
+    both.each(function (this: Element) {
+      expect(this.classList.contains('a')).toBe(false)
+      expect(this.classList.contains('b')).toBe(false)
+    })
+
+    // single-token add + contains reads the first element
+    both.classList.add('solo')
+    expect(both.classList.contains('solo')).toBe(true)
+
+    // toggle with force, per token
+    both.classList.remove('solo')
+    both.classList.toggle('on', true)
+    both.each(function (this: Element) {
+      expect(this.classList.contains('on')).toBe(true)
+    })
+    both.classList.toggle('on', false)
+    expect(both.classList.contains('on')).toBe(false)
+
+    // leading/trailing/duplicate whitespace does not throw
+    const d = $('<div>').appendTo(fixture)
+    d.classList.add('  p   q  ')
+    const el = d[0] as Element
+    expect(el.classList.contains('p')).toBe(true)
+    expect(el.classList.contains('q')).toBe(true)
   })
 })
 

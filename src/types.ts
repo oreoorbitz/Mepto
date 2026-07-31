@@ -119,6 +119,48 @@ export interface MeptoEvent extends Event {
   isImmediatePropagationStopped?: boolean
 }
 
+/**
+ * DOMTokenList-flavoured view over a {@link MeptoCollection}, exposed as the
+ * `.classList` getter. Mutating methods (`add`/`remove`/`toggle`/`replace`,
+ * the `value` setter) apply to every element in the collection and return the
+ * collection for chaining; read methods (`contains`, `length`, `value`,
+ * iterators) reflect only the first element. Unlike the native DOMTokenList,
+ * space-separated strings are split per token (mirroring `addClass`), so
+ * `.classList.add('a b')` adds both classes instead of throwing.
+ */
+export interface MeptoClassList {
+  add(...tokens: string[]): MeptoCollection
+  remove(...tokens: string[]): MeptoCollection
+  toggle(token: string, force?: boolean): MeptoCollection
+  contains(token: string): boolean
+  replace(oldToken: string, newToken: string): MeptoCollection
+  entries(): IterableIterator<[number, string]>
+  forEach(callback: (value: string, key: number, list: DOMTokenList) => void): void
+  item(index: number): string | null
+  keys(): IterableIterator<number>
+  values(): IterableIterator<string>
+  toString(): string
+  readonly length: number
+  value: string
+}
+
+/**
+ * Attribute view over a {@link MeptoCollection}, exposed as the `.attrs`
+ * getter. A migration bridge mirroring the native `getAttribute` /
+ * `setAttribute` / `removeAttribute`: `set`/`remove` apply to every element
+ * and return the collection for chaining, while `get` reads only the first
+ * element. Like `.attr`, a `null`/`undefined` value passed to `set` removes
+ * the attribute, and `remove` accepts a whitespace-separated list of names.
+ */
+export interface MeptoAttrs {
+  get(name: string): string | undefined
+  set(
+    name: string | Record<string, string | number | boolean | null | undefined>,
+    value?: string | number | boolean | null
+  ): MeptoCollection
+  remove(names: string): MeptoCollection
+}
+
 // Main Mepto collection interface
 export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   // Core properties
@@ -187,6 +229,20 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   removeClass(names?: string): MeptoCollection<T>
   toggleClass(names: string, switch_?: boolean): MeptoCollection<T>
   hasClass(name: string): boolean
+  /**
+   * DOMTokenList-flavoured bridge over the collection. Mutating methods apply
+   * to every element; read methods reflect the first element. Unlike the
+   * native DOMTokenList, space-separated strings are split per token (matching
+   * addClass/removeClass), so `.classList.add('a b')` does not throw.
+   */
+  readonly classList: MeptoClassList
+  /**
+   * Attribute bridge over the collection. Mutating methods apply to every
+   * element; `get` reflects the first element. A `null`/`undefined` value
+   * removes the attribute (matching `.attr`), and `remove` splits on
+   * whitespace (matching `removeAttr`).
+   */
+  readonly attrs: MeptoAttrs
 
   // Content manipulation
   append(content: Selector): MeptoCollection<T>

@@ -140,15 +140,15 @@ import $ from '../src/meptos'
 
       _.originalSettings = _.options
 
-      _.autoPlay = $.proxy(_.autoPlay, _)
-      _.autoPlayClear = $.proxy(_.autoPlayClear, _)
-      _.autoPlayIterator = $.proxy(_.autoPlayIterator, _)
-      _.changeSlide = $.proxy(_.changeSlide, _)
-      _.clickHandler = $.proxy(_.clickHandler, _)
-      _.selectHandler = $.proxy(_.selectHandler, _)
-      _.setPosition = $.proxy(_.setPosition, _)
-      _.swipeHandler = $.proxy(_.swipeHandler, _)
-      _.keyHandler = $.proxy(_.keyHandler, _)
+      _.autoPlay = _.autoPlay.bind(_)
+      _.autoPlayClear = _.autoPlayClear.bind(_)
+      _.autoPlayIterator = _.autoPlayIterator.bind(_)
+      _.changeSlide = _.changeSlide.bind(_)
+      _.clickHandler = _.clickHandler.bind(_)
+      _.selectHandler = _.selectHandler.bind(_)
+      _.setPosition = _.setPosition.bind(_)
+      _.swipeHandler = _.swipeHandler.bind(_)
+      _.keyHandler = _.keyHandler.bind(_)
 
       _.instanceUid = instanceUid++
 
@@ -169,12 +169,12 @@ import $ from '../src/meptos'
 
     _.$slideTrack
       .find('.mlick-active')
-      .attr({
+      .attrs.set({
         'aria-hidden': 'false',
         tabindex: '0',
       })
       .find('a, input, button, select')
-      .attr({
+      .attrs.set({
         tabindex: '0',
       })
   }
@@ -214,7 +214,7 @@ import $ from '../src/meptos'
     _.$slideTrack.append(_.$slides)
 
     _.$slides.each((index, element) => {
-      $(element).attr('data-mlick-index', index)
+      element.dataset.mlickIndex = index
     })
 
     _.$slidesCache = _.$slides
@@ -406,12 +406,12 @@ import $ from '../src/meptos'
     const _ = this
 
     if (_.options.arrows === true) {
-      _.$prevArrow = $(_.options.prevArrow).addClass('mlick-arrow')
-      _.$nextArrow = $(_.options.nextArrow).addClass('mlick-arrow')
+      _.$prevArrow = $(_.options.prevArrow).classList.add('mlick-arrow')
+      _.$nextArrow = $(_.options.nextArrow).classList.add('mlick-arrow')
 
       if (_.slideCount > _.options.slidesToShow) {
-        _.$prevArrow.removeClass('mlick-hidden').removeAttr('aria-hidden tabindex')
-        _.$nextArrow.removeClass('mlick-hidden').removeAttr('aria-hidden tabindex')
+        _.$prevArrow.classList.remove('mlick-hidden').attrs.remove('aria-hidden tabindex')
+        _.$nextArrow.classList.remove('mlick-hidden').attrs.remove('aria-hidden tabindex')
 
         if (_.htmlExpr.test(_.options.prevArrow)) {
           _.$prevArrow.prependTo(_.options.appendArrows)
@@ -422,14 +422,14 @@ import $ from '../src/meptos'
         }
 
         if (_.options.infinite !== true) {
-          _.$prevArrow.addClass('mlick-disabled').attr('aria-disabled', 'true')
+          _.$prevArrow.classList.add('mlick-disabled').attrs.set('aria-disabled', 'true')
         }
       } else {
         _.$prevArrow
           .add(_.$nextArrow)
 
-          .addClass('mlick-hidden')
-          .attr({
+          .classList.add('mlick-hidden')
+          .attrs.set({
             'aria-disabled': 'true',
             tabindex: '-1',
           })
@@ -443,9 +443,9 @@ import $ from '../src/meptos'
     let dot
 
     if (_.options.dots === true && _.slideCount > _.options.slidesToShow) {
-      _.$slider.addClass('mlick-dotted')
+      _.$slider.classList.add('mlick-dotted')
 
-      dot = $('<ul></ul>').addClass(_.options.dotsClass)
+      dot = $('<ul></ul>').classList.add(_.options.dotsClass)
 
       for (i = 0; i <= _.getDotCount(); i += 1) {
         dot.append($('<li></li>').append(_.options.customPaging.call(this, _, i)))
@@ -453,24 +453,25 @@ import $ from '../src/meptos'
 
       _.$dots = dot.appendTo(_.options.appendDots)
 
-      _.$dots.find('li').first().addClass('mlick-active')
+      _.$dots.find('li').first().classList.add('mlick-active')
     }
   }
 
   Mlick.prototype.buildOut = function () {
     const _ = this
 
-    _.$slides = _.$slider.children(`${_.options.slide}:not(.mlick-cloned)`).addClass('mlick-slide')
+    _.$slides = _.$slider
+      .children(`${_.options.slide}:not(.mlick-cloned)`)
+      .classList.add('mlick-slide')
 
     _.slideCount = _.$slides.length
 
     _.$slides.each((index, element) => {
-      $(element)
-        .attr('data-mlick-index', index)
-        .data('originalStyling', $(element).attr('style') || '')
+      element.dataset.mlickIndex = index
+      $(element).data('originalStyling', element.getAttribute('style') || '')
     })
 
-    _.$slider.addClass('mlick-slider')
+    _.$slider.classList.add('mlick-slider')
 
     _.$slideTrack =
       _.slideCount === 0
@@ -484,7 +485,7 @@ import $ from '../src/meptos'
       _.options.slidesToScroll = 1
     }
 
-    $('img[data-lazy]', _.$slider).not('[src]').addClass('mlick-loading')
+    $('img[data-lazy]', _.$slider).not('[src]').classList.add('mlick-loading')
 
     _.setupInfinite()
 
@@ -497,7 +498,7 @@ import $ from '../src/meptos'
     _.setSlideClasses(typeof _.currentSlide === 'number' ? _.currentSlide : 0)
 
     if (_.options.draggable === true) {
-      _.$list.addClass('draggable')
+      _.$list.classList.add('draggable')
     }
   }
 
@@ -691,8 +692,8 @@ import $ from '../src/meptos'
     if (_.options.dots && _.$dots !== null) {
       $('li', _.$dots)
         .off('click.mlick', _.changeSlide)
-        .off('mouseenter.mlick', $.proxy(_.interrupt, _, true))
-        .off('mouseleave.mlick', $.proxy(_.interrupt, _, false))
+        .off('mouseenter.mlick', _.interrupt.bind(_, true))
+        .off('mouseleave.mlick', _.interrupt.bind(_, false))
 
       if (_.options.accessibility === true) {
         _.$dots.off('keydown.mlick', _.keyHandler)
@@ -742,8 +743,8 @@ import $ from '../src/meptos'
   Mlick.prototype.cleanUpSlideEvents = function () {
     const _ = this
 
-    _.$list.off('mouseenter.mlick', $.proxy(_.interrupt, _, true))
-    _.$list.off('mouseleave.mlick', $.proxy(_.interrupt, _, false))
+    _.$list.off('mouseenter.mlick', _.interrupt.bind(_, true))
+    _.$list.off('mouseleave.mlick', _.interrupt.bind(_, false))
   }
 
   Mlick.prototype.cleanUpRows = function () {
@@ -752,7 +753,7 @@ import $ from '../src/meptos'
 
     if (_.options.rows > 0) {
       originalSlides = _.$slides.children().children()
-      originalSlides.removeAttr('style')
+      originalSlides.attrs.remove('style')
       _.$slider.empty().append(originalSlides)
     }
   }
@@ -783,9 +784,9 @@ import $ from '../src/meptos'
     }
 
     if (_.$prevArrow && _.$prevArrow.length) {
-      _.$prevArrow
-        .removeClass('mlick-disabled mlick-arrow mlick-hidden')
-        .removeAttr('aria-hidden aria-disabled tabindex')
+      _.$prevArrow.classList
+        .remove('mlick-disabled mlick-arrow mlick-hidden')
+        .attrs.remove('aria-hidden aria-disabled tabindex')
         .css('display', '')
 
       if (_.htmlExpr.test(_.options.prevArrow)) {
@@ -794,9 +795,9 @@ import $ from '../src/meptos'
     }
 
     if (_.$nextArrow && _.$nextArrow.length) {
-      _.$nextArrow
-        .removeClass('mlick-disabled mlick-arrow mlick-hidden')
-        .removeAttr('aria-hidden aria-disabled tabindex')
+      _.$nextArrow.classList
+        .remove('mlick-disabled mlick-arrow mlick-hidden')
+        .attrs.remove('aria-hidden aria-disabled tabindex')
         .css('display', '')
 
       if (_.htmlExpr.test(_.options.nextArrow)) {
@@ -805,12 +806,12 @@ import $ from '../src/meptos'
     }
 
     if (_.$slides) {
-      _.$slides
-        .removeClass('mlick-slide mlick-active mlick-center mlick-visible mlick-current')
-        .removeAttr('aria-hidden')
-        .removeAttr('data-mlick-index')
+      _.$slides.classList
+        .remove('mlick-slide mlick-active mlick-center mlick-visible mlick-current')
+        .attrs.remove('aria-hidden')
+        .attrs.remove('data-mlick-index')
         .each(function () {
-          $(this).attr('style', $(this).data('originalStyling'))
+          this.setAttribute('style', $(this).data('originalStyling'))
         })
 
       _.$slideTrack.children(this.options.slide).detach()
@@ -824,9 +825,9 @@ import $ from '../src/meptos'
 
     _.cleanUpRows()
 
-    _.$slider.removeClass('mlick-slider')
-    _.$slider.removeClass('mlick-initialized')
-    _.$slider.removeClass('mlick-dotted')
+    _.$slider.classList.remove('mlick-slider')
+    _.$slider.classList.remove('mlick-initialized')
+    _.$slider.classList.remove('mlick-dotted')
 
     _.unmlicked = true
 
@@ -1178,7 +1179,7 @@ import $ from '../src/meptos'
         }
       })
 
-      slidesTraversed = Math.abs($(swipedSlide).attr('data-mlick-index') - _.currentSlide) || 1
+      slidesTraversed = Math.abs(swipedSlide.dataset.mlickIndex - _.currentSlide) || 1
 
       return slidesTraversed
     } else {
@@ -1203,8 +1204,8 @@ import $ from '../src/meptos'
   Mlick.prototype.init = function (creation) {
     const _ = this
 
-    if (!$(_.$slider).hasClass('mlick-initialized')) {
-      $(_.$slider).addClass('mlick-initialized')
+    if (!_.$slider.classList.contains('mlick-initialized')) {
+      _.$slider.classList.add('mlick-initialized')
 
       _.buildRows()
       _.buildOut()
@@ -1241,12 +1242,12 @@ import $ from '../src/meptos'
 
     _.$slides
       .add(_.$slideTrack.find('.mlick-cloned'))
-      .attr({
+      .attrs.set({
         'aria-hidden': 'true',
         tabindex: '-1',
       })
       .find('a, input, button, select')
-      .attr({
+      .attrs.set({
         tabindex: '-1',
       })
 
@@ -1254,7 +1255,7 @@ import $ from '../src/meptos'
       _.$slides.not(_.$slideTrack.find('.mlick-cloned')).each(function (i) {
         const slideControlIndex = tabControlIndexes.indexOf(i)
 
-        $(this).attr({
+        $(this).attrs.set({
           role: 'tabpanel',
           id: `mlick-slide${_.instanceUid}${i}`,
           tabindex: -1,
@@ -1263,27 +1264,27 @@ import $ from '../src/meptos'
         if (slideControlIndex !== -1) {
           const ariaButtonControl = `mlick-slide-control${_.instanceUid}${slideControlIndex}`
           if ($(`#${ariaButtonControl}`).length) {
-            $(this).attr({
+            $(this).attrs.set({
               'aria-describedby': ariaButtonControl,
             })
           }
         }
       })
 
-      _.$dots
-        .attr('role', 'tablist')
+      _.$dots.attrs
+        .set('role', 'tablist')
         .find('li')
         .each(function (i) {
           const mappedSlideIndex = tabControlIndexes[i]
 
-          $(this).attr({
+          $(this).attrs.set({
             role: 'presentation',
           })
 
           $(this)
             .find('button')
             .first()
-            .attr({
+            .attrs.set({
               role: 'tab',
               id: `mlick-slide-control${_.instanceUid}${i}`,
               'aria-controls': `mlick-slide${_.instanceUid}${mappedSlideIndex}`,
@@ -1294,7 +1295,7 @@ import $ from '../src/meptos'
         })
         .eq(_.currentSlide)
         .find('button')
-        .attr({
+        .attrs.set({
           'aria-selected': 'true',
           tabindex: '0',
         })
@@ -1302,9 +1303,9 @@ import $ from '../src/meptos'
 
     for (let i = _.currentSlide, max = i + _.options.slidesToShow; i < max; i++) {
       if (_.options.focusOnChange) {
-        _.$slides.eq(i).attr({ tabindex: '0' })
+        _.$slides.eq(i).attrs.set({ tabindex: '0' })
       } else {
-        _.$slides.eq(i).removeAttr('tabindex')
+        _.$slides.eq(i).attrs.remove('tabindex')
       }
     }
 
@@ -1360,8 +1361,8 @@ import $ from '../src/meptos'
       _.slideCount > _.options.slidesToShow
     ) {
       $('li', _.$dots)
-        .on('mouseenter.mlick', $.proxy(_.interrupt, _, true))
-        .on('mouseleave.mlick', $.proxy(_.interrupt, _, false))
+        .on('mouseenter.mlick', _.interrupt.bind(_, true))
+        .on('mouseleave.mlick', _.interrupt.bind(_, false))
     }
   }
 
@@ -1369,8 +1370,8 @@ import $ from '../src/meptos'
     const _ = this
 
     if (_.options.pauseOnHover) {
-      _.$list.on('mouseenter.mlick', $.proxy(_.interrupt, _, true))
-      _.$list.on('mouseleave.mlick', $.proxy(_.interrupt, _, false))
+      _.$list.on('mouseenter.mlick', _.interrupt.bind(_, true))
+      _.$list.on('mouseleave.mlick', _.interrupt.bind(_, false))
     }
   }
 
@@ -1413,7 +1414,7 @@ import $ from '../src/meptos'
 
     _.$list.on('click.mlick', _.clickHandler)
 
-    $(document).on(_.visibilityChange, $.proxy(_.visibility, _))
+    $(document).on(_.visibilityChange, _.visibility.bind(_))
 
     if (_.options.accessibility === true) {
       _.$list.on('keydown.mlick', _.keyHandler)
@@ -1423,9 +1424,9 @@ import $ from '../src/meptos'
       $(_.$slideTrack).children().on('click.mlick', _.selectHandler)
     }
 
-    $(window).on(`orientationchange.mlick.mlick-${_.instanceUid}`, $.proxy(_.orientationChange, _))
+    $(window).on(`orientationchange.mlick.mlick-${_.instanceUid}`, _.orientationChange.bind(_))
 
-    $(window).on(`resize.mlick.mlick-${_.instanceUid}`, $.proxy(_.resize, _))
+    $(window).on(`resize.mlick.mlick-${_.instanceUid}`, _.resize.bind(_))
 
     $(":not([draggable='true'])", _.$slideTrack).on('dragstart', _.preventDefault)
 
@@ -1476,23 +1477,25 @@ import $ from '../src/meptos'
     function loadImages(imagesScope) {
       $('img[data-lazy]', imagesScope).each(function () {
         const image = $(this)
-        const imageSource = $(this).attr('data-lazy')
-        const imageSrcSet = $(this).attr('data-srcset')
-        const imageSizes = $(this).attr('data-sizes') || _.$slider.attr('data-sizes')
+        const imageSource = this.getAttribute('data-lazy')
+        const imageSrcSet = this.getAttribute('data-srcset')
+        const imageSizes = this.getAttribute('data-sizes') || _.$slider.attrs.get('data-sizes')
         const imageToLoad = document.createElement('img')
 
         imageToLoad.onload = function () {
           image.animate({ opacity: 0 }, 100, () => {
             if (imageSrcSet) {
-              image.attr('srcset', imageSrcSet)
+              image.attrs.set('srcset', imageSrcSet)
 
               if (imageSizes) {
-                image.attr('sizes', imageSizes)
+                image.attrs.set('sizes', imageSizes)
               }
             }
 
-            image.attr('src', imageSource).animate({ opacity: 1 }, 200, () => {
-              image.removeAttr('data-lazy data-srcset data-sizes').removeClass('mlick-loading')
+            image.attrs.set('src', imageSource).animate({ opacity: 1 }, 200, () => {
+              image.attrs
+                .remove('data-lazy data-srcset data-sizes')
+                .classList.remove('mlick-loading')
             })
             _.$slider.trigger('lazyLoaded', [_, image, imageSource])
           })
@@ -1501,8 +1504,8 @@ import $ from '../src/meptos'
         imageToLoad.onerror = function () {
           image
             .removeAttr('data-lazy')
-            .removeClass('mlick-loading')
-            .addClass('mlick-lazyload-error')
+            .classList.remove('mlick-loading')
+            .classList.add('mlick-lazyload-error')
 
           _.$slider.trigger('lazyLoadError', [_, image, imageSource])
         }
@@ -1567,7 +1570,7 @@ import $ from '../src/meptos'
       opacity: '1',
     })
 
-    _.$slider.removeClass('mlick-loading')
+    _.$slider.classList.remove('mlick-loading')
 
     _.initUI()
 
@@ -1633,7 +1636,7 @@ import $ from '../src/meptos'
 
         if (_.options.focusOnChange) {
           const $currentSlide = $(_.$slides.get(_.currentSlide))
-          $currentSlide.attr('tabindex', 0).trigger('focus')
+          $currentSlide.attrs.set('tabindex', 0).trigger('focus')
         }
       }
     }
@@ -1666,24 +1669,24 @@ import $ from '../src/meptos'
 
     if ($imgsToLoad.length) {
       image = $imgsToLoad.first()
-      imageSource = image.attr('data-lazy')
-      imageSrcSet = image.attr('data-srcset')
-      imageSizes = image.attr('data-sizes') || _.$slider.attr('data-sizes')
+      imageSource = image.attrs.get('data-lazy')
+      imageSrcSet = image.attrs.get('data-srcset')
+      imageSizes = image.attrs.get('data-sizes') || _.$slider.attrs.get('data-sizes')
       imageToLoad = document.createElement('img')
 
       imageToLoad.onload = function () {
         if (imageSrcSet) {
-          image.attr('srcset', imageSrcSet)
+          image.attrs.set('srcset', imageSrcSet)
 
           if (imageSizes) {
-            image.attr('sizes', imageSizes)
+            image.attrs.set('sizes', imageSizes)
           }
         }
 
-        image
-          .attr('src', imageSource)
-          .removeAttr('data-lazy data-srcset data-sizes')
-          .removeClass('mlick-loading')
+        image.attrs
+          .set('src', imageSource)
+          .attrs.remove('data-lazy data-srcset data-sizes')
+          .classList.remove('mlick-loading')
 
         if (_.options.adaptiveHeight === true) {
           _.setPosition()
@@ -1704,10 +1707,10 @@ import $ from '../src/meptos'
             _.progressiveLazyLoad(tryCount + 1)
           }, 500)
         } else {
-          image
-            .removeAttr('data-lazy')
-            .removeClass('mlick-loading')
-            .addClass('mlick-lazyload-error')
+          image.attrs
+            .remove('data-lazy')
+            .classList.remove('mlick-loading')
+            .classList.add('mlick-lazyload-error')
 
           _.$slider.trigger('lazyLoadError', [_, image, imageSource])
 
@@ -1799,7 +1802,7 @@ import $ from '../src/meptos'
   Mlick.prototype.reinit = function () {
     const _ = this
 
-    _.$slides = _.$slideTrack.children(_.options.slide).addClass('mlick-slide')
+    _.$slides = _.$slideTrack.children(_.options.slide).classList.add('mlick-slide')
 
     _.slideCount = _.$slides.length
 
@@ -2100,9 +2103,9 @@ import $ from '../src/meptos'
     _.positionProp = _.options.vertical === true ? 'top' : 'left'
 
     if (_.positionProp === 'top') {
-      _.$slider.addClass('mlick-vertical')
+      _.$slider.classList.add('mlick-vertical')
     } else {
-      _.$slider.removeClass('mlick-vertical')
+      _.$slider.classList.remove('mlick-vertical')
     }
 
     if (bodyStyle.transition !== undefined) {
@@ -2138,10 +2141,10 @@ import $ from '../src/meptos'
 
     allSlides = _.$slider
       .find('.mlick-slide')
-      .removeClass('mlick-active mlick-center mlick-current')
+      .classList.remove('mlick-active mlick-center mlick-current')
       .attr('aria-hidden', 'true')
 
-    _.$slides.eq(index).addClass('mlick-current')
+    _.$slides.eq(index).classList.add('mlick-current')
 
     if (_.options.centerMode === true) {
       let evenCoef
@@ -2158,32 +2161,32 @@ import $ from '../src/meptos'
         if (index >= centerOffset && index <= _.slideCount - 1 - centerOffset) {
           _.$slides
             .slice(index - centerOffset + evenCoef, index + centerOffset + 1)
-            .addClass('mlick-active')
+            .classList.add('mlick-active')
             .attr('aria-hidden', 'false')
         } else {
           indexOffset = _.options.slidesToShow + index
           allSlides
             .slice(indexOffset - centerOffset + 1 + evenCoef, indexOffset + centerOffset + 2)
-            .addClass('mlick-active')
+            .classList.add('mlick-active')
             .attr('aria-hidden', 'false')
         }
 
         if (index === 0) {
-          allSlides.eq(_.options.slidesToShow + _.slideCount + 1).addClass('mlick-center')
+          allSlides.eq(_.options.slidesToShow + _.slideCount + 1).classList.add('mlick-center')
         } else if (index === _.slideCount - 1) {
-          allSlides.eq(_.options.slidesToShow).addClass('mlick-center')
+          allSlides.eq(_.options.slidesToShow).classList.add('mlick-center')
         }
       }
 
-      _.$slides.eq(index).addClass('mlick-center')
+      _.$slides.eq(index).classList.add('mlick-center')
     } else {
       if (index >= 0 && index <= _.slideCount - _.options.slidesToShow) {
         _.$slides
           .slice(index, index + _.options.slidesToShow)
-          .addClass('mlick-active')
+          .classList.add('mlick-active')
           .attr('aria-hidden', 'false')
       } else if (allSlides.length <= _.options.slidesToShow) {
-        allSlides.addClass('mlick-active').attr('aria-hidden', 'false')
+        allSlides.classList.add('mlick-active').attr('aria-hidden', 'false')
       } else {
         remainder = _.slideCount % _.options.slidesToShow
         indexOffset = _.options.infinite === true ? _.options.slidesToShow + index : index
@@ -2194,12 +2197,12 @@ import $ from '../src/meptos'
         ) {
           allSlides
             .slice(indexOffset - (_.options.slidesToShow - remainder), indexOffset + remainder)
-            .addClass('mlick-active')
+            .classList.add('mlick-active')
             .attr('aria-hidden', 'false')
         } else {
           allSlides
             .slice(indexOffset, indexOffset + _.options.slidesToShow)
-            .addClass('mlick-active')
+            .classList.add('mlick-active')
             .attr('aria-hidden', 'false')
         }
       }
@@ -2234,25 +2237,25 @@ import $ from '../src/meptos'
           slideIndex = i - 1
           $(_.$slides[slideIndex])
             .clone(true)
-            .removeAttr('id')
-            .attr('data-mlick-index', slideIndex - _.slideCount)
+            .attrs.remove('id')
+            .attrs.set('data-mlick-index', slideIndex - _.slideCount)
             .prependTo(_.$slideTrack)
-            .addClass('mlick-cloned')
+            .classList.add('mlick-cloned')
         }
         for (i = 0; i < infiniteCount + _.slideCount; i += 1) {
           slideIndex = i
           $(_.$slides[slideIndex])
             .clone(true)
-            .removeAttr('id')
-            .attr('data-mlick-index', slideIndex + _.slideCount)
+            .attrs.remove('id')
+            .attrs.set('data-mlick-index', slideIndex + _.slideCount)
             .appendTo(_.$slideTrack)
-            .addClass('mlick-cloned')
+            .classList.add('mlick-cloned')
         }
         _.$slideTrack
           .find('.mlick-cloned')
           .find('[id]')
           .each(function () {
-            $(this).removeAttr('id')
+            this.removeAttribute('id')
           })
       }
     }
@@ -2274,7 +2277,7 @@ import $ from '../src/meptos'
       ? $(event.target)
       : $(event.target).parents('.mlick-slide')
 
-    let index = parseInt(targetElement.attr('data-mlick-index'))
+    let index = parseInt(targetElement.attrs.get('data-mlick-index'))
 
     if (!index) index = 0
 
@@ -2404,7 +2407,7 @@ import $ from '../src/meptos'
       _.$dots.hide()
     }
 
-    _.$slider.addClass('mlick-loading')
+    _.$slider.classList.add('mlick-loading')
   }
 
   Mlick.prototype.swipeDirection = function () {
@@ -2682,9 +2685,9 @@ import $ from '../src/meptos'
       _.$nextArrow.remove()
     }
 
-    _.$slides
-      .removeClass('mlick-slide mlick-active mlick-visible mlick-current')
-      .attr('aria-hidden', 'true')
+    _.$slides.classList
+      .remove('mlick-slide mlick-active mlick-visible mlick-current')
+      .attrs.set('aria-hidden', 'true')
       .css('width', '')
   }
 
@@ -2701,21 +2704,21 @@ import $ from '../src/meptos'
     centerOffset = Math.floor(_.options.slidesToShow / 2)
 
     if (_.options.arrows === true && _.slideCount > _.options.slidesToShow && !_.options.infinite) {
-      _.$prevArrow.removeClass('mlick-disabled').attr('aria-disabled', 'false')
-      _.$nextArrow.removeClass('mlick-disabled').attr('aria-disabled', 'false')
+      _.$prevArrow.classList.remove('mlick-disabled').attrs.set('aria-disabled', 'false')
+      _.$nextArrow.classList.remove('mlick-disabled').attrs.set('aria-disabled', 'false')
 
       if (_.currentSlide === 0) {
-        _.$prevArrow.addClass('mlick-disabled').attr('aria-disabled', 'true')
-        _.$nextArrow.removeClass('mlick-disabled').attr('aria-disabled', 'false')
+        _.$prevArrow.classList.add('mlick-disabled').attrs.set('aria-disabled', 'true')
+        _.$nextArrow.classList.remove('mlick-disabled').attrs.set('aria-disabled', 'false')
       } else if (
         _.currentSlide >= _.slideCount - _.options.slidesToShow &&
         _.options.centerMode === false
       ) {
-        _.$nextArrow.addClass('mlick-disabled').attr('aria-disabled', 'true')
-        _.$prevArrow.removeClass('mlick-disabled').attr('aria-disabled', 'false')
+        _.$nextArrow.classList.add('mlick-disabled').attrs.set('aria-disabled', 'true')
+        _.$prevArrow.classList.remove('mlick-disabled').attrs.set('aria-disabled', 'false')
       } else if (_.currentSlide >= _.slideCount - 1 && _.options.centerMode === true) {
-        _.$nextArrow.addClass('mlick-disabled').attr('aria-disabled', 'true')
-        _.$prevArrow.removeClass('mlick-disabled').attr('aria-disabled', 'false')
+        _.$nextArrow.classList.add('mlick-disabled').attrs.set('aria-disabled', 'true')
+        _.$prevArrow.classList.remove('mlick-disabled').attrs.set('aria-disabled', 'false')
       }
     }
   }
@@ -2724,12 +2727,12 @@ import $ from '../src/meptos'
     const _ = this
 
     if (_.$dots !== null) {
-      _.$dots.find('li').removeClass('mlick-active')
+      _.$dots.find('li').classList.remove('mlick-active')
 
       _.$dots
         .find('li')
         .eq(Math.floor(_.currentSlide / _.options.slidesToScroll))
-        .addClass('mlick-active')
+        .classList.add('mlick-active')
     }
   }
 
