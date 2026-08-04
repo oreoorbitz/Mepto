@@ -161,6 +161,23 @@ export interface MeptoAttrs {
   remove(names: string): MeptoCollection
 }
 
+/**
+ * Inline-style view over a {@link MeptoCollection}, exposed as the `.styles`
+ * getter. A migration bridge mirroring native `style.setProperty` /
+ * `style.removeProperty` / computed-style reads: `set` applies to every
+ * element and returns the collection for chaining, while `get` reads only the
+ * first element. Like `.css`, camelCase or dashed keys both work, a numeric
+ * value gets a `px` suffix (except unit-less properties), and a
+ * `null`/empty-string value removes the property.
+ */
+export interface MeptoStyles {
+  get(name: string): string | undefined
+  set(
+    name: string | Record<string, string | number | null | undefined>,
+    value?: string | number | null
+  ): MeptoCollection
+}
+
 // Main Mepto collection interface
 export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   // Core properties
@@ -243,6 +260,14 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
    * whitespace (matching `removeAttr`).
    */
   readonly attrs: MeptoAttrs
+  /**
+   * Inline-style bridge over the collection. `set` applies to every element;
+   * `get` reflects the first element (inline style, else computed). camelCase
+   * or dashed keys both work, a numeric value gets a `px` suffix (except
+   * unit-less properties), and a `null`/empty value removes the property
+   * (matching `.css`).
+   */
+  readonly styles: MeptoStyles
 
   // Content manipulation
   append(content: Selector): MeptoCollection<T>

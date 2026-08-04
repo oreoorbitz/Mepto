@@ -2368,6 +2368,59 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     },
   })
 
+  Object.defineProperty($.fn, 'styles', {
+    get() {
+      const collection = this
+      return {
+        get(name: string): string | undefined {
+          if (collection.length > 0 && collection[0].nodeType === 1) {
+            const element = collection[0] as HTMLElement
+            return (
+              (element.style as unknown as Record<string, string>)[camelize(name)] ||
+              getComputedStyle(element, '').getPropertyValue(name)
+            )
+          }
+          return undefined
+        },
+        set(
+          name: string | Record<string, string | number | null | undefined>,
+          value?: string | number | null
+        ) {
+          // perf: resolve each property's dasherized name + final value once
+          // per call (outside the element loop). `null`/`''` marks a removal.
+          const entries: [dashedName: string, cssValue: string | null][] = []
+          if (typeof name === 'string') {
+            entries.push(
+              !value && value !== 0
+                ? [dasherize(name), null]
+                : [dasherize(name), String(maybeAddPx(name, value))]
+            )
+          } else {
+            const propKeys = Object.keys(name)
+            for (let i = 0; i < propKeys.length; i++) {
+              const key = propKeys[i]
+              const propValue = name[key]
+              entries.push(
+                !propValue && propValue !== 0
+                  ? [dasherize(key), null]
+                  : [dasherize(key), String(maybeAddPx(key, propValue))]
+              )
+            }
+          }
+          return collection.each(function (this: Element) {
+            if (this.nodeType !== 1) return
+            const style = (this as HTMLElement).style
+            for (let i = 0; i < entries.length; i++) {
+              const entry = entries[i]
+              if (entry[1] === null) style.removeProperty(entry[0])
+              else style.setProperty(entry[0], entry[1])
+            }
+          })
+        },
+      }
+    },
+  })
+
   // Generate the `width` and `height` functions
   ;['width', 'height'].forEach(dimension => {
     const dimensionProperty = dimension.replace(/./, m => {

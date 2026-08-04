@@ -1,7 +1,10 @@
-*
-!README.md
-!MIT-LICENSE
-!dist/mepto.js
-!dist/mepto.min.js
-!src/*.js
-src/amd_layout.js
+# Test files (belt-and-suspenders with the !src/*.test.ts in files array)
+src/*.test.ts
+src/*.spec.ts
+
+# Build artifacts that shouldn't be in the package
+dist/src/**/*.map
+
+# Misc
+.DS_Store
+*.log

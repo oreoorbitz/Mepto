@@ -503,6 +503,42 @@ describe('CSS', () => {
     d.css({ fontSize: '20px' })
     expect(d.css('font-size')).toBe('20px')
   })
+
+  it('.styles bridge: get/set map, px suffix, null/empty removes', () => {
+    const a = $('<div class="st">').appendTo(fixture)
+    const b = $('<div class="st">').appendTo(fixture)
+    const both = $('.st')
+    expect(both.length).toBe(2)
+
+    // object-map set applies to every element, numeric adds px
+    both.styles.set({ width: 30, 'z-index': 2, opacity: 0.5 })
+    both.each(function (this: Element) {
+      const style = (this as HTMLElement).style
+      expect(style.width).toBe('30px') // numeric → px
+      expect(style.zIndex).toBe('2') // unit-less: no px
+      expect(style.opacity).toBe('0.5')
+    })
+
+    // get reads the first element (inline style)
+    expect(both.styles.get('width')).toBe('30px')
+
+    // single-name set + chaining
+    both.styles.set('height', 10).styles.set('display', 'inline-block')
+    expect((a[0] as HTMLElement).style.height).toBe('10px')
+    expect((b[0] as HTMLElement).style.display).toBe('inline-block')
+
+    // null removes, empty string removes
+    both.styles.set('opacity', null)
+    both.styles.set({ display: '' })
+    both.each(function (this: Element) {
+      const style = (this as HTMLElement).style
+      expect(style.opacity).toBe('')
+      expect(style.display).toBe('')
+    })
+
+    // empty collection: get → undefined
+    expect($('.no-such-st').styles.get('width')).toBeUndefined()
+  })
 })
 
 // ─── Classes ─────────────────────────────────────────────────────────────────

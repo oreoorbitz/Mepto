@@ -1,7 +1,7 @@
 {
   "name": "meptos",
   "version": "2.0.0",
-  "description": "Modern TypeScript fork of mepto.js - jQuery-compatible library with migration tools",
+  "description": "Modern TypeScript rewrite of Zepto.js — jQuery-compatible DOM library for evergreen browsers",
   "main": "./dist/meptos.umd.cjs",
   "module": "./dist/meptos.js",
   "types": "./dist/meptos.d.ts",
@@ -21,8 +21,10 @@
   "files": [
     "dist",
     "src",
-    "tools"
+    "!src/*.test.ts",
+    "!src/*.spec.ts"
   ],
+  "sideEffects": false,
   "scripts": {
     "dev": "vite",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
@@ -41,11 +43,11 @@
     "format:file": "prettier --write",
     "typecheck": "node node_modules/typescript-7/bin/tsc --noEmit",
     "typecheck:ts5": "node node_modules/typescript/bin/tsc --noEmit",
-    "prepare": "husky install",
+    "prepare": "node -e \"require('fs').existsSync('.husky') && require('child_process').execSync('npx husky install', {stdio: 'inherit'})\"",
     "size": "npm run build && size-limit",
     "size:check": "size-limit",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build && npm run size:check",
-    "prepublishOnly": "npm run verify",
+    "prepublishOnly": "npm test && npm run build && npm run size:check",
     "killports": "kill-port $(seq -s ' ' 3000 3099)"
   },
   "keywords": [
@@ -58,15 +60,15 @@
     "migration",
     "vanilla-js"
   ],
-  "author": "Mepto Contributors",
+  "author": "Orion Holmes (https://github.com/oreoorbitz)",
   "license": "MIT",
-  "homepage": "https://github.com/mepto/meptos#readme",
+  "homepage": "https://oreoorbitz.github.io/Mepto/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mepto/meptos.git"
+    "url": "https://github.com/oreoorbitz/Mepto.git"
   },
   "bugs": {
-    "url": "https://github.com/mepto/meptos/issues"
+    "url": "https://github.com/oreoorbitz/Mepto/issues"
   },
   "engines": {
     "node": "24.x"
@@ -89,6 +91,7 @@
     "globals": "^16.0.0",
     "husky": "^8.0.3",
     "jsdom": "^29.1.0",
+    "kill-port": "^2.0.1",
     "lint-staged": "^15.1.0",
     "oxlint": "^1.0.0",
     "prettier": "^3.1.0",
@@ -117,8 +120,5 @@
     "*.{ts,js,json,md,css,html}": [
       "prettier --write"
     ]
-  },
-  "dependencies": {
-    "kill-port": "^2.0.1"
   }
 }

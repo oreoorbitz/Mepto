@@ -17,7 +17,9 @@ The package is published as **`meptos`**. The browser globals are `$` and
 > `npm run build` print known type errors from the unconverted modules — this is
 > expected; the build still exits 0 and produces working bundles.
 
-Mepto is licensed under the MIT License, like Zepto itself.
+Mepto is licensed under the MIT License, like Zepto itself. It is a
+derivative of Zepto.js by Thomas Fuchs, whose original copyright notice is
+preserved in the [LICENSE](LICENSE) file.
 
 ---
 
