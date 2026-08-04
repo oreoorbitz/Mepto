@@ -20,17 +20,24 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    // TypeScript transition: currently enabling the two highest-value
+    // strict flags individually rather than the master "strict: true"
+    // switch. The remaining strict flags (strictFunctionTypes,
+    // noImplicitThis, etc.) all surface real type friction in
+    // jQuery-compat patterns (permissive $.each, untyped `this` in
+    // delegated handlers, etc.) and need a separate pass to address
+    // with type-level migration rather than a bulk find-replace.
     "strict": false,
-    "noImplicitAny": false,
-    "strictNullChecks": false,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
     "strictFunctionTypes": false,
-    "strictBindCallApply": false,
+    "strictBindCallApply": true,
     "strictPropertyInitialization": false,
     "noImplicitThis": false,
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noImplicitReturns": false,
-    "noFallthroughCasesInSwitch": false,
+    "noFallthroughCasesInSwitch": true,
     "noUncheckedIndexedAccess": false,
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,

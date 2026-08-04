@@ -51,8 +51,16 @@ declare const mepto: MeptoStatic
     callback: any,
     delay: any
   ): MeptoCollection {
-    if ($.isFunction(duration)) ((callback = duration), (ease = undefined), (duration = undefined))
-    if ($.isFunction(ease)) ((callback = ease), (ease = undefined))
+    // Shorthand: (properties, [duration,] [easing,] [complete]). Only swap
+    // a function-shaped duration/ease into the callback slot when the
+    // caller hasn't already supplied a callback — otherwise the
+    // shorthand swallows an explicit callback. This matters for
+    // $.fn.fadeIn/fadeOut/fadeToggle, which build a wrapped callback
+    // (calls origShow/origHide/origToggle + the user's cb) and pass it
+    // alongside the user's function-shaped "duration" arg.
+    if ($.isFunction(duration) && !callback)
+      ((callback = duration), (ease = undefined), (duration = undefined))
+    if ($.isFunction(ease) && !callback) ((callback = ease), (ease = undefined))
     if ($.isPlainObject(duration))
       ((ease = (duration as any).easing),
         (callback = (duration as any).complete),

@@ -51,8 +51,8 @@ declare const mepto: MeptoStatic
     checked: function (this: HTMLInputElement): HTMLInputElement | undefined {
       if (this.checked) return this
     },
-    parent: function (this: Element): ParentNode | null {
-      return this.parentNode
+    parent: function (this: Element): Element | null {
+      return this.parentNode as Element | null
     },
     first: function (this: Element, idx: number): Element | undefined {
       if (idx === 0) return this

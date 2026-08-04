@@ -42,7 +42,7 @@ export interface AjaxSettings {
   data?: PlainObject | string | FormData
   contentType?: string | false
   processData?: boolean
-  dataType?: 'json' | 'xml' | 'html' | 'text' | 'script'
+  dataType?: 'json' | 'xml' | 'html' | 'text' | 'script' | 'jsonp'
   timeout?: number
   async?: boolean
   cache?: boolean
@@ -61,6 +61,7 @@ export interface AjaxSettings {
   mimeType?: string
   xhrFields?: Record<string, unknown>
   statusCode?: Record<number, () => void>
+  crossDomain?: boolean
 }
 
 export type AjaxSuccessCallback = (data: unknown, status: string, xhr: XMLHttpRequest) => void
@@ -340,7 +341,16 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
   scroll(handler?: EventHandler): MeptoCollection<T>
   select(handler?: EventHandler): MeptoCollection<T>
   error(handler?: EventHandler): MeptoCollection<T>
-  load(handler?: EventHandler): MeptoCollection<T>
+  /**
+   * Performs an ajax GET request to `url` and replaces the collection's
+   * HTML with the response. If `url` contains a space, the second token
+   * is treated as a CSS selector to filter the response.
+   *
+   * (jQuery also exposes `load(handler)` as an event-binding shortcut,
+   * but mepto's `$.fn.load` is ajax-only — for event handling, use
+   * `$.fn.on('load', handler)` instead.)
+   */
+  load(url: string, data?: unknown, success?: unknown): MeptoCollection<T>
   unload(handler?: EventHandler): MeptoCollection<T>
 
   // Forms
@@ -403,10 +413,14 @@ export interface MeptoStatic {
   fn: MeptoCollection
 
   // Utilities
+  // Static $.each is a generic iterator — accept any callback shape, since
+  // callbacks often bind extra args (`(i, el) => ...`) or use the same
+  // function for both array and object iteration. The runtime forwards
+  // the iteration index and value; the callback decides what to read.
   each<T>(
-    collection: T[] | Record<string, T>,
-    callback: (index: string | number, item: T) => boolean | void
-  ): T[] | Record<string, T>
+    collection: T[] | Record<string, T> | unknown,
+    callback: (index: unknown, item: unknown) => boolean | void | unknown
+  ): T[] | Record<string, T> | unknown
   map<T, U>(collection: T[], callback: (item: T, index: number) => U | null | undefined): U[]
   extend<T, U>(target: T, source: U): T & U
   extend<T, U, V>(target: T, source1: U, source2: V): T & U & V
@@ -480,6 +494,16 @@ export interface MeptoStatic {
   // Ajax
   ajax(settings: AjaxSettings): XMLHttpRequest
   ajax(url: string, settings?: AjaxSettings): XMLHttpRequest
+  /**
+   * Defaults applied to every $.ajax call. Override individual fields to
+   * change global ajax behaviour (e.g. contentType, headers).
+   */
+  ajaxSettings: AjaxSettings
+  /**
+   * Number of in-flight ajax requests — used to fire the global
+   * ajaxStart/ajaxStop events.
+   */
+  active: number
   ajaxSetup(options: AjaxSettings): void
   get(
     url: string,
@@ -568,5 +592,4 @@ export interface MeptoStatic {
     ':': Record<string, (element: Element, index: number, matches: unknown) => boolean>
   }
   uuid: number
-  active: number
 }

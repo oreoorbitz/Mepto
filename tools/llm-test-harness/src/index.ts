@@ -15,6 +15,10 @@ import {
   BatchCaseResult,
   CompareResult,
 } from './runner'
+
+// Re-export the runner types so consumers can `import { TestRunner } from
+// 'llm-test-harness'`. Under `isolatedModules`, type-only re-exports must
+// use `export type` so the bundler can drop them at build time.
 import { sanitize } from './security/sanitizer'
 
 export interface HarnessOptions extends TestOptions {
@@ -335,7 +339,7 @@ export async function quickTest(
   })
 }
 
-export {
+export type {
   TestRunner,
   TestOptions,
   TestResult,

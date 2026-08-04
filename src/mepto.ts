@@ -2,10 +2,13 @@
 //     (c) 2010-2017 Thomas Fuchs
 //     mepto.js may be freely distributed under the MIT license.
 
-import { type MeptoCollection, type MeptoStatic, type PlainObject } from './types'
+import { type MeptoCollection, type MeptoStatic, type PlainObject, type Selector } from './types'
 
 const mepto: MeptoStatic = (function (): MeptoStatic {
-  let $: MeptoStatic = undefined
+  // `$` is reassigned below to the public factory function, so `let` is
+  // intentional here. Initialised to an empty MeptoStatic (not `undefined`)
+  // so any accidental early reference resolves to a real object.
+  let $: MeptoStatic = {} as MeptoStatic
   const emptyArray: unknown[] = []
 
   const filter = Array.prototype.filter
@@ -555,7 +558,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       // is thrown if the fragment doesn't begin with <
       const fragMatch = str[0] === '<' ? fragmentRE.exec(str) : null
       if (fragMatch) {
-        dom = mepto.fragment(str, fragMatch[1], context as PlainObject | null | undefined)
+        dom = mepto.fragment(
+          str,
+          fragMatch[1],
+          context as unknown as PlainObject | null | undefined
+        )
         finalSelector = null
       } else if (context !== undefined) {
         return $(context).find(str)
@@ -578,7 +585,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
           dom = mepto.fragment(
             String(selector).trim(),
             fragMatch[1],
-            context as PlainObject | null | undefined
+            context as unknown as PlainObject | null | undefined
           )
           finalSelector = null
         } else if (context !== undefined) {
@@ -660,17 +667,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     ...rest: (Record<string, unknown> | undefined)[]
   ): Record<string, unknown> {
     let deep = false
-    let destination: Record<string, unknown>
+    let destination: Record<string, unknown> | undefined
 
     if (typeof target === 'boolean') {
       deep = target
-      destination = rest.shift()
+      destination = rest.shift() as Record<string, unknown>
     } else {
-      destination = target
+      destination = target as Record<string, unknown>
     }
 
     rest.forEach(arg => {
-      if (arg) extend(destination, arg, deep)
+      if (arg) extend(destination as Record<string, unknown>, arg as Record<string, unknown>, deep)
     })
 
     return destination
@@ -842,8 +849,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns The current class name string when called as a getter.
    */
   function className(node: Element, value?: string): string | void {
-    const klass = node?.className
-    const svg = klass && typeof klass === 'object' && 'baseVal' in klass
+    const klass: string | SVGAnimatedString | null | undefined = node?.className
+    const svg = !!klass && typeof klass === 'object' && 'baseVal' in (klass as object)
 
     if (value === undefined) {
       return svg ? (klass as SVGAnimatedString).baseVal : klass
@@ -1132,11 +1139,13 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param args - Elements, arrays, or MeptoCollections to concatenate.
      * @returns A new plain array containing all merged elements.
      */
-    concat(this: FnThis, ...args: any[]): any[] {
+    concat(this: FnThis, ...args: unknown[]): unknown[] {
       // Flatten MeptoCollection arguments to plain arrays so concat
       // spreads their elements rather than nesting the whole object.
-      const flattened = args.map(arg => (mepto.isZ(arg) ? arg.toArray() : arg))
-      return emptyArray.concat(mepto.isZ(this) ? this.toArray() : this, ...flattened)
+      const flattened = args.map(arg =>
+        mepto.isZ(arg) ? (arg as MeptoCollection).toArray() : (arg as Element | Element[])
+      )
+      return emptyArray.concat(mepto.isZ(this) ? this.toArray() : this, ...flattened) as Element[]
     },
 
     // `map` and `slice` follow jQuery conventions, not Array.prototype:
@@ -1147,7 +1156,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       fn: (this: Element, index: number, element: Element) => U | null | undefined
     ): MeptoCollection {
       // $() accepts any array of values at runtime; the cast is compile-time only
-      return $($.map(this, (el, i) => fn.call(el, i, el)))
+      return $($.map(this, (el, i) => fn.call(el, i, el)) as unknown as Selector)
     },
     slice(this: FnThis, start?: number, end?: number): MeptoCollection {
       return $(slice.call(this, start, end))
@@ -1175,8 +1184,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
      * @param idx - Zero-based index, or `undefined` for the full array.
      * @returns A single DOM element, or an array of all elements.
      */
-    get(this: FnThis, idx?: number): any {
-      return idx === undefined ? slice.call(this) : this[idx >= 0 ? idx : idx + this.length]
+    get(this: FnThis, idx?: number): Element | Element[] | undefined {
+      return idx === undefined
+        ? (slice.call(this) as Element[])
+        : (this[idx >= 0 ? idx : idx + this.length] as Element | undefined)
     },
     toArray(this: FnThis): Element[] {
       return this.get() as Element[]
@@ -1538,7 +1549,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         this.map((_i: number, el: Element) => {
           // perf: manual loop instead of filter.call on the children array
           const result: Element[] = []
-          const kids = children(el.parentNode)
+          const kids = children(el.parentNode as Node)
           for (let i = 0; i < kids.length; i++) {
             const child = kids[i]
             if (child !== el) result.push(child)
@@ -1600,8 +1611,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         const wrapper = isCallable
           ? structure.call(this, index)
           : shouldClone
-            ? wrapperElement.cloneNode(true)
-            : wrapperElement
+            ? wrapperElement!.cloneNode(true)
+            : wrapperElement!
         ;($(this) as FnThis).wrapAll(wrapper as Element)
       })
     },
@@ -1701,7 +1712,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             const originHtml = this.innerHTML
             $(this)
               .empty()
-              .append(isFunction(html) ? html.call(this, idx, originHtml) : html)
+              .append(isFunction(html) ? html.call(this, idx, originHtml) : html!)
           })
         : 0 in this
           ? this[0].innerHTML
@@ -1853,7 +1864,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       }
 
       const data = this.attr(attrName)
-      return data !== undefined ? deserializeValue(data) : undefined
+      return data !== undefined ? deserializeValue(data!) : undefined
     },
     /**
      * Gets or sets the value of form elements.
@@ -2442,8 +2453,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
             ? (el as unknown as Document).documentElement[
                 ('scroll' + dimensionProperty) as 'scrollWidth' | 'scrollHeight'
               ]
-            : (offset = this.offset() as unknown as { width: number; height: number } | null) &&
-              offset[dimension as 'width' | 'height']
+            : ((offset = this.offset() as unknown as { width: number; height: number } | null),
+              offset?.[dimension as 'width' | 'height'] ?? 0)
       else
         return this.each(function (this: Element, idx) {
           const $el = $(this)
@@ -2550,10 +2561,10 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
         const parentInDocument = $.contains(document.documentElement, parent as unknown as Element)
 
         nodes.forEach(node => {
-          if (copyByClone) node = node.cloneNode(true)
+          if (copyByClone) node = (node as Node).cloneNode(true)
           else if (!parent) return $(node as Element).remove()
 
-          parent.insertBefore(node, target)
+          parent!.insertBefore(node as Node, target as Node)
           if (parentInDocument)
             traverseNode(node, el => {
               // perf: direct comparison — nodeName is already uppercase for

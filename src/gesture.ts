@@ -32,10 +32,10 @@ interface GestureState {
         gesture.e2 = (e as Event & { scale: number }).scale
       })
       .bind('gestureend', (e: Event) => {
-        if (gesture.e2 > 0) {
-          if (Math.abs(gesture.e1 - gesture.e2) !== 0) {
-            $(gesture.target).trigger('pinch')
-            $(gesture.target).trigger('pinch' + (gesture.e1 - gesture.e2 > 0 ? 'In' : 'Out'))
+        if (gesture.e2! > 0) {
+          if (Math.abs(gesture.e1! - gesture.e2!) !== 0) {
+            $(gesture.target!).trigger('pinch')
+            $(gesture.target!).trigger('pinch' + (gesture.e1! - gesture.e2! > 0 ? 'In' : 'Out'))
           }
           gesture.e1 = gesture.e2 = gesture.last = 0
         } else if ('last' in gesture) {

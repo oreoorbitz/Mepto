@@ -168,7 +168,12 @@ declare const mepto: MeptoStatic
     const args = 2 in arguments ? presetArgs : undefined
     if (isFunction(fn)) {
       const proxyFn = function () {
-        return fn.apply(context, args ? args.concat(slice.call(arguments)) : arguments)
+        return fn.apply(
+          context,
+          (args
+            ? args.concat(slice.call(arguments) as unknown[])
+            : Array.from(arguments)) as unknown[]
+        )
       }
       fnIds.set(proxyFn, fnZid(fn))
       return proxyFn

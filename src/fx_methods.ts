@@ -84,15 +84,30 @@ declare const mepto: MeptoStatic
     return anim(this, speed, opacity, null, callback)
   }
 
+  // Normalize the (speed, callback) pair so a function-shaped `speed` is
+  // moved into the `callback` slot. Without this, calling e.g.
+  // `$el.fadeOut(cb)` would leave the wrapped `hide` callback's captured
+  // user-cb as undefined, and the user callback would never run.
+  function normalizeArgs(
+    speed: Speed | undefined,
+    callback: ((...args: any[]) => any) | undefined
+  ): { speed: Speed | undefined; callback: ((...args: any[]) => any) | undefined } {
+    if (typeof speed === 'function' && callback === undefined) {
+      return { speed: undefined, callback: speed as (...args: any[]) => any }
+    }
+    return { speed, callback }
+  }
+
   fnRecord.fadeIn = function (
     this: MeptoCollection,
     speed?: Speed,
     callback?: (...args: any[]) => any
   ): MeptoCollection {
+    const norm = normalizeArgs(speed, callback)
     let target: number | string = this.css('opacity')
     if (Number(target) > 0) this.css('opacity', 0)
     else target = 1
-    return (origShow.call(this) as any).fadeTo(speed, target, callback)
+    return (origShow.call(this) as any).fadeTo(norm.speed, target, norm.callback)
   }
 
   fnRecord.fadeOut = function (
@@ -100,7 +115,8 @@ declare const mepto: MeptoStatic
     speed?: Speed,
     callback?: (...args: any[]) => any
   ): MeptoCollection {
-    return hide(this, speed, null, callback)
+    const norm = normalizeArgs(speed, callback)
+    return hide(this, norm.speed, null, norm.callback)
   }
 
   fnRecord.fadeToggle = function (

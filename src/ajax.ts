@@ -55,7 +55,7 @@ interface SerialParams extends Array<string> {
     blankRE = /^\s*$/
 
   // trigger a custom event and return false if it was cancelled
-  function triggerAndReturn(context: unknown, eventName: string, data: unknown): boolean {
+  function triggerAndReturn(context: unknown, eventName: string, data?: unknown): boolean {
     const event = $.Event(eventName) as Event & { isDefaultPrevented(): boolean }
     const target = (context || document) as MeptoElement
     $(target).trigger(event, data)
@@ -67,7 +67,7 @@ interface SerialParams extends Array<string> {
     settings: AjaxSettings,
     context: unknown,
     eventName: string,
-    data: unknown
+    data?: unknown
   ): boolean | undefined {
     if (settings.global) return triggerAndReturn(context || document, eventName, data)
   }
@@ -85,8 +85,11 @@ interface SerialParams extends Array<string> {
   // triggers an extra global event "ajaxBeforeSend" that's like "ajaxSend" but cancelable
   function ajaxBeforeSend(xhr: AnyXhr, settings: AjaxSettings): boolean | undefined {
     const context = settings.context
+    // $.ajax always merges $.ajaxSettings defaults into the caller's
+    // options, so these callbacks are guaranteed to be present at
+    // runtime — the `!` non-null assertions document that invariant.
     if (
-      settings.beforeSend.call(context, xhr as XMLHttpRequest, settings) === false ||
+      settings.beforeSend!.call(context, xhr as XMLHttpRequest, settings) === false ||
       triggerGlobal(settings, context, 'ajaxBeforeSend', [xhr, settings]) === false
     )
       return false
@@ -101,7 +104,7 @@ interface SerialParams extends Array<string> {
   ): void {
     const context = settings.context,
       status = 'success'
-    settings.success.call(context, data, status, xhr as XMLHttpRequest)
+    settings.success!.call(context, data, status, xhr as XMLHttpRequest)
     if (deferred) deferred.resolveWith(context, [data, status, xhr])
     triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
     ajaxComplete(status, xhr, settings)
@@ -115,7 +118,7 @@ interface SerialParams extends Array<string> {
     deferred?: AjaxDeferred
   ): void {
     const context = settings.context
-    settings.error.call(context, xhr as XMLHttpRequest, type, error as Error)
+    settings.error!.call(context, xhr as XMLHttpRequest, type, error as Error)
     if (deferred) deferred.rejectWith(context, [xhr, type, error])
     triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error || type])
     ajaxComplete(type, xhr, settings)
@@ -123,7 +126,7 @@ interface SerialParams extends Array<string> {
   // status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
   function ajaxComplete(status: string, xhr: AnyXhr, settings: AjaxSettings): void {
     const context = settings.context
-    settings.complete.call(context, xhr as XMLHttpRequest, status)
+    settings.complete!.call(context, xhr as XMLHttpRequest, status)
     triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
     ajaxStop(settings)
   }
@@ -137,7 +140,7 @@ interface SerialParams extends Array<string> {
   // Empty function, used as default callback
   function empty(): void {}
 
-  $.ajaxJSONP = function (options: AjaxSettings, deferred?: AjaxDeferred): unknown {
+  $.ajaxJSONP = function (options: AjaxSettings, deferred?: AjaxDeferred): XMLHttpRequest {
     if (!('type' in options)) return $.ajax(options)
 
     const _callbackName = options.jsonpCallback,
@@ -175,25 +178,24 @@ interface SerialParams extends Array<string> {
 
     if (ajaxBeforeSend(xhr, options) === false) {
       abort('abort')
-      return xhr
+      return xhr as XMLHttpRequest
     }
 
     ;(window as unknown as Record<string, unknown>)[callbackName] = (...args: unknown[]): void => {
       responseData = args
     }
 
-    script.src = options.url.replace(/\?(.+)=\?/, '?$1=' + callbackName)
+    script.src = options.url!.replace(/\?(.+)=\?/, '?$1=' + callbackName)
     document.head.appendChild(script)
 
-    if (options.timeout > 0)
+    if (options.timeout! > 0)
       abortTimeout = setTimeout((): void => {
         abort('timeout')
-      }, options.timeout)
+      }, options.timeout!)
 
-    return xhr
+    return xhr as unknown as XMLHttpRequest
   }
-
-  $.ajaxSettings = {
+  ;($.ajaxSettings as unknown as FullAjaxSettings) = {
     // Default type of request
     type: 'GET',
     // Callback that is executed before request
@@ -269,13 +271,23 @@ interface SerialParams extends Array<string> {
     }
   }
 
-  $.ajax = function (options: AjaxSettings): XMLHttpRequest {
+  // Note: the public MeptoStatic type for $.ajax is overloaded (single
+  // settings arg, or url+settings). Internally we accept both shapes
+  // and normalize the first arg into a single AjaxSettings object.
+  $.ajax = function (
+    optionsOrUrl: AjaxSettings | string,
+    settingsArg?: AjaxSettings
+  ): XMLHttpRequest {
+    const options: AjaxSettings =
+      typeof optionsOrUrl === 'string'
+        ? $.extend({}, settingsArg, { url: optionsOrUrl })
+        : optionsOrUrl
     const settings = $.extend({}, options || {}) as FullAjaxSettings
     const deferred = $.Deferred() as AjaxDeferred
     let hashIndex: number
-    const defaults = ($ as unknown as AjaxStatic).ajaxSettings
-    const s = settings as Record<string, unknown>
-    const d = defaults as Record<string, unknown>
+    const defaults: FullAjaxSettings = $.ajaxSettings as FullAjaxSettings
+    const s = settings as unknown as Record<string, unknown>
+    const d = defaults as unknown as Record<string, unknown>
     for (const key in defaults) if (s[key] === undefined) s[key] = d[key]
 
     ajaxStart(settings)
@@ -308,10 +320,13 @@ interface SerialParams extends Array<string> {
           settings.url,
           settings.jsonp ? settings.jsonp + '=?' : settings.jsonp === false ? '' : 'callback=?'
         )
-      return $.ajaxJSONP(settings, deferred) as XMLHttpRequest
+      return ($.ajaxJSONP as (s: AjaxSettings, d?: AjaxDeferred) => XMLHttpRequest)(
+        settings,
+        deferred
+      )
     }
 
-    let mime = settings.accepts[dataType as string]
+    let mime = settings.accepts![dataType as string]
     const headers: Record<string, string> = {}
     const setHeader = function (name: string, value: string): void {
       headers[name] = value
@@ -322,7 +337,7 @@ interface SerialParams extends Array<string> {
 
     if (
       settings.contentType ||
-      (settings.contentType !== false && settings.data && settings.type.toUpperCase() != 'GET')
+      (settings.contentType !== false && settings.data && settings.type!.toUpperCase() != 'GET')
     )
       setHeader('Content-Type', settings.contentType || 'application/x-www-form-urlencoded')
 
@@ -333,7 +348,7 @@ interface SerialParams extends Array<string> {
     const protocolMatch = /^([\w-]+):\/\//.exec(settings.url)
     const protocol = protocolMatch ? protocolMatch[1] : window.location.protocol
     const abortController = new AbortController()
-    const fetchMethod = (settings.type || 'GET').toUpperCase()
+    const fetchMethod = (settings.type! || 'GET').toUpperCase()
     const fetchHeaders = new Headers(headers)
     const fetchBody: BodyInit | undefined =
       fetchMethod === 'GET' || fetchMethod === 'HEAD'
@@ -393,14 +408,14 @@ interface SerialParams extends Array<string> {
     if (ajaxBeforeSend(xhr, settings) === false) {
       abortController.abort()
       ajaxError(null, 'abort', xhr, settings, deferred)
-      return xhr as XMLHttpRequest
+      return xhr as unknown as XMLHttpRequest
     }
 
-    if (settings.timeout > 0)
+    if (settings.timeout! > 0)
       abortTimeout = setTimeout((): void => {
         abortController.abort()
         ajaxError(null, 'timeout', xhr, settings, deferred)
-      }, settings.timeout)
+      }, settings.timeout!)
 
     fetch(settings.url, fetchInit)
       .then(async (response): Promise<void> => {
@@ -459,8 +474,8 @@ interface SerialParams extends Array<string> {
         }
       })
 
-    return xhr as XMLHttpRequest
-  }
+    return xhr as unknown as XMLHttpRequest
+  } as MeptoStatic['ajax']
 
   // handle optional data/success arguments
   function parseArguments(
@@ -554,7 +569,7 @@ interface SerialParams extends Array<string> {
   function serialize(
     params: SerialParams,
     obj: unknown,
-    traditional: boolean,
+    traditional: boolean | undefined,
     scope: string | undefined
   ): void {
     const array = $.isArray(obj),
@@ -585,7 +600,7 @@ interface SerialParams extends Array<string> {
       if (v == null) v = ''
       this.push(escape(key) + '=' + escape(v as string))
     }
-    serialize(params, obj, traditional, undefined)
+    serialize(params, obj, traditional, undefined as unknown as string)
     return params.join('&').replace(/%20/g, '+')
   }
 })(mepto)
