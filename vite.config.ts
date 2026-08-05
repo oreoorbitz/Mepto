@@ -65,6 +65,14 @@ export default defineConfig(async () => {
       rollupOptions: {
         // Make sure to externalize deps that shouldn't be bundled
         external: [],
+        // Disable tree-shaking for the library build. `package.json`
+        // sets `sideEffects: false` so consumer bundlers can drop
+        // unused exports, but the library build itself relies on the
+        // `meptos.ts` entry's side-effect imports to register the
+        // module globals (`$.ajax`, `$.fn`, `$.fx`, ...). Without
+        // this, the UMD bundle is a 611-byte re-export skeleton that
+        // doesn't actually run the library.
+        treeshake: false,
         output: {
           // Provide global variables to use in the UMD build
           globals: {},
