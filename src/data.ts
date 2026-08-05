@@ -96,9 +96,14 @@ declare const mepto: MeptoStatic
     })
   }
 
-  // Wrap `remove` and `empty` to also wipe dataMap entries. The wrap runs
-  // once at module load (no shared mutable state — just closure capture of
-  // the original method).
+  // Wrap `remove` and `empty` to also wipe dataMap entries and detach
+  // event handlers. Without the off() call, handlers registered via
+  // $.fn.on() would keep the detached nodes alive (the handlers map
+  // holds weak refs, but the closure in the handler still references
+  // the element via its `this`) and would re-fire if the same node
+  // were re-attached. Matches jQuery's `cleanData` behavior.
+  // The wrap runs once at module load (no shared mutable state — just
+  // closure capture of the original method).
   ;['remove', 'empty'].forEach(function (methodName: 'remove' | 'empty') {
     const origFn = $.fn[methodName] as (this: MeptoCollection) => MeptoCollection
     ;(($ as unknown as { fn: Record<string, unknown> }).fn[methodName] = function (
@@ -107,6 +112,9 @@ declare const mepto: MeptoStatic
       let elements = this.find('*')
       if (methodName === 'remove') elements = elements.add(this as unknown as MeptoElement)
       elements.removeData()
+      // $.fn.off is set by event.ts; safe to call here because the wrapper
+      // only runs at user-call time (after all modules have loaded).
+      ;(elements as MeptoCollection).off()
       return origFn.call(this)
     }) as never
   })

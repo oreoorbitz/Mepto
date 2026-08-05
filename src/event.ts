@@ -321,7 +321,13 @@ declare const mepto: MeptoStatic
             .get(0)
           if (match && match !== element) {
             const evt = $.extend(createProxy(e), {
-              currentTarget: match,
+              // `currentTarget` is the element where the listener is
+              // attached (the parent), not the matched descendant.
+              // jQuery semantics: `this` in the handler is the match
+              // (the child); `event.currentTarget` is the listener host
+              // (the parent). The previous code set currentTarget to
+              // `match`, which made the two indistinguishable.
+              currentTarget: element,
               liveFired: element,
             })
             return (autoRemove || callback).apply(match, [evt, ...args.slice(1)])
