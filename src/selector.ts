@@ -139,9 +139,31 @@ declare const mepto: MeptoStatic
     return process(
       selector,
       function (sel: string, filter: FilterFn | null, arg: string | number | undefined): boolean {
-        return (
-          (!sel || oldMatches(node, sel)) && (!filter || filter.call(node, 0, [node], arg) === node)
-        )
+        // Base selector check first. An invalid `sel` (e.g. the user passed
+        // `:lt(1)` and the regex couldn't split it because `lt` isn't a
+        // recognised pseudo, so `sel` keeps the whole thing) would throw
+        // here. Catch and return false — `.is()` shouldn't be able to
+        // crash the caller's code on an unrecognised selector.
+        if (sel) {
+          try {
+            if (!oldMatches(node, sel)) return false
+          } catch {
+            return false
+          }
+        }
+        if (!filter) return true
+        // Index-based filters (`:first`, `:last`, `:eq`, `:lt`, `:gt`, and
+        // any future nth-* filter) need to know the element's position
+        // among its parent's matching children — jQuery semantics for
+        // `.is(':eq(N)')` is "is this element the Nth match of sel in its
+        // parent". A detached element has no parent and no position, so
+        // it can never satisfy an index-based filter.
+        const parent = node.parentNode as ParentNode | null
+        if (!parent) return false
+        const siblings = sel ? oldQsa(parent, sel) : (Array.from(parent.children) as Element[])
+        const idx = siblings.indexOf(node)
+        if (idx < 0) return false
+        return filter.call(node, idx, siblings, arg) === node
       }
     )
   }

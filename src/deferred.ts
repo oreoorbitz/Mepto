@@ -200,20 +200,25 @@ declare const mepto: MeptoStatic
         }
       }
     }
-    // The "if (!remain)" branch below is the resolve path for the case
-    // when no deferreds were provided to $.when (len === 0 / all non-
-    // promise inputs / all already-resolved at registration). The main
-    // resolve path lives in `updateFn` above, which fires when the LAST
-    // remaining deferred settles — that one is the one that actually
-    // delivers the array. The bare `resolveWith(resolveContexts, val)`
-    // call would spread the array as individual args; the `[val]` wrap
-    // ensures the done handler receives the whole array as one value.
+    // The "if (!remain)" branch is the resolve path for the case when no
+    // deferreds were provided to $.when: either len === 0, or every
+    // input is a plain value (not a thenable). The main resolve path
+    // lives in `updateFn` above, which fires when the LAST remaining
+    // deferred settles and wraps its values in `[val]` so the done
+    // handler receives the whole array as one value (mepto convention).
+    //
+    // Here, since no deferreds are waiting, the values are already known
+    // and should be delivered to the done callback the same way jQuery
+    // 3.x does it: spread as individual args. So `$.when(5)` delivers 5,
+    // `$.when(5, 10)` delivers (5, 10), and `$.when()` delivers nothing.
+    // Wrapping in `[resolveValues]` (as this branch used to do) would
+    // hand the done callback an extra array level.
     if (!remain) {
       ;(
         deferred as unknown as {
           resolveWith: (c: unknown, a: unknown[]) => void
         }
-      ).resolveWith(resolveContexts, [resolveValues])
+      ).resolveWith(resolveContexts, resolveValues)
     }
     return deferred.promise() as unknown as PromiseObject<unknown[]>
   } as MeptoStatic['when']

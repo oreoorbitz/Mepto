@@ -115,11 +115,18 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
 
   /**
    * Checks if `element` matches the given CSS `selector`.
-   * Uses the standard `Element.matches` API.
+   * Uses the standard `Element.matches` API. An invalid selector (one the
+   * browser can't parse) returns false rather than throwing — callers like
+   * `$.fn.is()` shouldn't be able to crash the caller's code by passing a
+   * selector that turned out not to exist.
    */
   mepto.matches = function (element: Element, selector: string): boolean {
     if (!selector || !element || element.nodeType !== 1) return false
-    return element.matches(selector)
+    try {
+      return element.matches(selector)
+    } catch {
+      return false
+    }
   }
 
   /**

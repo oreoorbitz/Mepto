@@ -177,4 +177,53 @@ test.describe('$.Deferred', () => {
     })
     expect(result).toBe('resolved')
   })
+
+  test('$.when() with a single non-thenable passes it through as the value', async ({ page }) => {
+    // Regression: $.when(5) used to deliver [5] to the done callback because
+    // the all-non-thenables path wrapped the resolve values in an extra
+    // array. jQuery 3.x semantics: a single non-thenable is delivered as
+    // its raw value, with no wrap.
+    const result = await withMepto(page, () => {
+      let received: unknown = null
+      let argsLength = 0
+      $.when(5).done(function (...args: unknown[]) {
+        received = args[0]
+        argsLength = args.length
+      })
+      return { received, argsLength }
+    })
+    expect(result.received).toBe(5)
+    expect(result.argsLength).toBe(1)
+  })
+
+  test('$.when() with no arguments delivers no value to the done callback', async ({ page }) => {
+    // Regression: $.when() used to deliver [] to the done callback because
+    // the all-non-thenables path wrapped []. jQuery 3.x semantics: no
+    // arguments, so the done callback receives no value.
+    const result = await withMepto(page, () => {
+      let argsLength = -1
+      let firstArg: unknown = 'unset'
+      $.when().done(function (...args: unknown[]) {
+        argsLength = args.length
+        firstArg = args[0]
+      })
+      return { argsLength, firstArg }
+    })
+    expect(result.argsLength).toBe(0)
+  })
+
+  test('$.when() with multiple non-thenables delivers them as spread args', async ({ page }) => {
+    // Regression: $.when(5, 10) used to deliver [5, 10] as a single arg
+    // because of the same extra-array wrap. jQuery 3.x semantics: spread.
+    const result = await withMepto(page, () => {
+      let received: unknown[] = []
+      $.when(5, 10).done(function (...args: unknown[]) {
+        received = args
+      })
+      return { received, length: received.length }
+    })
+    expect(result.length).toBe(2)
+    expect(result.received[0]).toBe(5)
+    expect(result.received[1]).toBe(10)
+  })
 })
