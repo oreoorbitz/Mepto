@@ -35,7 +35,10 @@ interface TouchEventMap {
     up: ((e: Event) => void) | undefined,
     move: ((e: Event) => void) | undefined,
     eventMap: TouchEventMap | false = false,
-    initialized = false
+    initialized = false,
+    // Flipped by cancelAll so a queued swipeTimeout knows the gesture was
+    // canceled by a scroll/lifecycle reset, not by a fresh touchstart.
+    swipeCanceled = false
 
   function swipeDirection(x1: number, x2: number, y1: number, y2: number): string {
     return Math.abs(x1 - x2) >= Math.abs(y1 - y2)
@@ -66,6 +69,9 @@ interface TouchEventMap {
     if (swipeTimeout) clearTimeout(swipeTimeout)
     if (longTapTimeout) clearTimeout(longTapTimeout)
     touchTimeout = tapTimeout = swipeTimeout = longTapTimeout = null
+    // Mark any pending swipe as canceled so its deferred trigger (which
+    // captured the original target + coords at up-time) knows not to fire.
+    swipeCanceled = true
     touch = {}
   }
 
@@ -152,19 +158,36 @@ interface TouchEventMap {
       if ((_isPointerType = isPointerEventType(e, 'up')) && !isPrimaryTouch(e as PointerEvent))
         return
       cancelLongTap()
+      // Reset the swipe-canceled flag at the start of each new gesture
+      // so a queued swipeTimeout from the previous gesture is no longer
+      // affected by an old cancelAll.
+      swipeCanceled = false
 
       // swipe
       if (
         (touch.x2 && Math.abs(touch.x1! - touch.x2) > 30) ||
         (touch.y2 && Math.abs(touch.y1! - touch.y2) > 30)
-      )
+      ) {
+        // Capture the target + coords at the moment of `up` so a fresh
+        // touchstart that lands between here and the next macrotask (when
+        // the swipeTimeout fires) doesn't overwrite the target. We still
+        // honor cancelAll's "scroll beats swipe" contract via the
+        // swipeCanceled flag — cancelAll flips it before the timeout
+        // fires, the timeout checks it, and the swipe is correctly
+        // suppressed when a scroll beat us to it.
+        const el = touch.el
+        const x1 = touch.x1!
+        const y1 = touch.y1!
+        const x2 = touch.x2!
+        const y2 = touch.y2!
         swipeTimeout = setTimeout(() => {
-          if (touch.el) {
-            touch.el.trigger('swipe')
-            touch.el.trigger('swipe' + swipeDirection(touch.x1!, touch.x2!, touch.y1!, touch.y2!))
+          if (!swipeCanceled && el) {
+            el.trigger('swipe')
+            el.trigger('swipe' + swipeDirection(x1, x2, y1, y2))
           }
           touch = {}
         }, 0)
+      }
       // normal tap
       else if ('last' in touch)
         if (deltaX < 30 && deltaY < 30) {

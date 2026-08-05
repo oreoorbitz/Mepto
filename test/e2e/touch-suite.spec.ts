@@ -310,4 +310,74 @@ test.describe('Touch / pointer events', () => {
     })
     expect(result?.threw).toBe(false)
   })
+
+  // Regression: the swipeTimeout closure captured the module-level `touch`
+  // object, so a touchstart on a second element between `pointerup` and the
+  // next macrotask overwrote `touch.el` and `touch.x2` — the swipe then
+  // fired on the new target with stale or zeroed coordinates. Fix: capture
+  // el + coords in local variables and verify the gesture is still active.
+  test('swipe fires on the original target, not the next touch that overlapped the deferred trigger', async ({
+    page,
+  }) => {
+    const result = await withMeptoReady(
+      page,
+      '<div id="a" style="width:50px;height:50px;background:red;position:absolute;top:0;left:0"></div><div id="b" style="width:50px;height:50px;background:blue;position:absolute;top:0;left:60px"></div>',
+      () => {
+        return new Promise<{ aSwipes: string[]; bSwipes: string[] }>(resolve => {
+          const origDispatch = HTMLElement.prototype.dispatchEvent
+          HTMLElement.prototype.dispatchEvent = function (e: Event & Record<string, unknown>) {
+            if (e.type.startsWith('pointer')) {
+              Object.defineProperty(e, 'pointerType', {
+                value: 'touch',
+                writable: false,
+                configurable: true,
+              })
+              Object.defineProperty(e, 'isPrimary', {
+                value: true,
+                writable: false,
+                configurable: true,
+              })
+              Object.defineProperty(e, 'pointerId', {
+                value: 1,
+                writable: false,
+                configurable: true,
+              })
+            }
+            return origDispatch.call(this, e)
+          }
+          const ptEvent = (type: string, x: number, y: number): Event => {
+            const e = new Event(type, { bubbles: true, cancelable: true })
+            Object.defineProperty(e, 'pageX', { value: x, writable: false, configurable: true })
+            Object.defineProperty(e, 'pageY', { value: y, writable: false, configurable: true })
+            return e
+          }
+          const aSwipes: string[] = []
+          const bSwipes: string[] = []
+          const a = document.getElementById('a')!
+          const b = document.getElementById('b')!
+          $('#a').on('swipe swipeRight swipeLeft', (e: Event) => aSwipes.push(e.type))
+          $('#b').on('swipe swipeRight swipeLeft', (e: Event) => bSwipes.push(e.type))
+
+          // Swipe right on A: down → move >30px → up, all in the same tick.
+          a.dispatchEvent(ptEvent('pointerdown', 5, 5))
+          a.dispatchEvent(ptEvent('pointermove', 100, 5))
+          a.dispatchEvent(ptEvent('pointerup', 100, 5))
+
+          // Same tick: start a fresh touch on B. The previous swipeTimeout
+          // is queued for the next macrotask — this down races with it.
+          b.dispatchEvent(ptEvent('pointerdown', 65, 5))
+
+          setTimeout(() => {
+            HTMLElement.prototype.dispatchEvent = origDispatch
+            resolve({ aSwipes, bSwipes })
+          }, 30)
+        })
+      }
+    )
+    // The swipe should fire on A (the original target), not on B.
+    expect(result?.aSwipes).toContain('swipe')
+    expect(result?.aSwipes).toContain('swipeRight')
+    // B is currently mid-touch with no movement, so no swipe on B.
+    expect(result?.bSwipes).toEqual([])
+  })
 })
