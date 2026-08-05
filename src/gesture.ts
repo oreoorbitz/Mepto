@@ -6,6 +6,13 @@ import { type MeptoStatic, type MeptoCollection, type EventHandler } from './typ
 
 declare const mepto: MeptoStatic
 
+// iOS-only non-standard gesture events carry a `scale` property — the
+// ratio of the current pinch distance to its starting distance. Zepto
+// re-emits them as `pinch` / `pinchIn` / `pinchOut` jQuery-style events.
+interface GestureEvent extends Event {
+  scale: number
+}
+
 interface GestureState {
   last?: number
   target?: Element | null
@@ -21,17 +28,17 @@ interface GestureState {
       'tagName' in node ? (node as Element) : (node.parentNode as Element | null)
 
     $(document)
-      .bind('gesturestart', (e: Event) => {
+      .bind('gesturestart', (e: Event): void => {
         const now = Date.now(),
           delta = now - (gesture.last || now)
         gesture.target = parentIfText(e.target as Node)
-        gesture.e1 = (e as Event & { scale: number }).scale
+        gesture.e1 = (e as GestureEvent).scale
         gesture.last = now
       })
-      .bind('gesturechange', (e: Event) => {
-        gesture.e2 = (e as Event & { scale: number }).scale
+      .bind('gesturechange', (e: Event): void => {
+        gesture.e2 = (e as GestureEvent).scale
       })
-      .bind('gestureend', (e: Event) => {
+      .bind('gestureend', (e: Event): void => {
         if (gesture.e2! > 0) {
           if (Math.abs(gesture.e1! - gesture.e2!) !== 0) {
             $(gesture.target!).trigger('pinch')
@@ -42,11 +49,11 @@ interface GestureState {
           gesture = {}
         }
       })
-    ;['pinch', 'pinchIn', 'pinchOut'].forEach((m: string) => {
-      ;($.fn as unknown as Record<string, (callback: EventHandler) => MeptoCollection>)[m] =
-        function (callback: EventHandler) {
-          return this.bind(m, callback)
-        }
+    const fnRecord = $.fn as unknown as Record<string, (callback: EventHandler) => MeptoCollection>
+    ;['pinch', 'pinchIn', 'pinchOut'].forEach((m: string): void => {
+      fnRecord[m] = function (callback: EventHandler): MeptoCollection {
+        return this.bind(m, callback)
+      }
     })
   }
 })(mepto)

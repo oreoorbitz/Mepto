@@ -6,46 +6,70 @@ import { type MeptoStatic, type MeptoCollection } from './types'
 
 declare const mepto: MeptoStatic
 ;(function ($: MeptoStatic) {
-  const origShow = $.fn.show as any
-  const origHide = $.fn.hide as any
-  const origToggle = $.fn.toggle as any
+  // `show` / `hide` / `toggle` exist in the public MeptoCollection type;
+  // we save the originals at module load so we can call them from the
+  // wrapped versions without recursing.
+  const origShow = $.fn.show as (this: MeptoCollection) => MeptoCollection
+  const origHide = $.fn.hide as (this: MeptoCollection) => MeptoCollection
+  const origToggle = $.fn.toggle as (this: MeptoCollection, show?: boolean) => MeptoCollection
 
-  type Speed = number | string | ((...args: any[]) => any) | undefined
+  // Speed accepts a number, a named-speed string, OR a function. The
+  // function form is shorthand for `(speed, callback) => callback(speed)`
+  // — when the user calls `fadeOut(myCb)`, `myCb` arrives in the speed
+  // slot and we move it into the callback slot below. The callback
+  // receives whatever jQuery would pass through `animate`'s done hook.
+  type Speed = number | string | ((...args: unknown[]) => unknown) | undefined
+  type AnimateCallback = (this: Element, ...args: unknown[]) => unknown
+
+  interface AnimateProperties {
+    [key: string]: string | number
+  }
 
   function anim(
     el: MeptoCollection,
     speed: Speed,
     opacity: number,
     scale: string | null,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
-    if (typeof speed == 'function' && !callback) ((callback = speed), (speed = undefined))
-    const props: Record<string, any> = { opacity: opacity }
+    if (typeof speed == 'function' && !callback) {
+      callback = speed as AnimateCallback
+      speed = undefined
+    }
+    const props: AnimateProperties = { opacity: opacity }
     if (scale) {
       props.scale = scale
       el.css('transform-origin', '0 0')
     }
-    return (el as any).animate(props, speed, null, callback)
+    return el.animate(
+      props,
+      speed as number | string | undefined,
+      undefined,
+      callback as ((this: Element) => void) | undefined
+    )
   }
 
   function hide(
     el: MeptoCollection,
     speed: Speed,
     scale: string | null,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
-    return anim(el, speed, 0, scale, function (this: any): void {
+    return anim(el, speed, 0, scale, function (this: Element): void {
       origHide.call($(this))
-      callback && callback.call(this)
+      if (callback) callback.call(this)
     })
   }
 
-  const fnRecord = $.fn as unknown as Record<string, any>
+  const fnRecord = $.fn as unknown as Record<
+    string,
+    (this: MeptoCollection, ...args: unknown[]) => MeptoCollection
+  >
 
   fnRecord.show = function (
     this: MeptoCollection,
     speed?: Speed,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
     origShow.call(this)
     if (speed === undefined) speed = 0
@@ -56,7 +80,7 @@ declare const mepto: MeptoStatic
   fnRecord.hide = function (
     this: MeptoCollection,
     speed?: Speed,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
     if (speed === undefined) return origHide.call(this)
     else return hide(this, speed, '0,0', callback)
@@ -65,21 +89,24 @@ declare const mepto: MeptoStatic
   fnRecord.toggle = function (
     this: MeptoCollection,
     speed?: Speed | boolean,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
-    if (speed === undefined || typeof speed == 'boolean') return origToggle.call(this, speed)
-    else
-      return this.each(function (this: any): void {
-        const el = $(this)
-        ;(el as any)[el.css('display') == 'none' ? 'show' : 'hide'](speed, callback)
-      })
+    if (speed === undefined || typeof speed == 'boolean') {
+      return origToggle.call(this, speed as boolean | undefined)
+    }
+    return this.each(function (this: Element): void {
+      const el = $(this) as MeptoCollection
+      const method = el.css('display') == 'none' ? 'show' : 'hide'
+      const fn = el[method] as (speed: Speed, callback: AnimateCallback) => MeptoCollection
+      fn.call(el, speed, callback as AnimateCallback)
+    })
   }
 
   fnRecord.fadeTo = function (
     this: MeptoCollection,
     speed: Speed,
     opacity: number,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
     return anim(this, speed, opacity, null, callback)
   }
@@ -90,10 +117,10 @@ declare const mepto: MeptoStatic
   // user-cb as undefined, and the user callback would never run.
   function normalizeArgs(
     speed: Speed | undefined,
-    callback: ((...args: any[]) => any) | undefined
-  ): { speed: Speed | undefined; callback: ((...args: any[]) => any) | undefined } {
+    callback: AnimateCallback | undefined
+  ): { speed: Speed | undefined; callback: AnimateCallback | undefined } {
     if (typeof speed === 'function' && callback === undefined) {
-      return { speed: undefined, callback: speed as (...args: any[]) => any }
+      return { speed: undefined, callback: speed as AnimateCallback }
     }
     return { speed, callback }
   }
@@ -101,19 +128,24 @@ declare const mepto: MeptoStatic
   fnRecord.fadeIn = function (
     this: MeptoCollection,
     speed?: Speed,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
     const norm = normalizeArgs(speed, callback)
-    let target: number | string = this.css('opacity')
+    let target: number | string = this.css('opacity') as string
     if (Number(target) > 0) this.css('opacity', 0)
     else target = 1
-    return (origShow.call(this) as any).fadeTo(norm.speed, target, norm.callback)
+    const shown = origShow.call(this)
+    return (shown as unknown as { fadeTo: (...args: unknown[]) => MeptoCollection }).fadeTo(
+      norm.speed,
+      target,
+      norm.callback
+    )
   }
 
   fnRecord.fadeOut = function (
     this: MeptoCollection,
     speed?: Speed,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
     const norm = normalizeArgs(speed, callback)
     return hide(this, norm.speed, null, norm.callback)
@@ -122,13 +154,14 @@ declare const mepto: MeptoStatic
   fnRecord.fadeToggle = function (
     this: MeptoCollection,
     speed?: Speed,
-    callback?: (...args: any[]) => any
+    callback?: AnimateCallback
   ): MeptoCollection {
-    return this.each(function (this: any): void {
-      const el = $(this)
-      ;(el as any)[
+    return this.each(function (this: Element): void {
+      const el = $(this) as MeptoCollection
+      const method =
         Number(el.css('opacity')) == 0 || el.css('display') == 'none' ? 'fadeIn' : 'fadeOut'
-      ](speed, callback)
+      const fn = el[method] as (speed: Speed, callback: AnimateCallback) => MeptoCollection
+      fn.call(el, speed, callback as AnimateCallback)
     })
   }
 })(mepto)

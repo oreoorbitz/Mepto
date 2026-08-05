@@ -42,45 +42,90 @@ declare const mepto: MeptoStatic
     animationEnd: 'animationend',
   }
 
-  const fnRecord = $.fn as unknown as Record<string, any>
+  // Shorthand argument shapes for `animate`:
+  // (props, [duration,] [easing,] [complete]) — each is optional and may
+  // be a function (meaning "this is the callback"). A function-shaped
+  // duration/ease is only swapped into the callback slot when the caller
+  // hasn't already supplied a callback — otherwise the shorthand swallows
+  // an explicit callback. This matters for $.fn.fadeIn/fadeOut/fadeToggle,
+  // which build a wrapped callback and pass it alongside the user's
+  // function-shaped "duration" arg.
+  type AnimateSpeed = number | string
+  type AnimateEase = string
+  type AnimateCallback = (this: Element, ...args: unknown[]) => unknown
+  type AnimatePropertyMap = Record<string, string | number>
+  interface AnimateOptions {
+    duration?: AnimateSpeed
+    easing?: AnimateEase
+    complete?: AnimateCallback
+    delay?: AnimateSpeed
+  }
+  // A duration/easing arg can also be a function (caller-supplied callback
+  // in shorthand) — animate() swaps it into the callback slot above.
+  type ShorthandArg = AnimateSpeed | AnimateCallback
+
+  const fnRecord = $.fn as unknown as Record<
+    string,
+    (this: MeptoCollection, ...args: unknown[]) => MeptoCollection
+  >
 
   fnRecord.animate = function (
-    properties: Record<string, string | number> | string,
-    duration: any,
-    ease: any,
-    callback: any,
-    delay: any
+    this: MeptoCollection,
+    properties: AnimatePropertyMap | string,
+    duration?: ShorthandArg | AnimateOptions,
+    ease?: AnimateCallback | AnimateEase,
+    callback?: AnimateCallback,
+    delay?: AnimateSpeed
   ): MeptoCollection {
-    // Shorthand: (properties, [duration,] [easing,] [complete]). Only swap
-    // a function-shaped duration/ease into the callback slot when the
-    // caller hasn't already supplied a callback — otherwise the
-    // shorthand swallows an explicit callback. This matters for
-    // $.fn.fadeIn/fadeOut/fadeToggle, which build a wrapped callback
-    // (calls origShow/origHide/origToggle + the user's cb) and pass it
-    // alongside the user's function-shaped "duration" arg.
-    if ($.isFunction(duration) && !callback)
-      ((callback = duration), (ease = undefined), (duration = undefined))
-    if ($.isFunction(ease) && !callback) ((callback = ease), (ease = undefined))
-    if ($.isPlainObject(duration))
-      ((ease = (duration as any).easing),
-        (callback = (duration as any).complete),
-        (delay = (duration as any).delay),
-        (duration = (duration as any).duration))
-    if (duration)
+    if ($.isFunction(duration) && !callback) {
+      callback = duration as AnimateCallback
+      ease = undefined
+      duration = undefined
+    }
+    if ($.isFunction(ease) && !callback) {
+      callback = ease as AnimateCallback
+      ease = undefined
+    }
+    if ($.isPlainObject(duration)) {
+      const opts = duration as AnimateOptions
+      ease = opts.easing
+      callback = opts.complete
+      delay = opts.delay
+      duration = opts.duration
+    }
+    if (duration) {
       duration =
         (typeof duration == 'number'
           ? duration
-          : ($.fx.speeds as any)[duration] || $.fx.speeds._default) / 1000
-    if (delay) delay = parseFloat(delay) / 1000
-    return (this as any).anim(properties, duration, ease, callback, delay)
+          : ($.fx.speeds as unknown as Record<string, number>)[duration as string] ||
+            $.fx.speeds._default) / 1000
+    }
+    if (delay) delay = parseFloat(delay as string) / 1000
+    return (
+      this as unknown as {
+        anim: (
+          properties: AnimatePropertyMap | string,
+          duration?: number,
+          ease?: AnimateEase,
+          callback?: AnimateCallback,
+          delay?: number
+        ) => MeptoCollection
+      }
+    ).anim(
+      properties,
+      duration as number | undefined,
+      ease as AnimateEase | undefined,
+      callback,
+      delay as number | undefined
+    )
   }
 
   fnRecord.anim = function (
     this: MeptoCollection,
-    properties: Record<string, string | number> | string,
+    properties: AnimatePropertyMap | string,
     duration?: number,
-    ease?: string,
-    callback?: (...args: any[]) => any,
+    ease?: AnimateEase,
+    callback?: AnimateCallback,
     delay?: number
   ): MeptoCollection {
     let key: string
@@ -88,7 +133,7 @@ declare const mepto: MeptoStatic
     let cssProperties: string[] | undefined
     let transforms = ''
     const that = this
-    let wrappedCallback: (this: any, event?: any) => void
+    let wrappedCallback: (this: Element, event?: Event) => void
     let endEvent = $.fx.transitionEnd
     let fired = false
 
@@ -119,37 +164,38 @@ declare const mepto: MeptoStatic
       }
     }
 
-    wrappedCallback = function (this: any, event?: any): void {
+    wrappedCallback = function (this: Element, event?: Event): void {
       if (typeof event !== 'undefined') {
         if (event.target !== event.currentTarget) return // makes sure the event didn't bubble from "below"
-        $(event.target).unbind(endEvent, wrappedCallback)
-      } else $(this).unbind(endEvent, wrappedCallback) // triggered by setTimeout
+        $(event.target as Element).unbind(endEvent, wrappedCallback as unknown as () => void)
+      } else $(this).unbind(endEvent, wrappedCallback as unknown as () => void) // triggered by setTimeout
 
       fired = true
       $(this).css(cssReset)
-      callback && callback.call(this)
+      if (callback) callback.call(this)
     }
     if (duration > 0) {
-      this.bind(endEvent, wrappedCallback as any)
+      this.bind(endEvent, wrappedCallback as unknown as () => void)
       // transitionEnd is not always firing on older Android phones
       // so make sure it gets fired
       setTimeout(
         function (): void {
           if (fired) return
-          wrappedCallback.call(that)
+          wrappedCallback.call(that as unknown as Element)
         },
         (duration + delay) * 1000 + 25
       )
     }
 
     // trigger page reflow so new elements can animate
-    this.size() && (this.get(0) as any).clientLeft
+    const first = this.get(0) as HTMLElement | undefined
+    if (this.size() && first) void first.clientLeft
 
     this.css(cssValues)
 
     if (duration <= 0)
       setTimeout(function (): void {
-        that.each(function (this: any): void {
+        that.each(function (this: Element): void {
           wrappedCallback.call(this)
         })
       }, 0)

@@ -23,6 +23,10 @@ interface TouchEventMap {
   cancel: string
 }
 
+// A "first touch" can come from either a Touch (touchstart) or a
+// PointerEvent (pointerdown). Both expose `pageX`/`pageY` and `target`,
+// but the broader type is a small union to make narrowing explicit.
+type FirstTouch = Touch | PointerEvent
 ;(function ($: MeptoStatic) {
   const longTapDelay = 750
 
@@ -98,12 +102,12 @@ interface TouchEventMap {
   }
 
   function setup(__eventMap?: TouchEventMap): void {
-    let now: number
-    let delta: number
-    let deltaX = 0,
-      deltaY = 0,
-      firstTouch: any,
-      _isPointerType: boolean
+    let now = 0
+    let delta = 0
+    let deltaX = 0
+    let deltaY = 0
+    let firstTouch: FirstTouch
+    let _isPointerType = false
 
     unregisterTouchEvents()
 
@@ -119,10 +123,11 @@ interface TouchEventMap {
     // No API availables for touch events
     if (!eventMap) return
 
-    down = (e: Event) => {
-      if ((_isPointerType = isPointerEventType(e, 'down')) && !isPrimaryTouch(e as PointerEvent))
-        return
-      firstTouch = _isPointerType ? e : (e as TouchEvent).touches[0]
+    down = (e: Event): void => {
+      const isPointer = isPointerEventType(e, 'down')
+      _isPointerType = isPointer
+      if (isPointer && !isPrimaryTouch(e as PointerEvent)) return
+      firstTouch = isPointer ? (e as PointerEvent) : ((e as TouchEvent).touches[0] as FirstTouch)
       if ((e as TouchEvent).touches && (e as TouchEvent).touches.length === 1 && touch.x2) {
         // Clear out touch movement data if we have it sticking around
         // This can occur if touchcancel doesn't fire due to preventDefault, etc.
@@ -132,9 +137,11 @@ interface TouchEventMap {
       now = Date.now()
       delta = now - (touch.last || now)
       touch.el = $(
-        'tagName' in firstTouch.target ? firstTouch.target : firstTouch.target.parentNode
+        'tagName' in (firstTouch.target as Element)
+          ? (firstTouch.target as Element)
+          : ((firstTouch.target as Element).parentNode as Element)
       )
-      touchTimeout && clearTimeout(touchTimeout)
+      if (touchTimeout) clearTimeout(touchTimeout)
       touch.x1 = firstTouch.pageX
       touch.y1 = firstTouch.pageY
       if (delta > 0 && delta <= 250) touch.isDoubleTap = true
@@ -142,10 +149,11 @@ interface TouchEventMap {
       longTapTimeout = setTimeout(longTap, longTapDelay)
     }
 
-    move = (e: Event) => {
-      if ((_isPointerType = isPointerEventType(e, 'move')) && !isPrimaryTouch(e as PointerEvent))
-        return
-      firstTouch = _isPointerType ? e : (e as TouchEvent).touches[0]
+    move = (e: Event): void => {
+      const isPointer = isPointerEventType(e, 'move')
+      _isPointerType = isPointer
+      if (isPointer && !isPrimaryTouch(e as PointerEvent)) return
+      firstTouch = isPointer ? (e as PointerEvent) : ((e as TouchEvent).touches[0] as FirstTouch)
       cancelLongTap()
       touch.x2 = firstTouch.pageX
       touch.y2 = firstTouch.pageY
@@ -154,9 +162,10 @@ interface TouchEventMap {
       deltaY += Math.abs(touch.y1! - touch.y2!)
     }
 
-    up = (e: Event) => {
-      if ((_isPointerType = isPointerEventType(e, 'up')) && !isPrimaryTouch(e as PointerEvent))
-        return
+    up = (e: Event): void => {
+      const isPointer = isPointerEventType(e, 'up')
+      _isPointerType = isPointer
+      if (isPointer && !isPrimaryTouch(e as PointerEvent)) return
       cancelLongTap()
       // Reset the swipe-canceled flag at the start of each new gesture
       // so a queued swipeTimeout from the previous gesture is no longer
@@ -238,6 +247,7 @@ interface TouchEventMap {
     initialized = true
   }
 
+  const fnRecord = $.fn as unknown as Record<string, (callback: EventHandler) => MeptoCollection>
   ;[
     'swipe',
     'swipeLeft',
@@ -248,11 +258,10 @@ interface TouchEventMap {
     'tap',
     'singleTap',
     'longTap',
-  ].forEach((eventName: string) => {
-    ;($.fn as unknown as Record<string, (callback: EventHandler) => MeptoCollection>)[eventName] =
-      function (callback: EventHandler) {
-        return this.on(eventName, callback)
-      }
+  ].forEach((eventName: string): void => {
+    fnRecord[eventName] = function (callback: EventHandler): MeptoCollection {
+      return this.on(eventName, callback)
+    }
   })
   ;($ as unknown as MeptoStatic & { touch: { setup: typeof setup } }).touch = { setup: setup }
 

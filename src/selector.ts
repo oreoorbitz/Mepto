@@ -5,12 +5,22 @@
 import { type MeptoStatic } from './types'
 
 declare const mepto: MeptoStatic
+
+// `$.mepto` is the private namespace mepto.ts attaches to the public
+// MeptoStatic (`$.mepto = mepto`). selector.ts extends its `qsa` /
+// `matches` to plug in pseudo-selectors (:visible, :eq, ...) — we type
+// just the surface we touch here.
+interface MeptoNamespace {
+  qsa(element: ParentNode, selector: string): Element[]
+  matches(element: Element, selector: string): boolean
+  uniq<T>(array: ArrayLike<T>): T[]
+}
+interface MeptoExpr {
+  ':': Record<string, unknown>
+}
+
 ;(function ($: MeptoStatic) {
-  const innerMepto = ($ as any).mepto as {
-    qsa(element: ParentNode, selector: string): Element[]
-    matches(element: Element, selector: string): boolean
-    uniq<T>(array: ArrayLike<T>): T[]
-  }
+  const innerMepto = ($ as unknown as { mepto: MeptoNamespace }).mepto
   const oldQsa = innerMepto.qsa
   const oldMatches = innerMepto.matches
 
@@ -60,17 +70,32 @@ declare const mepto: MeptoStatic
     last: function (this: Element, idx: number, nodes: Element[]): Element | undefined {
       if (idx === nodes.length - 1) return this
     },
-    eq: function (this: Element, idx: number, _: any, value: number): Element | undefined {
-      if (idx === value) return this
+    eq: function (
+      this: Element,
+      idx: number,
+      _nodes: Element[],
+      value: string | number | undefined
+    ): Element | undefined {
+      if (typeof value === 'number' && idx === value) return this
     },
-    contains: function (this: Element, _idx: any, _nodes: any, text: string): Element | undefined {
-      if ($(this).text().indexOf(text) > -1) return this
+    contains: function (
+      this: Element,
+      _idx: number,
+      _nodes: Element[],
+      text: string | number | undefined
+    ): Element | undefined {
+      if (typeof text === 'string' && $(this).text().indexOf(text) > -1) return this
     },
-    has: function (this: Element, _idx: any, _nodes: any, sel: string): Element | undefined {
-      if (innerMepto.qsa(this, sel).length) return this
+    has: function (
+      this: Element,
+      _idx: number,
+      _nodes: Element[],
+      sel: string | number | undefined
+    ): Element | undefined {
+      if (typeof sel === 'string' && innerMepto.qsa(this, sel).length) return this
     },
   }
-  ;(($ as any).expr[':'] as Record<string, FilterFn>) = filters
+  ;($ as unknown as { expr: MeptoExpr }).expr[':'] = filters
 
   const filterRe: RegExp = /^(.*):(\w+)(?:\(([^)]+)\))?\s*$/
   const childRe: RegExp = /^\s*>/
@@ -84,7 +109,7 @@ declare const mepto: MeptoStatic
       return fn(sel, null, undefined)
     }
     let filter: FilterFn | undefined
-    let arg: string | undefined
+    let arg: string | number | undefined
     const match: RegExpMatchArray | null = filterRe.exec(sel)
     if (match && match[2] in filters) {
       filter = filters[match[2]]
@@ -93,17 +118,13 @@ declare const mepto: MeptoStatic
       if (arg) {
         const num: number = Number(arg)
         if (isNaN(num)) arg = arg.replace(/^["']|["']$/g, '')
-        else (arg as any) = num
+        else arg = num
       }
     }
     return fn(sel, filter || null, arg)
   }
 
-  innerMepto.qsa = function (
-    this: typeof innerMepto,
-    node: ParentNode,
-    selector: string
-  ): Element[] {
+  innerMepto.qsa = function (this: MeptoNamespace, node: ParentNode, selector: string): Element[] {
     return process(
       selector,
       function (sel: string, filter: FilterFn | null, arg: string | number | undefined): Element[] {
@@ -124,18 +145,14 @@ declare const mepto: MeptoStatic
           ? nodes
           : innerMepto.uniq(
               $.map(nodes, function (n: Element, i: number): Element | null {
-                return filter!.call(n, i, nodes, arg) || null
+                return (filter as FilterFn).call(n, i, nodes, arg) || null
               })
             )
       }
     )
   }
 
-  innerMepto.matches = function (
-    this: typeof innerMepto,
-    node: Element,
-    selector: string
-  ): boolean {
+  innerMepto.matches = function (this: MeptoNamespace, node: Element, selector: string): boolean {
     return process(
       selector,
       function (sel: string, filter: FilterFn | null, arg: string | number | undefined): boolean {
