@@ -408,8 +408,13 @@ export interface MeptoCollection<T extends MeptoElement = MeptoElement> {
 
 // Static Mepto interface
 export interface MeptoStatic {
-  // Core
-  (selector?: Selector, context?: Document | Element): MeptoCollection
+  // Core — mirrors mepto.init: selector string / element / array / collection,
+  // plus a ready-callback function; context may be Element, Document, or
+  // a selector string (for $(context).find(selector)).
+  (
+    selector?: Selector | ((...args: unknown[]) => unknown) | null,
+    context?: Document | Element | string
+  ): MeptoCollection
   fn: MeptoCollection
 
   // Utilities

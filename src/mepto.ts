@@ -80,13 +80,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     }
     isZ(object: unknown): boolean
     init(
-      selector:
-        | string
-        | Element
-        | ArrayLike<Element>
-        | ((...args: unknown[]) => unknown)
-        | null
-        | undefined,
+      selector?: Selector | ((...args: unknown[]) => unknown) | null,
       context?: Element | Document | string
     ): MeptoCollection
     qsa(element: ParentNode, selector: string): Element[]
@@ -460,23 +454,25 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     properties: PlainObject | null | undefined
   ): ArrayLike<Element> {
     let dom: ArrayLike<Element>
+    let htmlContent = html
+    let effectiveName: string | undefined = name
 
     // Fast path: a single empty or self-closing tag like <div>, <br/>
-    const singleMatch = singleTagRE.exec(html)
+    const singleMatch = singleTagRE.exec(htmlContent)
     if (singleMatch) {
       dom = [document.createElement(singleMatch[1])]
     } else {
       // Expand implicit self-closing non-void tags: <foo bar/> → <foo bar></foo>
-      html = html.replace(tagExpanderRE, '<$1></$2>')
+      htmlContent = htmlContent.replace(tagExpanderRE, '<$1></$2>')
 
       // Determine the right container so the browser parses the HTML correctly.
       // e.g. <tr> must live inside <tbody>, not a bare <div>.
-      if (name === undefined) {
-        const fragMatch = fragmentRE.exec(html)
-        name = fragMatch ? fragMatch[1] : undefined
+      if (effectiveName === undefined) {
+        const fragMatch = fragmentRE.exec(htmlContent)
+        effectiveName = fragMatch ? fragMatch[1] : undefined
       }
-      const container = getContainer(name)
-      setInnerHTML(container, html)
+      const container = getContainer(effectiveName)
+      setInnerHTML(container, htmlContent)
       const childNodes = slice.call(container.childNodes) as Element[]
       dom = $.each(childNodes, function (this: Element) {
         container.removeChild(this)
@@ -537,23 +533,11 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A Mepto collection.
    */
   mepto.init = function (
-    selector:
-      | string
-      | Element
-      | ArrayLike<Element>
-      | ((...args: unknown[]) => unknown)
-      | null
-      | undefined,
+    selector?: Selector | ((...args: unknown[]) => unknown) | null,
     context?: Element | Document | string
   ): MeptoCollection {
     let dom: ArrayLike<Element> | null | undefined
-    let finalSelector:
-      | string
-      | Element
-      | ArrayLike<Element>
-      | ((...args: unknown[]) => unknown)
-      | null
-      | undefined = selector
+    let finalSelector: Selector | ((...args: unknown[]) => unknown) | null | undefined = selector
 
     if (!selector) {
       return mepto.Z()
@@ -615,13 +599,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @returns A Mepto collection.
    */
   $ = function (
-    selector:
-      | string
-      | Element
-      | ArrayLike<Element>
-      | ((...args: unknown[]) => unknown)
-      | null
-      | undefined,
+    selector?: Selector | ((...args: unknown[]) => unknown) | null,
     context?: Element | Document | string
   ): MeptoCollection {
     return mepto.init(selector, context)
@@ -687,8 +665,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       if (arg) extend(destination as Record<string, unknown>, arg as Record<string, unknown>, deep)
     })
 
-    return destination
-  }
+    return destination as Record<string, unknown>
+  } as unknown as MeptoStatic['extend']
 
   /**
    * Mepto's CSS selector engine. Optimises for simple ID (`#foo`),
@@ -878,7 +856,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    * @param value - The raw attribute value string.
    * @returns The deserialized value.
    */
-  function deserializeValue(value: string): any {
+  function deserializeValue(value: string): unknown {
     // Falsy values (empty string, null, undefined) — return as-is
     if (!value) return value
 

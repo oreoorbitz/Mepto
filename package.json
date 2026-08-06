@@ -81,9 +81,9 @@
     "not IE 11"
   ],
   "devDependencies": {
-    "@playwright/test": "^1.40.0",
+    "@playwright/test": "^1.59.1",
     "@size-limit/preset-small-lib": "^11.0.0",
-    "@types/node": "^20.10.0",
+    "@types/node": "^24.0.0",
     "@eslint/js": "^10.0.1",
     "eslint": "^10.7.0",
     "eslint-config-prettier": "^10.1.8",
@@ -93,8 +93,8 @@
     "jsdom": "^29.1.0",
     "kill-port": "^2.0.1",
     "lint-staged": "^15.1.0",
-    "oxlint": "^1.0.0",
-    "prettier": "^3.1.0",
+    "oxlint": "^1.24.1",
+    "prettier": "^3.6.2",
     "size-limit": "^11.0.0",
     "typescript": "^5.9.0",
     "typescript-7": "npm:typescript@^7.0.2",

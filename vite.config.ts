@@ -23,8 +23,12 @@ async function findAvailablePort(): Promise<number> {
   throw new Error(`No available port in range ${PORT_RANGE_START}–${PORT_RANGE_END}`)
 }
 
-export default defineConfig(async () => {
-  const port = await findAvailablePort()
+export default defineConfig(async ({ command }) => {
+  // Vitest (and `vite build`) don't need a dev-server port — avoid the
+  // 3000–3099 scan entirely so `npm test` works even when the dev server
+  // is already holding the range.
+  const isVitest = !!process.env.VITEST || command === 'build'
+  const port = isVitest ? 3000 : await findAvailablePort()
   return {
     plugins: [
       dts({
