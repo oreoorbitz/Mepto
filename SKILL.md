@@ -382,5 +382,6 @@ failed (or no assertions used). With no assertions, `passed === success`.
 ## Do not edit
 
 - `.claude/settings.local.json` — Claude permissions/settings
-- `plans/` — planning documents
 - `tools/llm-test-harness/` — Harness source; only modify if improving the harness itself
+
+> **Note:** This file is retained as a legacy index. Focused skills under `skills/` (`verify`, `migrate`, `perf`, `harness`, `workflow`, `jquery-to-mepto`, `mepto-to-vanilla`) are canonical. See `AGENTS.md` for the router.

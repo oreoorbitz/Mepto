@@ -2,7 +2,7 @@
 
 [![ci](https://github.com/oreoorbitz/Mepto/actions/workflows/ci.yml/badge.svg)](https://github.com/oreoorbitz/Mepto/actions/workflows/ci.yml)
 
-Mepto is a lightweight, jQuery-compatible library for modern browsers, and a
+Mepto is a lightweight, jQuery-compatible library for evergreen browsers, and a
 TypeScript rewrite of [Zepto.js][zepto]. **If you use jQuery, you already know
 how to use Mepto.** It targets evergreen browsers only — no IE, no legacy Edge,
 no polyfills — and uses native platform APIs throughout.
@@ -10,16 +10,13 @@ no polyfills — and uses native platform APIs throughout.
 The package is published as **`meptos`**. The browser globals are `$` and
 `mepto`, matching jQuery/Zepto.
 
-> **Status: transition in progress.** This repo is an active rewrite of the
-> original Zepto codebase into TypeScript with modern tooling (Vite, Vitest,
-> Playwright). Some modules are fully typed and modernized, others are still
-> close to the original source. `npm run typecheck` and the declaration step of
-> `npm run build` print known type errors from the unconverted modules — this is
-> expected; the build still exits 0 and produces working bundles.
+> **Status: TypeScript transition in progress.** The library is fully usable from
+> `dist/` today. Source is being incrementally typed; `npm run build` prints
+> expected type errors from unconverted modules but exits 0 and emits working
+> bundles.
 
-Mepto is licensed under the MIT License, like Zepto itself. It is a
-derivative of Zepto.js by Thomas Fuchs, whose original copyright notice is
-preserved in the [LICENSE](LICENSE) file.
+Licensed under the MIT License, like Zepto itself. Derivative of Zepto.js by
+Thomas Fuchs — original copyright in [LICENSE](LICENSE).
 
 ---
 
@@ -32,9 +29,13 @@ pnpm add meptos
 yarn add meptos
 ```
 
-If you want a prebuilt UMD bundle without a bundler, grab it from your
-`node_modules` or a CDN and include it with a `<script>` tag (see
-[Browser / `<script>`](#browser--script-tag) below).
+Prebuilt UMD bundle (no bundler) via CDN:
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/meptos/dist/meptos.umd.cjs"></script>
+```
+
+Or `esm.sh` / `jsdelivr` / `unpkg` — pin a version.
 
 ## Usage
 
@@ -48,7 +49,8 @@ $('#app').addClass('ready').on('click', 'button', handleClick)
 
 ### Browser / `<script>` tag
 
-The UMD build exposes `window.$` and `window.mepto`:
+UMD exposes `window.$` and `window.mepto` immediately — no `domready` wrapper
+required, but `$(fn)` is supported jQuery-style:
 
 ```html
 <script src="https://cdn.jsdelivr.net/npm/meptos/dist/meptos.umd.cjs"></script>
@@ -59,14 +61,9 @@ The UMD build exposes `window.$` and `window.mepto`:
 </script>
 ```
 
-Or pin a version from a CDN of your choice (`esm.sh`, `jsdelivr`, `unpkg`).
-When loaded as a UMD global, `$` and `mepto` are available immediately — no
-`domready` wrapper is required, but `$(fn)` is supported jQuery-style.
-
 ### TypeScript
 
-Type declarations ship in the package (`dist/meptos.d.ts`), so editor
-autocomplete and type-checking work out of the box:
+Declarations ship with the package (`dist/meptos.d.ts`):
 
 ```ts
 import { $, type MeptoCollection } from 'meptos'
@@ -76,7 +73,7 @@ const items: MeptoCollection = $('.item').addClass('active')
 
 ## What's in the box
 
-Mepto bundles these modules in every build — there is no custom-build step:
+No custom-build step — every build bundles:
 
 | Module       | What it gives you                                                         |
 | ------------ | ------------------------------------------------------------------------- |
@@ -96,42 +93,53 @@ Mepto bundles these modules in every build — there is no custom-build step:
 | `deferred`   | `$.Deferred` / promise API                                                |
 | `assets`     | Experimental iOS memory cleanup for removed image elements                |
 
-The Zepto-era `ie` and `ios3` modules were dropped along with all legacy
-browser support. `types.ts` holds the shared type definitions.
+`ie` / `ios3` removed with legacy browser support. Shared types in `src/types.ts`.
 
 ## Browser support
 
-**Evergreen browsers only** — the last 3 versions of Chrome, Firefox, Safari,
-and Edge. Mepto uses native APIs (`WeakMap`, `AbortController`, `fetch`,
-`classList`, `closest`, `dataset`, `requestAnimationFrame`, …) freely; there is
-no IE, legacy Edge, or old-Safari compatibility code. If you need to support a
-legacy browser, Mepto is not the right tool.
+**Evergreen only** — last 3 versions of Chrome, Firefox, Safari, Edge. Uses
+`WeakMap`, `AbortController`, `fetch`, `classList`, `closest`, `dataset`,
+`requestAnimationFrame`, … freely. No IE / legacy Edge / old-Safari shims. If
+you need legacy browsers, Mepto isn’t the right tool.
 
 ## jQuery compatibility
 
-Mepto mirrors the jQuery API for the modules above. Two notes:
+Mepto mirrors the jQuery API for the modules above:
 
-- **AJAX is built on `fetch`**, not `XMLHttpRequest`. The public `$.ajax`
-  surface (`success` / `error` / `complete` callbacks, `$.get`, `$.post`,
-  `$.getJSON`, JSONP) is preserved; the transport is modernized.
-- **`data()` is WeakMap-backed.** Values are stored off the DOM node (via a
-  `Symbol` expando), so they are garbage-collected when the node is removed —
-  no leaks, no expando properties visible on elements.
+- **AJAX is `fetch`-backed.** Public surface (`$.ajax`, `$.get`, `$.post`,
+  `$.getJSON`, JSONP, `success`/`error`/`complete` callbacks) is preserved;
+  transport is modernized.
+- **`data()` is WeakMap-backed.** Values live off-node via `Symbol` + `WeakMap`,
+  GC’d on removal — no leaks, no visible expando.
+- **Dropped:** Zepto `ie`/`ios3`, deprecated `$.fn.live`/`die` (use
+  `on`/`off` delegation).
 
-For the full migration story (including bridge APIs for progressively moving
-toward vanilla DOM), see [docs-stub.md](docs-stub.md).
+## Migrating
+
+Mepto is designed as a **progressive bridge** — jQuery → Mepto is near drop-in,
+Mepto → vanilla JS is phased via bridge APIs that mirror the native DOM.
+
+| Path                                                                         | Start here                         |
+| ---------------------------------------------------------------------------- | ---------------------------------- |
+| **jQuery → Mepto** (install + drop-in + known differences)                   | `skills/jquery-to-mepto/SKILL.md`  |
+| **Mepto → Vanilla JS** (selector / `classList` / `attrs` / `styles` bridges) | `skills/mepto-to-vanilla/SKILL.md` |
+
+For LLMs: load **one** skill at a time. Do not mix the two mappings in a single
+prompt — `jquery-to-mepto` first, then `mepto-to-vanilla` after the port is
+green. Each skill contains a copy-paste prompt template and verification steps
+(`tools/llm-test-harness --compare` diffs Mepto vs jQuery).
 
 ## Examples
 
-The `examples/` directory contains runnable pages served by the dev server:
+Runnable pages served by the dev server (`examples/`):
 
-- `examples/todo/` — a full TodoMVC-feature-parity todo app that doubles as a
-  validation tool exercising the real-world API surface (event delegation,
-  `$.Callbacks`, `localStorage` persistence, edit-in-place).
+- `examples/todo/` — TodoMVC-parity todo app exercising the real API surface
+  (delegation, `$.Callbacks`, `localStorage`, edit-in-place)
+- `examples/mlick/`, `examples/pokemon/`, `examples/snow/`, etc.
 
 ## Bundles
 
-`npm run build` produces, in `dist/`:
+`npm run build` emits to `dist/`:
 
 | File             | Format | Use                                  |
 | ---------------- | ------ | ------------------------------------ |
@@ -139,59 +147,16 @@ The `examples/` directory contains runnable pages served by the dev server:
 | `meptos.umd.cjs` | UMD    | `<script>` tags, CommonJS `require`  |
 | `meptos.d.ts`    | Types  | TypeScript editor/CLI support        |
 
-plus sourcemaps. Output is minified via esbuild; `npm run size` enforces a
-15 KB budget on each bundle via size-limit.
-
-## Running tests
-
-Unit tests (Vitest + jsdom):
-
-```sh
-npm test           # or: npm run test:watch
-```
-
-End-to-end tests in real browsers (Playwright; runs the suite in
-`test/index.html`, which imports the library straight from source — no build
-needed):
-
-```sh
-npx playwright test --project=chromium   # quick Chromium run
-npm run test:e2e                         # all browsers + mobile
-```
-
-Everything at once:
-
-```sh
-npm run test:all
-```
-
-`test/functional/` contains manual test pages for touch, gestures, and effects.
-Other useful checks: `npm run lint`, `npm run lint:fast`, `npm run format:check`,
-`npm run typecheck`, `npm run size`.
-
-### LLM test harness
-
-`tools/llm-test-harness/` is a secure, sandboxed Puppeteer runner that lets
-LLM agents execute JavaScript snippets against Mepto loaded from source, with
-prompt-injection detection and network isolation:
-
-```sh
-cd tools/llm-test-harness && npm install && npm run build && cd ../..
-node tools/llm-test-harness/bin/mepto-test.js --code "return $('div').length"
-node tools/llm-test-harness/bin/mepto-test.js --batch=cases.json --compare   # diff against jQuery 3.7
-```
-
-See `tools/llm-test-harness/TODO.md` and `plans/llm-test-harness.md` for
-details.
+Plus sourcemaps. Minified via esbuild; `npm run size` enforces a 15 KB budget per bundle.
 
 ## Contributing
 
-Contributions are welcome! Mepto is a TypeScript rewrite in active progress.
-For dev setup, the test pyramid, CI gates, and how to plug in an AI coding
-assistant, see **[CONTRIBUTING.md](CONTRIBUTING.md)**. Coding conventions and
-the performance philosophy live in **[AGENTS.md](AGENTS.md)**.
+Mepto is an active TypeScript rewrite — contributions welcome. For dev setup,
+test pyramid, CI gates, and how to plug in an AI assistant, see
+**[CONTRIBUTING.md](CONTRIBUTING.md)**. For agent routing, see
+**[AGENTS.md](AGENTS.md)**.
 
-Bugs and feature requests go to the [issue tracker][issues].
+Bugs and feature requests: [issue tracker][issues].
 
 [zepto]: https://github.com/madrobby/zepto
 [issues]: https://github.com/oreoorbitz/Mepto/issues

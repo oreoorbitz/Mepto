@@ -158,8 +158,8 @@ Every API decision should minimize live DOM touches — the browser's layout
 engine dominates real-world cost. Prefer `DocumentFragment` for bulk inserts,
 separate read/write passes to avoid layout thrashing, cache query results, and
 use `WeakMap`/`WeakSet` for element-associated data. The full philosophy and
-the patterns-to-prefer / patterns-to-avoid tables are in **[AGENTS.md](AGENTS.md)**
-under "Performance Philosophy" — read it before touching hot paths.
+the patterns-to-prefer / patterns-to-avoid tables are in
+**[skills/perf/SKILL.md](skills/perf/SKILL.md)** — read it before touching hot paths.
 
 ### TypeScript conventions
 
@@ -171,7 +171,7 @@ under "Performance Philosophy" — read it before touching hot paths.
 - Don't add `@types/*` packages or type stubs for legacy browser APIs. If the
   DOM lib is missing a type for a modern API, use a type assertion.
 - When converting a module, follow the **Module Conversion Playbook** in
-  AGENTS.md (type the IIFE param → `var`→`const`/`let` → type module vars →
+  `skills/migrate/SKILL.md` (type the IIFE param → `var`→`const`/`let` → type module vars →
   type params → fix local antipatterns → build & verify).
 
 ## Pull request checklist
@@ -222,25 +222,23 @@ your PR.
 
 ## What not to edit
 
-- **`AGENTS.md`** — contributor/agent conventions and progress report
-- **`plans/`** — planning documents
-- **`tools/llm-test-harness/`** — the test harness source (only modify when
-  improving the harness itself)
-- **`.claude/settings.local.json`** — local IDE permissions
+- **`.claude/settings.local.json`** — local IDE permissions (personal)
+- **`tools/llm-test-harness/`** — harness source (only when improving the harness itself)
+
+Focused agent procedures live in `skills/*/SKILL.md` and are safe to extend with new skills; route changes go through `AGENTS.md`.
 
 ## Working with an AI coding assistant
 
 Mepto is set up to be friendly to AI pair-programming (Claude, Cursor, ZCode,
 etc.). There are two complementary pieces.
 
-### 1. Agent instructions (`AGENTS.md`)
+### 1. Agent instructions (`AGENTS.md` + `skills/`)
 
-**[AGENTS.md](AGENTS.md)** is the single source of truth for any coding agent
-working in this repo. It covers: the library's goals, the browser target, the
-verify-before-trusting routine, how the dev server works, the TypeScript
-transition status, the module conversion playbook, and the performance
-philosophy. **Point your assistant at it first** — most "how do I…" questions
-are answered there.
+**[AGENTS.md](AGENTS.md)** is the short router every agent reads first. It points to focused skills under `skills/`:
+`skills/verify/SKILL.md` (tests, dev server, build), `skills/migrate/SKILL.md`
+(TS conversion playbook + status), `skills/perf/SKILL.md` (perf philosophy),
+`skills/harness/SKILL.md` (sandboxed snippet runner), `skills/workflow/SKILL.md`
+(git/GitHub). **Point your assistant at `AGENTS.md` first**, then follow the router — most "how do I…" questions are answered by one skill.
 
 To plug in your assistant:
 
@@ -291,7 +289,7 @@ node tools/llm-test-harness/bin/mepto-test.js --validate --code="return $('div')
 available in every run. `--compare` runs each case against **both** Mepto and
 jQuery (both exposed as `$`) and diffs return values — the fastest way to catch
 a jQuery-compatibility regression. Full options and the security model are in
-AGENTS.md ("LLM Test Harness").
+`skills/harness/SKILL.md`.
 
 **The rule for agents:** _always verify through the harness or the test suite —
 never report a change as "working" from inspection alone._
@@ -315,8 +313,8 @@ never report a change as "working" from inspection alone._
 
 ## Need help?
 
-1. Read **[AGENTS.md](AGENTS.md)** — it answers most questions.
-2. Check the harness details in `plans/llm-test-harness.md`.
+1. Read **[AGENTS.md](AGENTS.md)** — router to the focused skill you need.
+2. Check harness details in `skills/harness/SKILL.md` (`tools/llm-test-harness/`).
 3. Look at example tests in `test/`.
 4. Open an issue on the [issue tracker][issues].
 
