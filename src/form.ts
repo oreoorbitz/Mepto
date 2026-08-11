@@ -1,6 +1,6 @@
-//     mepto.js
+//     zepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     mepto.js may be freely distributed under the MIT license.
+//     zepto.js may be freely distributed under the MIT license.
 
 import { type MeptoStatic, type MeptoCollection, type EventHandler } from './types'
 

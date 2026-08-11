@@ -51,9 +51,10 @@ Library approach: Optional async/batched mode for animations or high-frequency u
 
 Step 5: Caching and Minimizing DOM Queries
 
-querySelector* and traversals are slower than many expect, especially when repeated (jQuery's selector engine adds noticeable overhead).
-Best practice: Cache element references internally (use WeakMap for user-associated data). Scope queries narrowly.
-Library feature: Maintain internal managed-element cache; offer simple selector helpers that encourage caching.
+querySelector\* and traversals are slower than many expect, especially when repeated (jQuery's selector engine adds noticeable overhead).
+Measured (js_query_performance/ dom-bench Chrome 150): `#id` gEBI 1.18× > qS, `.cls` gEBCN 57× > qSA @20K (9.3M flat), `tag` gEBTN 3292× > qSA @20K (11M flat), `closest` 4.1× > manual loop, `classList.contains` 1.4× > `matches` for class, `firstElementChild` 2.1× > `children[0]`, `nextElementSibling` chain 2.3× > skip loop, cached `for` 1.23×/2.4× > live.length/forEach. See `js_query_performance/dom-bench/RESULTS.md`.
+Best practice: Route bare tokens via indexed APIs (`getElementById`/`getElementsByClassName`/`getElementsByTagName`), use `closest` for delegation, `classList.contains`/`tagName===` for pure guards, and `firstElementChild`/`nextElementSibling` walks. Cache live collections + hoisted length.
+Library feature: `mepto.qsa` rquickExpr routing + `mepto.findFast(sel,ctx)` O(1) helper, `$.fn.filter` fast class/tag, `siblings` via element-sibling walk. Keep jQuery `$(sel)` — fast path is inside.
 
 Step 6: Efficient Event Handling
 

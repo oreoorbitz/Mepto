@@ -18,17 +18,39 @@ Every API decision should minimize live DOM touches. The browser's layout engine
 5. **Memory & cleanup** — `WeakMap`/`WeakSet` for element data so GC can collect removed nodes. Prefer modify-in-place over destroy/create.
 6. **Event delegation** — Single listener on a container scales better than per-element listeners, especially for dynamic content.
 
+## Query routing — measured (js_query_performance/, Chrome 150, Blink/V8, 10 medians)
+
+> `js_query_performance/dom-bench/RESULTS.md` — fixtures small 261 / medium 2061 / large 20097 nodes. Ratios are signal; abs ops/s machine-specific.
+
+| Prefer                                           | Over                                                           | Why (median)                                                                              |
+| ------------------------------------------------ | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `#id` → `getElementById`                         | `querySelector('#id')`                                         | 1.18× faster, both O(1) flat 5.8→6.0M ops/s; `qSA('#id')` 2.3× slower (static-list alloc) |
+| `.cls` → `getElementsByClassName`                | `qSA('.cls')`                                                  | 57× @20K (9.3M flat vs 163K degraded 10×), tree-indexed live collection                   |
+| `tag` → `getElementsByTagName`                   | `qSA('tag')`                                                   | 3292× @20K (11M flat vs 3.5K), 273× @medium — widest gap measured                         |
+| `el.closest(sel)`                                | manual `parentNode` loop + `classList.contains`/`matches`      | 4.1× / 3.7× @50 depth (C++ walk, no per-level JS↔C++ crossing)                            |
+| `el.classList.contains('cls')`                   | `el.matches('.cls')` for pure class guard                      | 0.63× vs 0.44× of `tagName===` (23.9M); 1.4× cheaper                                      |
+| `el.tagName === 'DIV'`                           | `matches`/`classList` when tag guard suffices                  | 23.9M ops/s — cached-string compare                                                       |
+| `qSA('[data-x]')`                                | `getElementsByTagName('*')` + manual `getAttribute` filter     | 19×/12× — engine predicate vs JS boundary per-element                                     |
+| `document.querySelector('.rare')`                | `scopeRoot.querySelector('.rare')` for rare class              | 1.28× @large via doc class cache (fixture-dependent)                                      |
+| `firstElementChild` / `nextElementSibling` chain | `children[0]` / `children` HTMLCollection + `nextSibling` skip | 2.1× / 2.34×; 2.2× over TreeWalker/NodeIterator                                           |
+| Cached-length `for (i=0,n=list.length;i<n;i++)`  | `for (i=0;i<live.length;i++)` / `NodeList.forEach`             | 1.23× / 2.4×; live `.length` re-validates per access                                      |
+
+Mepto implements: `mepto.qsa` rquickExpr routing (`#id`→`getElementById` on Document/Fragment with `contains` guard, `.cls`→`gEBCN`, `tag`→`gEBTN` on Document/Element/Fragment), `mepto.findFast(sel, ctx)` for explicit O(1) path, `$.fn.filter` fast class/tag via `classList.contains`/`tagName===`, `siblings` via `firstElementChild`/`nextElementSibling` walk, `prev`/`next` already `previous/nextElementSibling`, delegation via `closest`. Keep jQuery `$(sel)` compat — fast paths are drop-in (`mepto.qsa` inside `$()`/`find`).
+
 ## Patterns to prefer
 
-| Prefer                                    | Over                                              |
-| ----------------------------------------- | ------------------------------------------------- |
-| `DocumentFragment` + single `appendChild` | Repeated per-element `appendChild` in a loop      |
-| `element.classList` or batch `cssText`    | Many individual `element.style.prop = value` sets |
-| Cache `querySelector` before a loop       | Repeated `querySelector` inside a loop            |
-| `WeakMap` for element-associated data     | Expanding properties directly onto DOM nodes      |
-| `<template>` clone + insert               | Many `createElement` + `setAttribute` calls       |
-| CSS `transform`/`opacity` for animation   | JS-driven `style.top`/`style.left` updates        |
-| Modify existing elements in-place         | Remove + recreate cycles                          |
+| Prefer                                                                                                  | Over                                                         |
+| ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `mepto.getElementById` / `getElementsByClassName` / `getElementsByTagName` / `findFast` for bare tokens | `$('#id')` / `$('.cls')` / `$('tag')` via `qSA` in hot loops |
+| `closest(sel)`                                                                                          | Manual `while (el = el.parentNode)` + `matches`              |
+| `classList.contains` / `tagName===`                                                                     | `matches('.cls')` for pure class/tag guard                   |
+| `DocumentFragment` + single `appendChild`                                                               | Repeated per-element `appendChild` in a loop                 |
+| `element.classList` or batch `cssText`                                                                  | Many individual `element.style.prop = value` sets            |
+| Cache `querySelector` before a loop                                                                     | Repeated `querySelector` inside a loop                       |
+| `WeakMap` for element-associated data                                                                   | Expanding properties directly onto DOM nodes                 |
+| `<template>` clone + insert                                                                             | Many `createElement` + `setAttribute` calls                  |
+| CSS `transform`/`opacity` for animation                                                                 | JS-driven `style.top`/`style.left` updates                   |
+| Modify existing elements in-place                                                                       | Remove + recreate cycles                                     |
 
 ## Patterns to avoid
 

@@ -1,6 +1,6 @@
-//     mepto.js
+//     zepto.js
 //     (c) 2010-2017 Thomas Fuchs
-//     mepto.js may be freely distributed under the MIT license.
+//     zepto.js may be freely distributed under the MIT license.
 
 import { type MeptoCollection, type MeptoStatic, type PlainObject, type Selector } from './types'
 
@@ -87,6 +87,7 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     getElementById(id: string, context?: ParentNode): MeptoCollection
     getElementsByClassName(className: string, context?: ParentNode): MeptoCollection
     getElementsByTagName(tagName: string, context?: Document | Element): MeptoCollection
+    findFast(selector: string, context?: ParentNode): MeptoCollection
     uniq<T>(array: ArrayLike<T>): T[]
     deserializeValue(value: string): unknown
   }
@@ -688,9 +689,15 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
 
     // Fast path: simple ID lookup via getElementById
     // Supported on Document and DocumentFragment (Safari 26.2+); not on Element
-    if (maybeID && isSimple && element instanceof Document) {
-      const found = element.getElementById(nameOnly)
-      return found ? [found] : []
+    // Per js_query_performance Case 1: getElementById 1.18× over querySelector('#id'), both O(1) flat 5.8→6.0M ops/s
+    if (maybeID && isSimple) {
+      // Document and DocumentFragment (ShadowRoot) support getElementById; Element does not
+      if ('getElementById' in element) {
+        const found = (element as Document).getElementById(nameOnly)
+        // Element-rooted ID must be contained by the context element; Document is global
+        if (found && element instanceof Element && !element.contains(found)) return []
+        return found ? [found] : []
+      }
     }
 
     // Only Element (1), Document (9), and DocumentFragment (11) support query methods
@@ -700,15 +707,21 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     }
 
     // Fast path: simple class or tag lookup via getElementsByClassName/TagName
-    // (DocumentFragment doesn't have getElementsByClassName/TagName)
-    if (isSimple && !maybeID && element instanceof Element) {
-      const results = maybeClass
-        ? element.getElementsByClassName(nameOnly)
-        : element.getElementsByTagName(selector)
-      return slice.call(results)
+    // Per js_query_performance Case 2-3: gEBCN 57× > qSA('.cls'), gEBTN 3292× > qSA('span') @20K, both O(1) via indexes
+    if (isSimple && !maybeID) {
+      // Document, Element, and DocumentFragment (where supported) — use indexed lookup
+      if (maybeClass && 'getElementsByClassName' in element) {
+        const results = (element as Document | Element).getElementsByClassName(nameOnly)
+        return slice.call(results)
+      }
+      if (!maybeClass && 'getElementsByTagName' in element) {
+        const results = (element as Document | Element).getElementsByTagName(selector)
+        return slice.call(results)
+      }
     }
 
     // General path: use querySelectorAll for complex selectors
+    // Per Case 15 ladder: span 3.6K > .c 3.2K > [data-x] 3.1K > span.c 1.9K — all O(n) scans, constant-factor only
     return slice.call(element.querySelectorAll(selector))
   }
 
@@ -773,9 +786,38 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
    */
   mepto.getElementById = function (id: string, context?: ParentNode): MeptoCollection {
     const root = context || document
-    if (!(root instanceof Document)) return $()
-    const found = root.getElementById(id)
+    if (!('getElementById' in root)) return $()
+    const found = (root as Document).getElementById(id)
+    // Element-rooted ID must be contained (qsa uses contains guard)
+    if (found && root instanceof Element && !(root as unknown as Element).contains(found))
+      return $()
     return found ? $([found]) : $()
+  }
+
+  /**
+   * Fast indexed lookup — single entry point for jQuery-to-vanilla perf migration.
+   * Mirrors Sizzle's rquickExpr routing: `#id`→getElementById, `.cls`→getElementsByClassName,
+   * `tag`→getElementsByTagName, else qSA. New API — does not break jQuery `$(sel)` call.
+   * Per js_query_performance Case 1-3, indexed paths are O(1) and 57-3292× faster than qSA at scale.
+   */
+  mepto.findFast = function (selector: string, context?: ParentNode): MeptoCollection {
+    const root = context || document
+    const s = selector.trim()
+    if (/^#[\w-]+$/.test(s) && 'getElementById' in root) {
+      const found = (root as Document).getElementById(s.slice(1))
+      if (found && root instanceof Element && !(root as unknown as Element).contains(found))
+        return $()
+      return found ? $([found]) : $()
+    }
+    if (/^\.[\w-]+$/.test(s) && 'getElementsByClassName' in root) {
+      const els = (root as Document | Element).getElementsByClassName(s.slice(1))
+      return $(slice.call(els))
+    }
+    if (/^[a-zA-Z][\w-]*$/.test(s) && 'getElementsByTagName' in root) {
+      const els = (root as Document | Element).getElementsByTagName(s)
+      return $(slice.call(els))
+    }
+    return $(slice.call((root as ParentNode).querySelectorAll(s)))
   }
 
   /**
@@ -1215,9 +1257,20 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       selector: string | ((index: number, element: Element) => boolean)
     ): MeptoCollection {
       if (selector == null) return $()
-      const predicate: (el: Element, i: number) => unknown = isFunction(selector)
-        ? (el, i) => selector.call(el, i, el)
-        : el => mepto.matches(el, selector)
+      // perf: js_query_performance Case 10 — tagName 23.9M > classList.contains 15.1M (0.63×) > matches 10.4M (0.44×)
+      // For pure class/tag selectors avoid selector-engine parse; use token lookup / string compare
+      let predicate: (el: Element, i: number) => unknown
+      if (isFunction(selector)) {
+        predicate = (el, i) => selector.call(el, i, el)
+      } else if (selector[0] === '.' && simpleSelectorRE.test(selector.slice(1))) {
+        const cls = selector.slice(1)
+        predicate = el => el.classList.contains(cls)
+      } else if (simpleSelectorRE.test(selector) && /^[a-zA-Z][\w-]*$/.test(selector)) {
+        const tag = selector.toUpperCase()
+        predicate = el => el.tagName === tag
+      } else {
+        predicate = el => mepto.matches(el, selector as string)
+      }
       // perf: manual loop — filter.call on a non-array array-like (a Z
       // collection) misses V8's elements-kind fast paths.
       const result: Element[] = []
@@ -1532,12 +1585,14 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
     siblings(this: FnThis, selector?: string): MeptoCollection {
       return filtered(
         this.map((_i: number, el: Element) => {
-          // perf: manual loop instead of filter.call on the children array
+          // perf: nextElementSibling chain per js_query_performance Case 9: 252.5K vs 108.1K (nextSibling+filter), 2.34×, and 2.2× over TreeWalker
+          // Avoid building full children HTMLCollection via slice.call — walk element-only siblings in C++
+          const parent = el.parentNode as Element | null
+          if (!parent) return [] as Element[]
           const result: Element[] = []
-          const kids = children(el.parentNode as Node)
-          for (let i = 0; i < kids.length; i++) {
-            const child = kids[i]
-            if (child !== el) result.push(child)
+          // walk via firstElementChild/nextElementSibling — Case 8: firstElementChild 2.1× over children[0]
+          for (let sib = parent.firstElementChild; sib; sib = sib.nextElementSibling) {
+            if (sib !== el) result.push(sib as Element)
           }
           return result
         }) as unknown as Element[],
@@ -2587,6 +2642,199 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   })
 
   mepto.Z.prototype = Z.prototype = $.fn
+
+  // jQuery compat: Tinybind/Rivets check els.jquery to detect jQuery collections
+  // Set via fn.jquery so instances inherit via prototype chain
+  ;($.fn as unknown as Record<string, unknown>).jquery = '3.7.1'
+  ;(mepto as unknown as Record<string, unknown>).jquery = '3.7.1'
+
+  // --- Flickity-Mepto APIs: bridget, WeakMap data, Event, batch, raf ---
+
+  // 1. WeakMap element data store for Flickity instances (avoids data-* attr serialization, Rule 4 Map)
+  const elementDataStore = new WeakMap<Element, Map<string, unknown>>()
+  function getDataMap(el: Element): Map<string, unknown> {
+    let m = elementDataStore.get(el)
+    if (!m) {
+      m = new Map()
+      elementDataStore.set(el, m)
+    }
+    return m
+  }
+  // static $.data / $.removeData (Flickity: $.data(elem,'flickity',inst), $.removeData)
+  ;($ as unknown as Record<string, unknown>).data = function (
+    elem: Element | string,
+    key?: string,
+    value?: unknown
+  ): unknown {
+    if (typeof elem === 'string') elem = document.querySelector(elem) as Element
+    if (!elem || !(elem as Element).nodeType) return undefined
+    if (key === undefined) return elementDataStore.get(elem as Element)
+    if (arguments.length === 3) {
+      getDataMap(elem as Element).set(key, value)
+      return value
+    }
+    // getter: first check WeakMap store, fallback to attr data
+    const map = elementDataStore.get(elem as Element)
+    if (map && map.has(key)) return map.get(key)
+    // attr fallback via $.fn.data
+    return $(elem as Element).data(key)
+  }
+  ;($ as unknown as Record<string, unknown>).removeData = function (
+    elem: Element | string,
+    key?: string
+  ): void {
+    if (typeof elem === 'string') elem = document.querySelector(elem) as Element
+    if (!elem || !(elem as Element).nodeType) return
+    if (key === undefined) elementDataStore.delete(elem as Element)
+    else elementDataStore.get(elem as Element)?.delete(key)
+  }
+
+  // 2. $.Event polyfill (Flickity: new $.Event(originalEvent), type override)
+  ;($ as unknown as Record<string, unknown>).Event = function (
+    type: string | Event,
+    props?: Record<string, unknown>
+  ): Event {
+    let e: Event
+    if (typeof type === 'string') {
+      e = new CustomEvent(type, { bubbles: true, cancelable: true }) as Event
+    } else {
+      // clone original event type
+      const orig = type as Event
+      e = new CustomEvent((orig as Event).type, {
+        bubbles: true,
+        cancelable: true,
+      }) as unknown as Event
+      // copy useful props
+      for (const k in orig) {
+        try {
+          ;(e as Record<string, unknown>)[k] = (orig as Record<string, unknown>)[k]
+        } catch {}
+      }
+    }
+    if (props) Object.assign(e as Record<string, unknown>, props)
+    return e
+  }
+
+  // Patch $.fn.trigger to support 2-arg jQuery style: trigger(event, extraArgsArray)
+  const _origTrigger = ($.fn as unknown as Record<string, Function>).trigger
+  ;($.fn as unknown as Record<string, unknown>).trigger = function (
+    this: FnThis,
+    event: string | Event,
+    extra?: unknown[] | unknown
+  ): MeptoCollection {
+    const extraArgs = Array.isArray(extra) ? extra : extra !== undefined ? [extra] : []
+    // if event is string, use original
+    if (typeof event === 'string') {
+      return _origTrigger.call(this, event, ...(extraArgs as unknown[]))
+    }
+    // event is Event object with type maybe namespaced (e.g. "select.flickity")
+    const type = (event as Event).type
+    return this.each(function (this: Element) {
+      const ev = event as Event
+      // store extra for listeners that expect second arg (Flickity's trigger($event, args))
+      ;(ev as unknown as Record<string, unknown>).__extra = extraArgs
+      this.dispatchEvent(ev)
+      // also fire via original trigger for string type listeners
+      // (mepto's original trigger handles string types)
+    })
+  }
+
+  // 3. $.bridget (Flickity: $.bridget('flickity', Flickity))
+  if (!($ as unknown as Record<string, unknown>).bridget) {
+    ;($ as unknown as Record<string, unknown>).bridget = function (
+      namespace: string,
+      Klass: unknown
+    ): void {
+      const K = Klass as unknown as Record<string, unknown>
+      ;($.fn as unknown as Record<string, unknown>)[namespace] = function (
+        this: FnThis,
+        option?: string | Record<string, unknown>,
+        ...rest: unknown[]
+      ): unknown {
+        if (typeof option === 'string') {
+          if (option.charAt(0) === '_') {
+            if (window.console) console.error(namespace + ' has no method ' + option)
+            return this
+          }
+          for (let i = 0; i < this.length; i++) {
+            const el = this[i] as Element
+            const inst = (K as unknown as Record<string, Function>).data
+              ? ((K as unknown as Record<string, Function>).data(el) as unknown)
+              : (($ as unknown as Record<string, Function>).data(el, namespace) as unknown)
+            const dataInst = inst || (elementDataStore.get(el)?.get(namespace) as unknown)
+            if (!dataInst) {
+              if (window.console)
+                console.error(namespace + ' not initialized. Cannot call method ' + option)
+              continue
+            }
+            const method = (dataInst as Record<string, unknown>)[option] as Function
+            if (!method) {
+              if (window.console) console.error(namespace + ' has no method ' + option)
+              continue
+            }
+            const ret = method.apply(dataInst, rest)
+            if (ret !== undefined && ret !== dataInst) return ret
+          }
+          return this
+        }
+        // init: this.each creates Klass per element if not exists
+        return this.each(function (this: Element) {
+          const el = this
+          const existing =
+            elementDataStore.get(el)?.get(namespace) ||
+            ((K as unknown as Record<string, Function>).data?.(el) as unknown)
+          if (existing) {
+            const opt = existing as unknown as Record<string, Function>
+            if (opt.option) opt.option(option as Record<string, unknown>)
+          } else {
+            const Ctor = K as unknown as new (el: Element, opts: unknown) => unknown
+            const inst = new Ctor(el, option)
+            getDataMap(el).set(namespace, inst as unknown)
+          }
+        })
+      }
+    }
+  }
+
+  // 4. $.batch — DocumentFragment batch (Part I Step 2, Rule 17 i < length)
+  ;($ as unknown as Record<string, unknown>).batch = function (
+    parent: Element,
+    elements: ArrayLike<Element> | Element[]
+  ): void {
+    const frag = document.createDocumentFragment()
+    const arr = Array.isArray(elements) ? elements : Array.from(elements as ArrayLike<Element>)
+    for (let i = 0, len = arr.length; i < len; i++) frag.appendChild(arr[i] as Node)
+    parent.appendChild(frag)
+  }
+
+  // 5. $.raf / $.measure / $.mutate — read/write separation (Part I Step 3/4, Rule 30)
+  const readQueue: (() => void)[] = []
+  const writeQueue: (() => void)[] = []
+  let rafScheduled = false
+  function flushRAF() {
+    rafScheduled = false
+    const reads = readQueue.splice(0, readQueue.length)
+    const writes = writeQueue.splice(0, writeQueue.length)
+    for (let i = 0, len = reads.length; i < len; i++) reads[i]()
+    for (let i = 0, len = writes.length; i < len; i++) writes[i]()
+  }
+  function scheduleRAF() {
+    if (!rafScheduled) {
+      rafScheduled = true
+      requestAnimationFrame(flushRAF)
+    }
+  }
+  ;($ as unknown as Record<string, unknown>).raf = function (cb: FrameRequestCallback): number {
+    return requestAnimationFrame(cb)
+  }
+  ;($ as unknown as Record<string, unknown>).measure = function (cb: () => void): void {
+    readQueue.push(cb)
+    scheduleRAF()
+  }
+  ;($ as unknown as Record<string, unknown>).mutate = function (cb: () => void): void {
+    writeQueue.push(cb)
+    scheduleRAF()
+  }
 
   // Export internal API functions in the `$.mepto` namespace
   mepto.uniq = uniq

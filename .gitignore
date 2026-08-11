@@ -51,3 +51,6 @@ logs/
 
 # Old build artifacts (from original mepto)
 *.gz
+
+# Research — DOM query performance (Chrome 150 bench, not to commit large binaries)
+js_query_performance/

@@ -1,6 +1,6 @@
-//     mepto.js
+//     zepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     mepto.js may be freely distributed under the MIT license.
+//     zepto.js may be freely distributed under the MIT license.
 
 // The following code is heavily inspired by jQuery's $.fn.data()
 // Uses WeakMap for element-associated data so GC can collect removed nodes.

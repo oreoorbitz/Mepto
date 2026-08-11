@@ -597,4 +597,18 @@ export interface MeptoStatic {
     ':': Record<string, (element: Element, index: number, matches: unknown) => boolean>
   }
   uuid: number
+
+  // Perf-fast indexed selectors (jQuery compat preserved — new API, O(1) per js_query_performance)
+  getElementById(id: string, context?: ParentNode): import('./types').MeptoCollection
+  getElementsByClassName(className: string, context?: ParentNode): import('./types').MeptoCollection
+  getElementsByTagName(
+    tagName: string,
+    context?: Document | Element
+  ): import('./types').MeptoCollection
+  findFast(selector: string, context?: ParentNode): import('./types').MeptoCollection
+  mepto: {
+    qsa(element: ParentNode, selector: string): Element[]
+    matches(element: Element, selector: string): boolean
+    findFast(selector: string, context?: ParentNode): import('./types').MeptoCollection
+  }
 }

@@ -1,6 +1,6 @@
-//     mepto.js
+//     zepto.js
 //     (c) 2010-2016 Thomas Fuchs
-//     mepto.js may be freely distributed under the MIT license.
+//     zepto.js may be freely distributed under the MIT license.
 
 import {
   type MeptoStatic,
@@ -104,7 +104,7 @@ interface SerialParams extends Array<string> {
   ): void {
     const context = settings.context,
       status = 'success'
-    settings.success!.call(context, data, status, xhr as XMLHttpRequest)
+    fireCallbacks(settings.success, context, [data, status, xhr as XMLHttpRequest])
     if (deferred) deferred.resolveWith(context, [data, status, xhr])
     triggerGlobal(settings, context, 'ajaxSuccess', [xhr, settings, data])
     ajaxComplete(status, xhr, settings)
@@ -118,7 +118,7 @@ interface SerialParams extends Array<string> {
     deferred?: AjaxDeferred
   ): void {
     const context = settings.context
-    settings.error!.call(context, xhr as XMLHttpRequest, type, error as Error)
+    fireCallbacks(settings.error, context, [xhr as XMLHttpRequest, type, error as Error])
     if (deferred) deferred.rejectWith(context, [xhr, type, error])
     triggerGlobal(settings, context, 'ajaxError', [xhr, settings, error || type])
     ajaxComplete(type, xhr, settings)
@@ -126,7 +126,7 @@ interface SerialParams extends Array<string> {
   // status: "success", "notmodified", "error", "timeout", "abort", "parsererror"
   function ajaxComplete(status: string, xhr: AnyXhr, settings: AjaxSettings): void {
     const context = settings.context
-    settings.complete!.call(context, xhr as XMLHttpRequest, status)
+    fireCallbacks(settings.complete, context, [xhr as XMLHttpRequest, status])
     triggerGlobal(settings, context, 'ajaxComplete', [xhr, settings])
     ajaxStop(settings)
   }
@@ -139,6 +139,14 @@ interface SerialParams extends Array<string> {
 
   // Empty function, used as default callback
   function empty(): void {}
+
+  // jQuery compat: CartJS Queue passes success/error/complete as arrays via ensureArray
+  // Handle both function and array of functions
+  function fireCallbacks(callback: unknown, context: unknown, args: unknown[]): void {
+    if (typeof callback === 'function') (callback as Function).apply(context, args)
+    else if (Array.isArray(callback))
+      for (const fn of callback as Function[]) if (typeof fn === 'function') fn.apply(context, args)
+  }
 
   $.ajaxJSONP = function (options: AjaxSettings, deferred?: AjaxDeferred): XMLHttpRequest {
     if (!('type' in options)) return $.ajax(options)

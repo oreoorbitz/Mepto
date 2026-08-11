@@ -1,5 +1,5 @@
 /**
- * Mepto - Modern TypeScript fork of mepto.js
+ * Mepto - Modern TypeScript fork of Zepto.js
  * A minimalist jQuery-compatible library for modern browsers
  *
  * @version 2.0.0
