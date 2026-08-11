@@ -149,6 +149,18 @@ Runnable pages served by the dev server (`examples/`):
 
 Plus sourcemaps. Minified via esbuild; `npm run size` enforces a 15 KB budget per bundle.
 
+## Bundled Shopify ThemeKit fork (for Timber 1.0 / Mimber)
+
+Mepto bundles **ThemeKit** (`vendor/themekit`, fork [`oreoorbitz/themekit`](https://github.com/oreoorbitz/themekit), Go) for Shopify 1.0 themes (Mimber/Timber `assets/layout/snippets/templates/config`) where `shopify theme` 2.0 CLI is incompatible. ThemeKit is used only for `watch`/`deploy` — JS bundling stays Vite.
+
+```bash
+git clone https://github.com/oreoorbitz/themekit vendor/themekit  # already vendored
+npm run themekit:build   # go build -o vendor/themekit/bin/theme ./vendor/themekit/...
+npm run themekit -- watch --config ../Mimber/config.yml
+```
+
+See `tools/themekit.mjs` (prefers `vendor/themekit/bin/theme` → `@shopify/themekit` fallback) and `oreoorbitz/themekit` for Go customization.
+
 ## Contributing
 
 Mepto is an active TypeScript rewrite — contributions welcome. For dev setup,

@@ -1,0 +1,3 @@
+[submodule "vendor/themekit"]
+	path = vendor/themekit
+	url = https://github.com/oreoorbitz/themekit

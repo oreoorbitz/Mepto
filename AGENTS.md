@@ -8,18 +8,19 @@ Mepto is a lightweight, jQuery-compatible DOM library for evergreen browsers (no
 
 ## Router — read the focused skill for your task
 
-| You are…                                                                                                            | Read this first                                                     |
-| ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Verifying a change, running tests, starting the dev server, dealing with ports or build noise, TypeScript toolchain | `skills/verify/SKILL.md`                                            |
-| Converting a JS module to TypeScript, touching `src/*.ts`, or checking transition status                            | `skills/migrate/SKILL.md`                                           |
-| Changing any DOM-heavy API, batching, caching, or animation code                                                    | `skills/perf/SKILL.md` (+ `V8_OPTIMIZATION_RULES.md` for hot paths) |
-| Running isolated snippets against Mepto or comparing with jQuery                                                    | `skills/harness/SKILL.md` (`tools/llm-test-harness/`)               |
-| Pushing, opening a PR, or interacting with GitHub                                                                   | `skills/workflow/SKILL.md`                                          |
-| Migrating **jQuery → Mepto** (drop-in, known deltas)                                                                | `skills/jquery-to-mepto/SKILL.md`                                   |
-| Migrating **Mepto → vanilla JS** (bridge APIs, phases)                                                              | `skills/mepto-to-vanilla/SKILL.md`                                  |
-| Human contributor setup, test tiers, or PR checklist                                                                | `CONTRIBUTING.md`                                                   |
-| End-user install, usage, browser support, what's included                                                           | `README.md`                                                         |
-| Claude-specific / Qwen-specific tooling                                                                             | `CLAUDE.md` / `QWEN.md`                                             |
+| You are…                                                                                                            | Read this first                                                                                    |
+| ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Verifying a change, running tests, starting the dev server, dealing with ports or build noise, TypeScript toolchain | `skills/verify/SKILL.md`                                                                           |
+| Converting a JS module to TypeScript, touching `src/*.ts`, or checking transition status                            | `skills/migrate/SKILL.md`                                                                          |
+| Changing any DOM-heavy API, batching, caching, or animation code                                                    | `skills/perf/SKILL.md` (+ `V8_OPTIMIZATION_RULES.md` for hot paths)                                |
+| Running isolated snippets against Mepto or comparing with jQuery                                                    | `skills/harness/SKILL.md` (`tools/llm-test-harness/`)                                              |
+| Pushing, opening a PR, or interacting with GitHub                                                                   | `skills/workflow/SKILL.md`                                                                         |
+| Migrating **jQuery → Mepto** (drop-in, known deltas)                                                                | `skills/jquery-to-mepto/SKILL.md`                                                                  |
+| Migrating **Mepto → vanilla JS** (bridge APIs, phases)                                                              | `skills/mepto-to-vanilla/SKILL.md`                                                                 |
+| Deploying Shopify Timber 1.0 via bundled ThemeKit fork (Mimber)                                                     | `vendor/themekit/README.md` + `tools/themekit.mjs` (`oreoorbitz/themekit`, Go, `npm run themekit`) |
+| Human contributor setup, test tiers, or PR checklist                                                                | `CONTRIBUTING.md`                                                                                  |
+| End-user install, usage, browser support, what's included                                                           | `README.md`                                                                                        |
+| Claude-specific / Qwen-specific tooling                                                                             | `CLAUDE.md` / `QWEN.md`                                                                            |
 
 Do not guess past the router — open the skill. Each skill is the single source of truth for its domain; `AGENTS.md` stays short by design.
 

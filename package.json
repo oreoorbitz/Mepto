@@ -51,7 +51,9 @@
     "size:check": "size-limit",
     "verify": "npm run typecheck && npm run lint && npm test && npm run build && npm run size:check",
     "prepublishOnly": "npm test && npm run build && npm run size:check",
-    "killports": "kill-port $(seq -s ' ' 3000 3099)"
+    "killports": "kill-port $(seq -s ' ' 3000 3099)",
+    "themekit:build": "go build -o vendor/themekit/bin/theme ./vendor/themekit/... 2>&1 | head -n 20; echo \"(Go required; binary at vendor/themekit/bin/theme; also see oreoorbitz/themekit fork)\"",
+    "themekit": "node tools/themekit.mjs"
   },
   "keywords": [
     "jquery",
