@@ -1,0 +1,580 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>DOM Query Microbenchmark</title>
+  </head>
+  <body>
+    <script>
+      'use strict'
+      // ---------------------------------------------------------------------------
+      // Global DCE sink
+      // ---------------------------------------------------------------------------
+      var sink = 0
+      function eatNode(n) {
+        sink = (sink ^ (n ? n.nodeType + (n.nodeName.length << 4) : 7)) | 0
+      }
+      function eatNum(x) {
+        sink = (sink ^ (x | 0)) | 0
+      }
+
+      // ---------------------------------------------------------------------------
+      // Fixture builders
+      // ---------------------------------------------------------------------------
+      var fixture = null // current size fixture (attached)
+      var refs = {} // per-fixture element references
+
+      function buildFixture(targetNodes) {
+        if (fixture && fixture.parentNode) fixture.parentNode.removeChild(fixture)
+        fixture = document.createElement('div')
+        fixture.id = 'fixture-root'
+        var count = 1
+        var els = [fixture]
+        function makeEl() {
+          var el
+          var r = count % 20
+          if (r === 0) {
+            el = document.createElement('input')
+            el.type = 'text'
+            el.name = 'f' + count
+          } else if (r % 2 === 0) el = document.createElement('span')
+          else el = document.createElement('div')
+          el.className = ['a', 'b', 'c'][count % 3]
+          if (count % 100 === 1 && count > 1) el.id = 'n' + count // ~1% ids
+          if (count % 10 === 0) {
+            el.setAttribute('data-x', '1')
+            el.className += ' dx'
+          }
+          el.setAttribute('data-i', String(count))
+          count++
+          els.push(el)
+          return el
+        }
+        // BFS growth, branching 4 -> depth ~ log4(N) (~7-8 levels at 20k)
+        var qi = 0
+        while (count < targetNodes) {
+          var parent = els[qi++]
+          if (!parent) break
+          var kids = Math.min(4, targetNodes - count)
+          for (var i = 0; i < kids; i++) parent.appendChild(makeEl())
+        }
+        // id target, ~60% deep
+        var idHost = els[Math.floor(els.length * 0.6)]
+        idHost.id = 'target'
+        // .c-target elements (scale with size, min 4)
+        var nCT = Math.max(4, Math.floor(targetNodes / 500))
+        var cTargets = []
+        for (var t = 0; t < nCT; t++) {
+          var host = els[Math.floor((els.length * (t + 0.5)) / nCT)]
+          var ct = document.createElement('span')
+          ct.className = 'c c-target'
+          host.appendChild(ct)
+          cTargets.push(ct)
+        }
+        // scope subtree (~50 nodes) with a deeply nested .deep-target
+        var scope = document.createElement('div')
+        scope.id = 'scope-root'
+        var cur = scope
+        for (var d = 0; d < 25; d++) {
+          var nd = document.createElement('div')
+          nd.className = 'a'
+          var sp = document.createElement('span')
+          sp.className = 'b'
+          nd.appendChild(sp)
+          cur.appendChild(nd)
+          cur = nd
+        }
+        var deepT = document.createElement('span')
+        deepT.className = 'deep-target'
+        cur.appendChild(deepT)
+        els[1].appendChild(scope)
+        // a few .deep-target scattered in the main tree too
+        for (var g = 0; g < 5; g++) {
+          var dt = document.createElement('span')
+          dt.className = 'deep-target'
+          els[Math.floor((els.length * (g + 1)) / 6)].appendChild(dt)
+        }
+        document.body.appendChild(fixture)
+        refs = {
+          els: els,
+          idHost: idHost,
+          cTarget0: cTargets[0],
+          scope: scope,
+          deepTarget: deepT,
+          nodeCount: count + nCT + 52 + 5,
+        }
+        return refs
+      }
+
+      // Deep chain: 500 nested divs (detached; closest/parent work on detached trees)
+      var chain = (function () {
+        var root = document.createElement('div')
+        root.className = 'chain-root'
+        var cur = root
+        var at50 = null,
+          marked = []
+        for (var i = 1; i <= 500; i++) {
+          var d = document.createElement('div')
+          if (i % 50 === 0 && i < 500) {
+            d.className = 'ancestor'
+            d.setAttribute('data-x', '1')
+            marked.push(d)
+          }
+          if (i === 450) d.className += ' ancestor-at-depth-50' // 50 levels above leaf
+          cur.appendChild(d)
+          cur = d
+        }
+        return { root: root, leaf: cur, at50: at50, nearestMarked: marked[marked.length - 1] }
+      })()
+
+      // Child-access fixture: element with text nodes interleaved
+      var childFix = (function () {
+        var p = document.createElement('div')
+        p.appendChild(document.createTextNode('text'))
+        var first = document.createElement('span')
+        first.className = 'first-child'
+        p.appendChild(first)
+        p.appendChild(document.createTextNode('more'))
+        for (var i = 0; i < 5; i++) p.appendChild(document.createElement('span'))
+        return { parent: p, first: first }
+      })()
+
+      // Sibling-walk fixture: 200 element children interleaved with text nodes
+      var sibFix = (function () {
+        var p = document.createElement('div')
+        var firstEl = null,
+          n = 200
+        for (var i = 0; i < n; i++) {
+          p.appendChild(document.createTextNode('t' + i))
+          var s = document.createElement('span')
+          s.className = 'sib'
+          if (!firstEl) firstEl = s
+          p.appendChild(s)
+        }
+        p.appendChild(document.createTextNode('end'))
+        return { parent: p, first: firstEl, count: n }
+      })()
+
+      // matches() fixture element
+      var matchEl = (function () {
+        var d = document.createElement('div')
+        d.className = 'cls other'
+        return d
+      })()
+    </script>
+    <script>
+      'use strict'
+      // ---------------------------------------------------------------------------
+      // Harness
+      // ---------------------------------------------------------------------------
+      var results = {} // results[caseId][sizeLabel][variant] = {median,min,max,spread,samples}
+
+      function warmup(fn, ms) {
+        var t0 = performance.now()
+        var n = 0
+        while (performance.now() - t0 < ms) {
+          fn()
+          n++
+        }
+        return n
+      }
+
+      // One sample: run fn for at least minMs, return ops/sec
+      function sampleOnce(fn, minMs) {
+        var t0 = performance.now()
+        var n = 0
+        do {
+          for (var i = 0; i < 50; i++) fn()
+          n += 50
+        } while (performance.now() - t0 < minMs)
+        var dt = performance.now() - t0
+        return n / (dt / 1000)
+      }
+
+      function median(arr) {
+        var a = arr.slice().sort(function (x, y) {
+          return x - y
+        })
+        var m = a.length >> 1
+        return a.length % 2 ? a[m] : (a[m - 1] + a[m]) / 2
+      }
+
+      // Run list: [{caseId, sizeLabel, variant, fn}]
+      var runList = []
+      function addCase(caseId, sizeLabel, variants) {
+        for (var name in variants) {
+          runList.push({ caseId: caseId, sizeLabel: sizeLabel, variant: name, fn: variants[name] })
+        }
+      }
+
+      var REPS = 5,
+        SAMPLE_MS = 300,
+        WARMUP_MS = 200
+
+      function runAll(onProgress) {
+        // Warmup everything first (order as-listed)
+        for (var i = 0; i < runList.length; i++) warmup(runList[i].fn, WARMUP_MS)
+        var samples = runList.map(function () {
+          return []
+        })
+        // Alternate order across repetitions (rotate by rep) to mitigate drift
+        for (var rep = 0; rep < REPS; rep++) {
+          for (var k = 0; k < runList.length; k++) {
+            var idx = (k + rep * 7) % runList.length
+            samples[idx].push(sampleOnce(runList[idx].fn, SAMPLE_MS))
+          }
+          if (onProgress) onProgress(rep + 1, REPS)
+        }
+        for (var j = 0; j < runList.length; j++) {
+          var it = runList[j]
+          var s = samples[j]
+          var med = median(s)
+          var mn = Math.min.apply(null, s),
+            mx = Math.max.apply(null, s)
+          if (!results[it.caseId]) results[it.caseId] = {}
+          if (!results[it.caseId][it.sizeLabel]) results[it.caseId][it.sizeLabel] = {}
+          results[it.caseId][it.sizeLabel][it.variant] = {
+            median: med,
+            min: mn,
+            max: mx,
+            spread: med > 0 ? (mx - mn) / med : 0,
+            samples: s,
+          }
+        }
+      }
+    </script>
+    <script>
+      'use strict'
+      // ---------------------------------------------------------------------------
+      // Case definitions
+      // ---------------------------------------------------------------------------
+
+      function addSizeCases(L) {
+        // L = size label; uses global `fixture`/`refs`
+        // --- Case 1: id lookup ---
+        addCase('01-id', L, {
+          getElementById: function () {
+            eatNode(document.getElementById('target'))
+          },
+          'querySelector(#target)': function () {
+            eatNode(document.querySelector('#target'))
+          },
+          'querySelectorAll(#target)': function () {
+            eatNum(document.querySelectorAll('#target').length)
+          },
+        })
+        // --- Case 2: class lookup ---
+        addCase('02-class', L, {
+          'getElementsByClassName[0]': function () {
+            eatNode(document.getElementsByClassName('c-target')[0])
+          },
+          'getElementsByClassName(.length)': function () {
+            eatNum(document.getElementsByClassName('c-target').length)
+          },
+          'querySelector(.c-target)': function () {
+            eatNode(document.querySelector('.c-target'))
+          },
+          'querySelectorAll(.c-target)': function () {
+            eatNum(document.querySelectorAll('.c-target').length)
+          },
+        })
+        // --- Case 3: tag lookup ---
+        addCase('03-tag', L, {
+          'getElementsByTagName(span)': function () {
+            eatNum(document.getElementsByTagName('span').length)
+          },
+          'querySelectorAll(span)': function () {
+            eatNum(document.querySelectorAll('span').length)
+          },
+        })
+        // --- Case 14 scaling is derived from 01/02 across sizes ---
+
+        if (L !== 'small') {
+          // --- Case 4: collection iteration ---
+          addCase('04-iterate', L, {
+            'live HTMLCollection (c.length each iter)': function () {
+              var c = document.getElementsByClassName('c')
+              for (var i = 0; i < c.length; i++) eatNode(c[i])
+            },
+            'live HTMLCollection (cached length)': function () {
+              var c = document.getElementsByClassName('c')
+              for (var i = 0, len = c.length; i < len; i++) eatNode(c[i])
+            },
+            'static NodeList (querySelectorAll)': function () {
+              var l = document.querySelectorAll('.c')
+              for (var i = 0; i < l.length; i++) eatNode(l[i])
+            },
+            'static NodeList forEach': function () {
+              document.querySelectorAll('.c').forEach(function (el) {
+                eatNode(el)
+              })
+            },
+          })
+          // --- Case 5: repeated access / live-collection caching ---
+          addCase('05-requery-vs-cache', L, {
+            're-query gEBCN x100': function () {
+              for (var i = 0; i < 100; i++) {
+                eatNum(document.getElementsByClassName('c').length)
+              }
+            },
+            'cache live collection x100 reads': function () {
+              var c = document.getElementsByClassName('c')
+              for (var i = 0; i < 100; i++) {
+                eatNum(c.length)
+              }
+            },
+            're-query qSA x100': function () {
+              for (var i = 0; i < 100; i++) {
+                eatNum(document.querySelectorAll('.c').length)
+              }
+            },
+          })
+          // --- Case 6: subtree scoping ---
+          addCase('06-scope', L, {
+            'scopeRoot.querySelector(.deep-target)': function () {
+              eatNode(refs.scope.querySelector('.deep-target'))
+            },
+            'document.querySelector(.deep-target)': function () {
+              eatNode(document.querySelector('.deep-target'))
+            },
+          })
+          // --- Case 11: attribute selector vs manual filter ---
+          addCase('11-attr', L, {
+            'querySelectorAll([data-x="1"])': function () {
+              eatNum(document.querySelectorAll('[data-x="1"]').length)
+            },
+            'getElementsByTagName(*) + manual filter': function () {
+              var all = document.getElementsByTagName('*')
+              var n = 0
+              for (var i = 0, len = all.length; i < len; i++) {
+                if (all[i].getAttribute('data-x') === '1') n++
+              }
+              eatNum(n)
+            },
+          })
+          // --- Case 12: XPath vs CSS vs class ---
+          addCase('12-xpath', L, {
+            'document.evaluate(//*[@data-x="1"])': function () {
+              var r = document.evaluate(
+                '//*[@data-x="1"]',
+                document,
+                null,
+                XPathResult.ANY_TYPE,
+                null
+              )
+              var n = 0,
+                node
+              while ((node = r.iterateNext())) n++
+              eatNum(n)
+            },
+            'querySelectorAll([data-x="1"])': function () {
+              eatNum(document.querySelectorAll('[data-x="1"]').length)
+            },
+            'getElementsByClassName(dx) [equiv set]': function () {
+              eatNum(document.getElementsByClassName('dx').length)
+            },
+          })
+        }
+
+        if (L === 'large') {
+          // --- Case 15: selector complexity ladder ---
+          addCase('15-selector-ladder', L, {
+            span: function () {
+              eatNum(document.querySelectorAll('span').length)
+            },
+            '.c': function () {
+              eatNum(document.querySelectorAll('.c').length)
+            },
+            'span.c': function () {
+              eatNum(document.querySelectorAll('span.c').length)
+            },
+            '[data-x]': function () {
+              eatNum(document.querySelectorAll('[data-x]').length)
+            },
+            'div > span.c': function () {
+              eatNum(document.querySelectorAll('div > span.c').length)
+            },
+            'div span.c': function () {
+              eatNum(document.querySelectorAll('div span.c').length)
+            },
+            ':nth-child(3)': function () {
+              eatNum(document.querySelectorAll(':nth-child(3)').length)
+            },
+          })
+        }
+      }
+
+      function addUnitCases() {
+        // size-independent cases, run once
+        // --- Case 7: closest() vs manual traversal (500-deep chain) ---
+        addCase('07-closest', 'chain-500', {
+          'closest(.ancestor-at-depth-50)': function () {
+            eatNode(chain.leaf.closest('.ancestor-at-depth-50'))
+          },
+          'manual loop + classList.contains': function () {
+            var e = chain.leaf
+            while (e && !(e.tagName === 'DIV' && e.classList.contains('ancestor-at-depth-50')))
+              e = e.parentNode
+            eatNode(e)
+          },
+          'manual loop + matches()': function () {
+            var e = chain.leaf
+            while (e && !e.matches('.ancestor-at-depth-50')) e = e.parentNode
+            eatNode(e)
+          },
+          'closest(div.ancestor)': function () {
+            eatNode(chain.leaf.closest('div.ancestor'))
+          },
+          'closest(.ancestor[data-x="1"])': function () {
+            eatNode(chain.leaf.closest('.ancestor[data-x="1"]'))
+          },
+        })
+        // --- Case 8: child access ---
+        addCase('08-child-access', 'unit', {
+          'el.children[0]': function () {
+            eatNode(childFix.parent.children[0])
+          },
+          'el.firstElementChild': function () {
+            eatNode(childFix.parent.firstElementChild)
+          },
+          'el.childNodes[0] (text node!)': function () {
+            eatNode(childFix.parent.childNodes[0])
+          },
+          'manual firstElementChild polyfill': function () {
+            var n = childFix.parent.firstChild
+            while (n && n.nodeType !== 1) n = n.nextSibling
+            eatNode(n)
+          },
+        })
+        // --- Case 9: sibling walking (200 element sibs + text nodes) ---
+        addCase('09-sibling-walk', 'unit', {
+          'nextElementSibling chain': function () {
+            var e = sibFix.first,
+              n = 0
+            while (e) {
+              n++
+              e = e.nextElementSibling
+            }
+            eatNum(n)
+          },
+          'nextSibling chain (skip non-elements)': function () {
+            var e = sibFix.first,
+              n = 0
+            while (e) {
+              if (e.nodeType === 1) n++
+              e = e.nextSibling
+            }
+            eatNum(n)
+          },
+          'TreeWalker(SHOW_ELEMENT)': function () {
+            var w = document.createTreeWalker(sibFix.parent, NodeFilter.SHOW_ELEMENT)
+            var n = 0
+            while (w.nextNode()) n++
+            eatNum(n)
+          },
+          'NodeIterator(SHOW_ELEMENT)': function () {
+            var it = document.createNodeIterator(sibFix.parent, NodeFilter.SHOW_ELEMENT)
+            var n = 0
+            while (it.nextNode()) n++
+            eatNum(n)
+          },
+        })
+        // --- Case 10: matches() vs classList vs tagName ---
+        addCase('10-matches', 'unit', {
+          'el.matches(".cls")': function () {
+            eatNum(matchEl.matches('.cls') ? 1 : 0)
+          },
+          'el.classList.contains("cls")': function () {
+            eatNum(matchEl.classList.contains('cls') ? 1 : 0)
+          },
+          'el.tagName === "DIV"': function () {
+            eatNum(matchEl.tagName === 'DIV' ? 1 : 0)
+          },
+        })
+        // --- Case 13: named access ---
+        addCase('13-named-access', 'unit', {
+          'window["namedId"]': function () {
+            eatNode(window['namedId'])
+          },
+          'document.forms["benchForm"]': function () {
+            eatNode(document.forms['benchForm'])
+          },
+          'getElementById("namedId")': function () {
+            eatNode(document.getElementById('namedId'))
+          },
+        })
+      }
+    </script>
+    <script>
+      'use strict'
+      // ---------------------------------------------------------------------------
+      // Named-access fixture elements (case 13)
+      // ---------------------------------------------------------------------------
+      ;(function () {
+        var d = document.createElement('div')
+        d.id = 'namedId'
+        document.body.appendChild(d)
+        var f = document.createElement('form')
+        f.name = 'benchForm'
+        f.id = 'benchForm'
+        document.body.appendChild(f)
+      })()
+
+      // ---------------------------------------------------------------------------
+      // Driver
+      // ---------------------------------------------------------------------------
+      window.__done = false
+      window.__progress = 'starting'
+      window.__results = null
+
+      var SIZES = [
+        ['small', 200],
+        ['medium', 2000],
+        ['large', 20000],
+      ]
+
+      function runStep(si) {
+        if (si >= SIZES.length) {
+          window.__results = {
+            meta: {
+              userAgent: navigator.userAgent,
+              reps: REPS,
+              sampleMs: SAMPLE_MS,
+              warmupMs: WARMUP_MS,
+              fixtureCounts: { small: 200, medium: 2000, large: 20000 },
+              actualNodes: window.__actualNodes,
+              sink: sink,
+            },
+            cases: results,
+          }
+          window.__progress = 'done'
+          window.__done = true
+          return
+        }
+        var label = SIZES[si][0],
+          N = SIZES[si][1]
+        window.__progress = 'building fixture: ' + label
+        buildFixture(N)
+        if (!window.__actualNodes) window.__actualNodes = {}
+        window.__actualNodes[label] = refs.nodeCount
+        if (window.gc) window.gc()
+        if (si === 0) addUnitCases()
+        addSizeCases(label)
+        window.__progress = 'running: ' + label + ' (' + runList.length + ' benchmarks)'
+        // Let the event loop breathe so the runner can poll progress
+        setTimeout(function () {
+          runAll(function (rep, total) {
+            window.__progress = label + ' rep ' + rep + '/' + total
+          })
+          runList.length = 0
+          if (window.gc) window.gc()
+          setTimeout(function () {
+            runStep(si + 1)
+          }, 50)
+        }, 50)
+      }
+
+      runStep(0)
+    </script>
+  </body>
+</html>

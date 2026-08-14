@@ -1,0 +1,612 @@
+{
+  "version": "Chrome/150.0.7871.181",
+  "node": "v20.20.2",
+  "date": "2026-08-13T23:31:53.789Z",
+  "cases": {
+    "1.dispatch-vs-depth :: leaf-listener depth=1": {
+      "median": 252083,
+      "min": 234972,
+      "max": 263130,
+      "spread": 28158,
+      "cv": 0.04041265217222215,
+      "n": 10,
+      "agreement10": true
+    },
+    "1.dispatch-vs-depth :: leaf-listener depth=50": {
+      "median": 154299,
+      "min": 140622,
+      "max": 157709,
+      "spread": 17087,
+      "cv": 0.03965052031414345,
+      "n": 10,
+      "agreement10": true
+    },
+    "1.dispatch-vs-depth :: leaf-listener depth=500": {
+      "median": 31521,
+      "min": 27509,
+      "max": 32416,
+      "spread": 4907,
+      "cv": 0.05125319531131408,
+      "n": 10,
+      "agreement10": true
+    },
+    "1.dispatch-vs-depth :: root-listener depth=1": {
+      "median": 252632,
+      "min": 244862,
+      "max": 271888,
+      "spread": 27026,
+      "cv": 0.03295841294990937,
+      "n": 10,
+      "agreement10": true
+    },
+    "1.dispatch-vs-depth :: root-listener depth=50": {
+      "median": 142316,
+      "min": 134067,
+      "max": 158351,
+      "spread": 24284,
+      "cv": 0.05907402514304539,
+      "n": 10,
+      "agreement10": true
+    },
+    "1.dispatch-vs-depth :: root-listener depth=500": {
+      "median": 31281,
+      "min": 26453,
+      "max": 34013,
+      "spread": 7560,
+      "cv": 0.09152321767821986,
+      "n": 10,
+      "agreement10": true
+    },
+    "2.capture-vs-bubble depth=500 :: capture@root": {
+      "median": 28869,
+      "min": 25447,
+      "max": 33071,
+      "spread": 7624,
+      "cv": 0.07265322851871393,
+      "n": 10,
+      "agreement10": true
+    },
+    "2.capture-vs-bubble depth=500 :: bubble@root": {
+      "median": 28556,
+      "min": 26379,
+      "max": 33464,
+      "spread": 7085,
+      "cv": 0.06634053515390488,
+      "n": 10,
+      "agreement10": true
+    },
+    "2.capture-vs-bubble depth=500 :: bubble@leaf": {
+      "median": 30889,
+      "min": 25205,
+      "max": 34365,
+      "spread": 9160,
+      "cv": 0.09930314915380055,
+      "n": 15,
+      "agreement10": false
+    },
+    "3.listener-count :: 1 listener on target": {
+      "median": 246300,
+      "min": 234972,
+      "max": 256000,
+      "spread": 21028,
+      "cv": 0.028456062041941278,
+      "n": 10,
+      "agreement10": true
+    },
+    "3.listener-count :: 10 listeners on target": {
+      "median": 243006,
+      "min": 229635,
+      "max": 253549,
+      "spread": 23914,
+      "cv": 0.03222655612874183,
+      "n": 10,
+      "agreement10": true
+    },
+    "3.listener-count :: 100 listeners on target": {
+      "median": 248428,
+      "min": 236568,
+      "max": 254305,
+      "spread": 17737,
+      "cv": 0.02200173324974426,
+      "n": 10,
+      "agreement10": true
+    },
+    "3.listener-count :: 10 listeners / 10 ancestors (depth10)": {
+      "median": 80959,
+      "min": 76800,
+      "max": 84881,
+      "spread": 8081,
+      "cv": 0.0347641770289673,
+      "n": 10,
+      "agreement10": true
+    },
+    "3.listener-count :: 10 listeners on target (depth10 tree)": {
+      "median": 221719,
+      "min": 209431,
+      "max": 226082,
+      "spread": 16651,
+      "cv": 0.023842597002255186,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation registration :: addEventListener x1 (delegated)": {
+      "median": 1327407,
+      "min": 1284224,
+      "max": 1364878,
+      "spread": 80654,
+      "cv": 0.016847816691441534,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation registration :: addEventListener x1000 (direct)": {
+      "median": 1304,
+      "min": 1247,
+      "max": 1330,
+      "spread": 83,
+      "cv": 0.020418576882949045,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation dispatch :: delegated: 1 doc listener + closest": {
+      "median": 176143,
+      "min": 165492,
+      "max": 185347,
+      "spread": 19855,
+      "cv": 0.034985066606025114,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation dispatch :: direct: 1000 listeners on buttons": {
+      "median": 174022,
+      "min": 166737,
+      "max": 178486,
+      "spread": 11749,
+      "cv": 0.020295611406278977,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation dispatch :: delegated: 1 listener on 2000-node flat parent": {
+      "median": 146961,
+      "min": 133712,
+      "max": 154828,
+      "spread": 21116,
+      "cv": 0.03778465610388023,
+      "n": 10,
+      "agreement10": true
+    },
+    "4.delegation dispatch :: direct: 1 listener on target in 2000-node flat": {
+      "median": 148431,
+      "min": 139698,
+      "max": 152431,
+      "spread": 12733,
+      "cv": 0.031240044805784028,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: baseline (no read)": {
+      "median": 248924,
+      "min": 234115,
+      "max": 254895,
+      "spread": 20780,
+      "cv": 0.02670573528847566,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.key": {
+      "median": 238774,
+      "min": 220543,
+      "max": 244862,
+      "spread": 24319,
+      "cv": 0.030656735417273987,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.code": {
+      "median": 244700,
+      "min": 229203,
+      "max": 248263,
+      "spread": 19060,
+      "cv": 0.028785082340099206,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.keyCode": {
+      "median": 238456,
+      "min": 221277,
+      "max": 249838,
+      "spread": 28561,
+      "cv": 0.03632327304382018,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.which": {
+      "median": 248842,
+      "min": 240901,
+      "max": 251664,
+      "spread": 10763,
+      "cv": 0.015121681888797152,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.charCode": {
+      "median": 241863,
+      "min": 231412,
+      "max": 248842,
+      "spread": 17430,
+      "cv": 0.022051007154229585,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.key read twice": {
+      "median": 241221,
+      "min": 231412,
+      "max": 247577,
+      "spread": 16165,
+      "cv": 0.01792603344895415,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.getModifierState('Control')": {
+      "median": 233728,
+      "min": 224308,
+      "max": 242266,
+      "spread": 17958,
+      "cv": 0.021211431256830796,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.ctrlKey": {
+      "median": 245514,
+      "min": 220866,
+      "max": 253533,
+      "spread": 32667,
+      "cv": 0.03522237436651152,
+      "n": 10,
+      "agreement10": true
+    },
+    "5.key-property-reads :: e.shiftKey": {
+      "median": 246399,
+      "min": 224356,
+      "max": 251497,
+      "spread": 27141,
+      "cv": 0.03538247749098116,
+      "n": 10,
+      "agreement10": true
+    },
+    "6.shortcut-matching (handler only) :: a) normalized string + Map.get": {
+      "median": 5379821,
+      "min": 4915200,
+      "max": 5452246,
+      "spread": 537046,
+      "cv": 0.030926629935855227,
+      "n": 10,
+      "agreement10": true
+    },
+    "6.shortcut-matching (handler only) :: b) bitmask int + Map<number>": {
+      "median": 16541800,
+      "min": 16232497,
+      "max": 16731671,
+      "spread": 499174,
+      "cv": 0.009121620199182476,
+      "n": 10,
+      "agreement10": true
+    },
+    "6.shortcut-matching (handler only) :: c) linear scan of 50 bindings (hit last)": {
+      "median": 2284622,
+      "min": 1992794,
+      "max": 2309519,
+      "spread": 316725,
+      "cv": 0.03938836338314228,
+      "n": 10,
+      "agreement10": true
+    },
+    "6.shortcut-matching (handler only) :: d) Map-of-Maps trie": {
+      "median": 14578061,
+      "min": 6213493,
+      "max": 14805475,
+      "spread": 8591982,
+      "cv": 0.18630045095505826,
+      "n": 10,
+      "agreement10": true
+    },
+    "7.registration-removal :: add+remove pair": {
+      "median": 1344509,
+      "min": 1176079,
+      "max": 1404497,
+      "spread": 228418,
+      "cv": 0.04626874396626219,
+      "n": 10,
+      "agreement10": true
+    },
+    "7.registration-removal :: once:true (register+dispatch+auto-remove)": {
+      "median": 183281,
+      "min": 163404,
+      "max": 190575,
+      "spread": 27171,
+      "cv": 0.04687879229750064,
+      "n": 10,
+      "agreement10": true
+    },
+    "7.registration-removal :: abort: 100 listeners removed via 1 abort()": {
+      "median": 11931,
+      "min": 7888,
+      "max": 12340,
+      "spread": 4452,
+      "cv": 0.11064529145961235,
+      "n": 10,
+      "agreement10": true
+    },
+    "7.registration-removal :: remove: 100 removeEventListener calls": {
+      "median": 22645,
+      "min": 9005,
+      "max": 24916,
+      "spread": 15911,
+      "cv": 0.23002890921241842,
+      "n": 15,
+      "agreement10": false
+    },
+    "8.event-control :: no preventDefault": {
+      "median": 247055,
+      "min": 230722,
+      "max": 253968,
+      "spread": 23246,
+      "cv": 0.029287127383559486,
+      "n": 10,
+      "agreement10": true
+    },
+    "8.event-control :: preventDefault()": {
+      "median": 243485,
+      "min": 215811,
+      "max": 250796,
+      "spread": 34985,
+      "cv": 0.04109369130095666,
+      "n": 10,
+      "agreement10": true
+    },
+    "8.event-control :: no stopPropagation (2-level path)": {
+      "median": 201615,
+      "min": 195755,
+      "max": 207660,
+      "spread": 11905,
+      "cv": 0.018839523899126433,
+      "n": 10,
+      "agreement10": true
+    },
+    "8.event-control :: stopPropagation() (2-level path)": {
+      "median": 235285,
+      "min": 208945,
+      "max": 239920,
+      "spread": 30975,
+      "cv": 0.03682152518004397,
+      "n": 10,
+      "agreement10": true
+    },
+    "8.event-control :: 2 listeners same node, no stopImmediate": {
+      "median": 243086,
+      "min": 237272,
+      "max": 252502,
+      "spread": 15230,
+      "cv": 0.019798706974153587,
+      "n": 10,
+      "agreement10": true
+    },
+    "8.event-control :: stopImmediatePropagation (2 same-node)": {
+      "median": 232882,
+      "min": 212978,
+      "max": 240901,
+      "spread": 27923,
+      "cv": 0.03640774924163959,
+      "n": 10,
+      "agreement10": true
+    },
+    "9.event-type :: keydown": {
+      "median": 246544,
+      "min": 222097,
+      "max": 255234,
+      "spread": 33137,
+      "cv": 0.036464357751260945,
+      "n": 10,
+      "agreement10": true
+    },
+    "9.event-type :: keyup": {
+      "median": 248428,
+      "min": 244618,
+      "max": 253465,
+      "spread": 8847,
+      "cv": 0.010174625232014976,
+      "n": 10,
+      "agreement10": true
+    },
+    "9.event-type :: beforeinput (InputEvent)": {
+      "median": 308701,
+      "min": 289362,
+      "max": 317229,
+      "spread": 27867,
+      "cv": 0.030991815785186016,
+      "n": 10,
+      "agreement10": true
+    },
+    "9.event-type :: input (InputEvent)": {
+      "median": 308085,
+      "min": 287640,
+      "max": 315129,
+      "spread": 27489,
+      "cv": 0.030114910955418,
+      "n": 10,
+      "agreement10": true
+    },
+    "9.event-type :: compositionstart": {
+      "median": 359268,
+      "min": 330323,
+      "max": 365227,
+      "spread": 34904,
+      "cv": 0.029426230572068026,
+      "n": 10,
+      "agreement10": true
+    },
+    "10.listener-shape :: function listener": {
+      "median": 248346,
+      "min": 230646,
+      "max": 254642,
+      "spread": 23996,
+      "cv": 0.025997133761164432,
+      "n": 10,
+      "agreement10": true
+    },
+    "10.listener-shape :: {handleEvent} object": {
+      "median": 223936,
+      "min": 212061,
+      "max": 230112,
+      "spread": 18051,
+      "cv": 0.024153640850957624,
+      "n": 10,
+      "agreement10": true
+    },
+    "10.listener-shape :: arrow closure": {
+      "median": 243327,
+      "min": 233034,
+      "max": 254558,
+      "spread": 21524,
+      "cv": 0.028237848505931033,
+      "n": 10,
+      "agreement10": true
+    },
+    "10.listener-shape :: onkeydown property": {
+      "median": 228237,
+      "min": 215311,
+      "max": 237430,
+      "spread": 22119,
+      "cv": 0.02727992899811327,
+      "n": 10,
+      "agreement10": true
+    },
+    "11.event-construction :: construct only (no dispatch)": {
+      "median": 432197,
+      "min": 417198,
+      "max": 438420,
+      "spread": 21222,
+      "cv": 0.017885727175894706,
+      "n": 10,
+      "agreement10": true
+    },
+    "11.event-construction :: dispatch, fresh event each time": {
+      "median": 245596,
+      "min": 235050,
+      "max": 251413,
+      "spread": 16363,
+      "cv": 0.02290156296920509,
+      "n": 10,
+      "agreement10": true
+    },
+    "11.event-construction :: dispatch, reused preconstructed event": {
+      "median": 775912,
+      "min": 606159,
+      "max": 789262,
+      "spread": 183103,
+      "cv": 0.09750699178401954,
+      "n": 10,
+      "agreement10": true
+    },
+    "12.guards :: no guard": {
+      "median": 239920,
+      "min": 214380,
+      "max": 246891,
+      "spread": 32511,
+      "cv": 0.04119870680370136,
+      "n": 10,
+      "agreement10": true
+    },
+    "12.guards :: if(e.repeat) return": {
+      "median": 238933,
+      "min": 214183,
+      "max": 251748,
+      "spread": 37565,
+      "cv": 0.043914965394885846,
+      "n": 10,
+      "agreement10": true
+    },
+    "12.guards :: if(e.isComposing) return": {
+      "median": 239284,
+      "min": 222609,
+      "max": 252334,
+      "spread": 29725,
+      "cv": 0.03273673873285984,
+      "n": 10,
+      "agreement10": true
+    },
+    "14.delegated-target-checks :: e.target.closest('[data-k]')": {
+      "median": 127915,
+      "min": 122027,
+      "max": 135005,
+      "spread": 12978,
+      "cv": 0.031908098703565355,
+      "n": 10,
+      "agreement10": true
+    },
+    "14.delegated-target-checks :: e.target.matches('[data-k]')": {
+      "median": 125665,
+      "min": 119855,
+      "max": 131740,
+      "spread": 11885,
+      "cv": 0.02875717332072061,
+      "n": 10,
+      "agreement10": true
+    },
+    "14.delegated-target-checks :: e.target.tagName === 'BUTTON'": {
+      "median": 125148,
+      "min": 117048,
+      "max": 130977,
+      "spread": 13929,
+      "cv": 0.027189234843628132,
+      "n": 10,
+      "agreement10": true
+    },
+    "14.delegated-target-checks :: e.composedPath()[0]": {
+      "median": 130425,
+      "min": 121500,
+      "max": 133757,
+      "spread": 12257,
+      "cv": 0.03266559476376277,
+      "n": 10,
+      "agreement10": true
+    }
+  },
+  "trusted": {
+    "empty": {
+      "presses": 200,
+      "wallSec": 0.793,
+      "pressesPerSec": 252.20680958385876,
+      "keydowns": 200,
+      "keyups": 200,
+      "beforeinputs": 200,
+      "inputs": 200,
+      "latencyMsAvg": 1.2699999999813736,
+      "latencyMsMax": 6.600000000093132,
+      "latencyN": 50
+    },
+    "shortcut": {
+      "presses": 200,
+      "wallSec": 0.855,
+      "pressesPerSec": 233.91812865497076,
+      "keydowns": 200,
+      "keyups": 200,
+      "beforeinputs": 200,
+      "inputs": 200,
+      "latencyMsAvg": 1.4260000000242143,
+      "latencyMsMax": 6,
+      "latencyN": 50
+    },
+    "preventDefault": {
+      "presses": 200,
+      "wallSec": 0.315,
+      "pressesPerSec": 634.9206349206349,
+      "keydowns": 200,
+      "keyups": 200,
+      "beforeinputs": 0,
+      "inputs": 0,
+      "latencyMsAvg": 0.9279999999981373,
+      "latencyMsMax": 4.100000000093132,
+      "latencyN": 50
+    }
+  }
+}

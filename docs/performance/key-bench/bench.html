@@ -1,0 +1,843 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>key-bench</title>
+  </head>
+  <body>
+    <script>
+      'use strict'
+      // ============================== HARNESS ==============================
+      window.__sink = 0
+      window.__lastEv = null
+      function sink(v) {
+        window.__sink += v
+      }
+      const now = () => performance.now()
+      const tick = () => new Promise(r => setTimeout(r, 0))
+
+      function warmup(fn, ms) {
+        const t0 = now()
+        while (now() - t0 < ms) {
+          for (let i = 0; i < 2000; i++) fn(i)
+        }
+      }
+
+      // one measurement: batches calibrated to >=2ms, total >= ms; returns ops/sec
+      function measureOnce(fn, ms) {
+        let batch = 1
+        for (;;) {
+          const t0 = now()
+          for (let i = 0; i < batch; i++) fn(i)
+          const dt = now() - t0
+          if (dt >= 2 || batch >= 1 << 26) break
+          batch *= 2
+        }
+        let ops = 0
+        const tStart = now()
+        do {
+          for (let i = 0; i < batch; i++) fn(i)
+          ops += batch
+        } while (now() - tStart < ms)
+        const total = now() - tStart
+        return ops / (total / 1000)
+      }
+
+      function stats(a) {
+        const s = [...a].sort((x, y) => x - y)
+        const med = s[Math.floor(s.length / 2)]
+        const min = s[0],
+          max = s[s.length - 1]
+        const mean = a.reduce((x, y) => x + y, 0) / a.length
+        const sd = Math.sqrt(a.reduce((x, y) => x + (y - mean) * (y - mean), 0) / a.length)
+        return { median: med, min, max, spread: max - min, cv: sd / mean, reps: a.map(Math.round) }
+      }
+
+      // case: {name, fn, setup?, before?, cleanup?}
+      const suites = []
+      function suite(name, cases) {
+        suites.push({ name, cases })
+      }
+
+      async function runSuites(list) {
+        const results = {}
+        for (const s of list) {
+          if (window.gc) gc()
+          await tick()
+          for (const c of s.cases) {
+            if (c.setup) c.setup()
+            warmup(c.fn, 200)
+          }
+          const perCase = s.cases.map(() => [])
+          for (let rep = 0; rep < 5; rep++) {
+            let order = s.cases.map((_, i) => i)
+            if (rep % 2 === 1) order.reverse() // alternate case order across reps
+            for (const idx of order) {
+              const c = s.cases[idx]
+              if (c.before) c.before()
+              perCase[idx].push(measureOnce(c.fn, 300))
+            }
+            await tick()
+          }
+          s.cases.forEach((c, i) => {
+            results[s.name + ' :: ' + c.name] = stats(perCase[i])
+            if (c.cleanup) c.cleanup()
+          })
+        }
+        return results
+      }
+
+      window.__runAll = async function (filter) {
+        const list = filter
+          ? suites
+              .filter(s =>
+                filter.some(
+                  f =>
+                    s.name + ' :: ' === f.slice(0, s.name.length + 4) ||
+                    f.startsWith(s.name + ' :: ')
+                )
+              )
+              .map(s => ({
+                name: s.name,
+                cases: s.cases.filter(c => !filter || filter.includes(s.name + ' :: ' + c.name)),
+              }))
+              .filter(s => s.cases.length)
+          : suites
+        const results = await runSuites(list)
+        return { results, sink: window.__sink }
+      }
+
+      // ============================== FIXTURES ==============================
+      const KINIT = {
+        key: 'k',
+        code: 'KeyK',
+        keyCode: 75,
+        which: 75,
+        bubbles: true,
+        cancelable: true,
+      }
+      const KINIT_CTRL = {
+        key: 'k',
+        code: 'KeyK',
+        keyCode: 75,
+        which: 75,
+        bubbles: true,
+        cancelable: true,
+        ctrlKey: true,
+        shiftKey: true,
+      }
+      const kev = init => new KeyboardEvent('keydown', init || KINIT)
+
+      // detached depth trees: path length == depth exactly
+      function depthTree(depth) {
+        const root = document.createElement('div')
+        let cur = root
+        for (let i = 1; i < depth; i++) {
+          const d = document.createElement('div')
+          cur.appendChild(d)
+          cur = d
+        }
+        return { root, leaf: cur }
+      }
+      const T = {}
+      for (const d of [1, 10, 50, 500]) T[d] = depthTree(d)
+
+      // attached: container with 1000 buttons
+      const container = document.createElement('div')
+      const buttons = []
+      for (let i = 0; i < 1000; i++) {
+        const b = document.createElement('button')
+        b.setAttribute('data-k', 'k' + i)
+        b.textContent = 'b' + i
+        container.appendChild(b)
+        buttons.push(b)
+      }
+      document.body.appendChild(container)
+
+      // attached: 2000-node flat tree
+      const flat = document.createElement('div')
+      const flatKids = []
+      for (let i = 0; i < 2000; i++) {
+        const d = document.createElement('div')
+        d.setAttribute('data-k', 'f' + i)
+        flat.appendChild(d)
+        flatKids.push(d)
+      }
+      document.body.appendChild(flat)
+
+      const H = () => {
+        sink(1)
+      } // shared minimal handler
+    </script>
+  </body>
+</html>
+
+<script>
+  'use strict'
+  // ============================== CASES 1-3: dispatch topology ==============================
+  {
+    const cases = []
+    for (const d of [1, 50, 500]) {
+      const t = T[d]
+      t.leaf.addEventListener('keydown', H) // one bubble listener ON THE LEAF
+      cases.push({
+        name: 'leaf-listener depth=' + d,
+        fn() {
+          t.leaf.dispatchEvent(kev())
+        },
+      })
+    }
+    for (const d of [1, 50, 500]) {
+      const t = depthTree(d)
+      t.root.addEventListener('keydown', H) // one listener on ROOT: full path traversal
+      cases.push({
+        name: 'root-listener depth=' + d,
+        fn() {
+          t.leaf.dispatchEvent(kev())
+        },
+      })
+    }
+    suite('1.dispatch-vs-depth', cases)
+  }
+  {
+    const t = T[500]
+    const cap = depthTree(500),
+      bub = depthTree(500)
+    cap.root.addEventListener('keydown', H, true) // capture at root
+    bub.root.addEventListener('keydown', H) // bubble at root
+    // T[500].leaf already has a bubble listener from suite 1 — use fresh tree to be clean
+    const leafT = depthTree(500)
+    leafT.leaf.addEventListener('keydown', H)
+    suite('2.capture-vs-bubble depth=500', [
+      {
+        name: 'capture@root',
+        fn() {
+          cap.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'bubble@root',
+        fn() {
+          bub.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'bubble@leaf',
+        fn() {
+          leafT.leaf.dispatchEvent(kev())
+        },
+      },
+    ])
+  }
+  {
+    const n1 = document.createElement('div')
+    n1.addEventListener('keydown', H)
+    const n10 = document.createElement('div')
+    for (let i = 0; i < 10; i++) n10.addEventListener('keydown', H)
+    const n100 = document.createElement('div')
+    for (let i = 0; i < 100; i++) n100.addEventListener('keydown', H)
+    // 10 listeners spread across 10 ancestors (depth 10)
+    const t10 = depthTree(10)
+    {
+      let cur = t10.root
+      for (let i = 0; i < 10; i++) {
+        cur.addEventListener('keydown', H)
+        cur = cur.firstChild || cur
+      }
+    }
+    // 10 listeners on the target itself, same tree shape for fairness
+    const t10b = depthTree(10)
+    for (let i = 0; i < 10; i++) t10b.leaf.addEventListener('keydown', H)
+    suite('3.listener-count', [
+      {
+        name: '1 listener on target',
+        fn() {
+          n1.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '10 listeners on target',
+        fn() {
+          n10.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '100 listeners on target',
+        fn() {
+          n100.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '10 listeners / 10 ancestors (depth10)',
+        fn() {
+          t10.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '10 listeners on target (depth10 tree)',
+        fn() {
+          t10b.leaf.dispatchEvent(kev())
+        },
+      },
+    ])
+  }
+  // ============================== CASE 4: delegation vs direct ==============================
+  {
+    const midBtn = buttons[500]
+    const delegHandler = e => {
+      const t = e.target.closest('[data-k]')
+      sink(t ? 1 : 0)
+    }
+    // registration cost: op = register + remove (needed to repeat)
+    suite('4.delegation registration', [
+      {
+        name: 'addEventListener x1 (delegated)',
+        fn() {
+          document.addEventListener('keydown', delegHandler)
+          document.removeEventListener('keydown', delegHandler)
+        },
+      },
+      {
+        name: 'addEventListener x1000 (direct)',
+        fn() {
+          for (let i = 0; i < 1000; i++) buttons[i].addEventListener('keydown', H)
+          for (let i = 0; i < 1000; i++) buttons[i].removeEventListener('keydown', H)
+        },
+      },
+    ])
+    const dCases = [
+      {
+        name: 'delegated: 1 doc listener + closest',
+        setup() {
+          document.addEventListener('keydown', delegHandler)
+        },
+        fn() {
+          midBtn.dispatchEvent(kev())
+        },
+        cleanup() {
+          document.removeEventListener('keydown', delegHandler)
+        },
+      },
+      {
+        name: 'direct: 1000 listeners on buttons',
+        setup() {
+          for (let i = 0; i < 1000; i++) buttons[i].addEventListener('keydown', H)
+        },
+        fn() {
+          midBtn.dispatchEvent(kev())
+        },
+        cleanup() {
+          for (let i = 0; i < 1000; i++) buttons[i].removeEventListener('keydown', H)
+        },
+      },
+    ]
+    // flat 2000-node variant
+    const midFlat = flatKids[1000]
+    const flatDeleg = e => {
+      const t = e.target.closest('[data-k]')
+      sink(t ? 1 : 0)
+    }
+    dCases.push(
+      {
+        name: 'delegated: 1 listener on 2000-node flat parent',
+        setup() {
+          flat.addEventListener('keydown', flatDeleg)
+        },
+        fn() {
+          midFlat.dispatchEvent(kev())
+        },
+        cleanup() {
+          flat.removeEventListener('keydown', flatDeleg)
+        },
+      },
+      {
+        name: 'direct: 1 listener on target in 2000-node flat',
+        setup() {
+          midFlat.addEventListener('keydown', H)
+        },
+        fn() {
+          midFlat.dispatchEvent(kev())
+        },
+        cleanup() {
+          midFlat.removeEventListener('keydown', H)
+        },
+      }
+    )
+    suite('4.delegation dispatch', dCases)
+  }
+  // ============================== CASE 5: key property reads ==============================
+  {
+    function propCase(name, read) {
+      const n = document.createElement('div')
+      n.addEventListener('keydown', e => sink(read(e)))
+      return {
+        name,
+        fn() {
+          n.dispatchEvent(kev())
+        },
+      }
+    }
+    suite('5.key-property-reads', [
+      propCase('baseline (no read)', () => 1),
+      propCase('e.key', e => e.key.length),
+      propCase('e.code', e => e.code.length),
+      propCase('e.keyCode', e => e.keyCode),
+      propCase('e.which', e => e.which),
+      propCase('e.charCode', e => e.charCode),
+      propCase('e.key read twice', e => e.key.length + e.key.length),
+      propCase("e.getModifierState('Control')", e => (e.getModifierState('Control') ? 1 : 0)),
+      propCase('e.ctrlKey', e => (e.ctrlKey ? 1 : 0)),
+      propCase('e.shiftKey', e => (e.shiftKey ? 1 : 0)),
+    ])
+  }
+</script>
+
+<script>
+  'use strict'
+  // ============================== CASE 6: shortcut matching (handler-only) ==============================
+  {
+    const ev = new KeyboardEvent('keydown', KINIT_CTRL)
+    const hit = () => sink(1)
+    // (a) normalized string + Map.get
+    const strMap = new Map([['ctrl+shift+k', hit]])
+    const hStr = e => {
+      const s =
+        (e.ctrlKey ? 'ctrl+' : '') +
+        (e.shiftKey ? 'shift+' : '') +
+        (e.altKey ? 'alt+' : '') +
+        (e.metaKey ? 'meta+' : '') +
+        e.key.toLowerCase()
+      const f = strMap.get(s)
+      if (f) f()
+    }
+    // (b) bitmask integer + Map<number,fn>
+    const bitMap = new Map([[1 | 2 | (75 << 4), hit]])
+    const hBit = e => {
+      const code =
+        (e.ctrlKey ? 1 : 0) |
+        (e.shiftKey ? 2 : 0) |
+        (e.altKey ? 4 : 0) |
+        (e.metaKey ? 8 : 0) |
+        (e.keyCode << 4)
+      const f = bitMap.get(code)
+      if (f) f()
+    }
+    // (c) linear array scan of 50 binding objects; match placed LAST (worst case)
+    const bindings = []
+    for (let i = 0; i < 49; i++)
+      bindings.push({ ctrl: true, shift: false, alt: false, meta: false, key: 'x' + i, fn: hit })
+    bindings.push({ ctrl: true, shift: true, alt: false, meta: false, key: 'k', fn: hit })
+    const hScan = e => {
+      const c = e.ctrlKey,
+        s = e.shiftKey,
+        a = e.altKey,
+        m = e.metaKey,
+        k = e.key
+      for (let i = 0; i < bindings.length; i++) {
+        const b = bindings[i]
+        if (b.ctrl === c && b.shift === s && b.alt === a && b.meta === m && b.key === k) {
+          b.fn()
+          return
+        }
+      }
+    }
+    // (d) Map-of-Maps trie: ctrl -> shift -> key -> fn
+    const trie = new Map([[true, new Map([[true, new Map([['k', hit]])]])]])
+    const hTrie = e => {
+      const l1 = trie.get(e.ctrlKey)
+      const l2 = l1 && l1.get(e.shiftKey)
+      const f = l2 && l2.get(e.key)
+      if (f) f()
+    }
+    suite('6.shortcut-matching (handler only)', [
+      {
+        name: 'a) normalized string + Map.get',
+        fn() {
+          hStr(ev)
+        },
+      },
+      {
+        name: 'b) bitmask int + Map<number>',
+        fn() {
+          hBit(ev)
+        },
+      },
+      {
+        name: 'c) linear scan of 50 bindings (hit last)',
+        fn() {
+          hScan(ev)
+        },
+      },
+      {
+        name: 'd) Map-of-Maps trie',
+        fn() {
+          hTrie(ev)
+        },
+      },
+    ])
+  }
+  // ============================== CASE 7: registration / removal ==============================
+  {
+    const n = document.createElement('div')
+    suite('7.registration-removal', [
+      {
+        name: 'add+remove pair',
+        fn() {
+          n.addEventListener('keydown', H)
+          n.removeEventListener('keydown', H)
+          sink(1)
+        },
+      },
+      {
+        name: 'once:true (register+dispatch+auto-remove)',
+        fn() {
+          n.addEventListener('keydown', H, { once: true })
+          n.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'abort: 100 listeners removed via 1 abort()',
+        fn() {
+          const c = new AbortController()
+          for (let i = 0; i < 100; i++) n.addEventListener('keydown', H, { signal: c.signal })
+          c.abort()
+          sink(1)
+        },
+      },
+      {
+        name: 'remove: 100 removeEventListener calls',
+        fn() {
+          for (let i = 0; i < 100; i++) n.addEventListener('keydown', H)
+          for (let i = 0; i < 100; i++) n.removeEventListener('keydown', H)
+          sink(1)
+        },
+      },
+    ])
+  }
+  // ============================== CASE 8: event control calls ==============================
+  {
+    const p1 = depthTree(2),
+      p2 = depthTree(2),
+      p3 = depthTree(2),
+      p4 = depthTree(2)
+    const s1 = document.createElement('div'),
+      s2 = document.createElement('div')
+    p1.leaf.addEventListener('keydown', H)
+    p2.leaf.addEventListener('keydown', e => {
+      e.preventDefault()
+      sink(1)
+    })
+    p3.leaf.addEventListener('keydown', H)
+    p3.root.addEventListener('keydown', H)
+    p4.leaf.addEventListener('keydown', e => {
+      e.stopPropagation()
+      sink(1)
+    })
+    p4.root.addEventListener('keydown', H)
+    s1.addEventListener('keydown', H)
+    s1.addEventListener('keydown', H)
+    s2.addEventListener('keydown', e => {
+      e.stopImmediatePropagation()
+      sink(1)
+    })
+    s2.addEventListener('keydown', H)
+    suite('8.event-control', [
+      {
+        name: 'no preventDefault',
+        fn() {
+          p1.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'preventDefault()',
+        fn() {
+          p2.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'no stopPropagation (2-level path)',
+        fn() {
+          p3.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'stopPropagation() (2-level path)',
+        fn() {
+          p4.leaf.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '2 listeners same node, no stopImmediate',
+        fn() {
+          s1.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'stopImmediatePropagation (2 same-node)',
+        fn() {
+          s2.dispatchEvent(kev())
+        },
+      },
+    ])
+  }
+  // ============================== CASE 9: event type cost ==============================
+  {
+    const n = document.createElement('div')
+    const h = e => sink(1)
+    n.addEventListener('keydown', h)
+    n.addEventListener('keyup', h)
+    n.addEventListener('beforeinput', h)
+    n.addEventListener('input', h)
+    n.addEventListener('compositionstart', h)
+    suite('9.event-type', [
+      {
+        name: 'keydown',
+        fn() {
+          n.dispatchEvent(new KeyboardEvent('keydown', KINIT))
+        },
+      },
+      {
+        name: 'keyup',
+        fn() {
+          n.dispatchEvent(new KeyboardEvent('keyup', KINIT))
+        },
+      },
+      {
+        name: 'beforeinput (InputEvent)',
+        fn() {
+          n.dispatchEvent(
+            new InputEvent('beforeinput', {
+              bubbles: true,
+              cancelable: true,
+              data: 'k',
+              inputType: 'insertText',
+            })
+          )
+        },
+      },
+      {
+        name: 'input (InputEvent)',
+        fn() {
+          n.dispatchEvent(
+            new InputEvent('input', { bubbles: true, data: 'k', inputType: 'insertText' })
+          )
+        },
+      },
+      {
+        name: 'compositionstart',
+        fn() {
+          n.dispatchEvent(new CompositionEvent('compositionstart', { bubbles: true, data: 'k' }))
+        },
+      },
+    ])
+  }
+  // ============================== CASE 10: listener shape ==============================
+  {
+    const mk = () => document.createElement('div')
+    const nFn = mk()
+    nFn.addEventListener('keydown', function (e) {
+      sink(1)
+    })
+    const nObj = mk()
+    nObj.addEventListener('keydown', {
+      handleEvent(e) {
+        sink(1)
+      },
+    })
+    const nArrow = mk()
+    let c = 0
+    nArrow.addEventListener('keydown', e => {
+      c++
+      sink(c & 1)
+    })
+    const nProp = mk()
+    nProp.onkeydown = function (e) {
+      sink(1)
+    }
+    suite('10.listener-shape', [
+      {
+        name: 'function listener',
+        fn() {
+          nFn.dispatchEvent(kev())
+        },
+      },
+      {
+        name: '{handleEvent} object',
+        fn() {
+          nObj.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'arrow closure',
+        fn() {
+          nArrow.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'onkeydown property',
+        fn() {
+          nProp.dispatchEvent(kev())
+        },
+      },
+    ])
+  }
+  // ============================== CASE 11: event construction ==============================
+  {
+    const n = document.createElement('div')
+    n.addEventListener('keydown', H)
+    const pre = kev()
+    suite('11.event-construction', [
+      {
+        name: 'construct only (no dispatch)',
+        fn() {
+          window.__lastEv = kev()
+        },
+      },
+      {
+        name: 'dispatch, fresh event each time',
+        fn() {
+          n.dispatchEvent(kev())
+        },
+      },
+      {
+        name: 'dispatch, reused preconstructed event',
+        fn() {
+          n.dispatchEvent(pre)
+        },
+      },
+    ])
+  }
+  // ============================== CASE 12: composition/repeat guards ==============================
+  {
+    const RINIT = Object.assign({ repeat: false }, KINIT)
+    const n0 = document.createElement('div')
+    n0.addEventListener('keydown', e => {
+      sink(1)
+    })
+    const nR = document.createElement('div')
+    nR.addEventListener('keydown', e => {
+      if (e.repeat) return
+      sink(1)
+    })
+    const nC = document.createElement('div')
+    nC.addEventListener('keydown', e => {
+      if (e.isComposing) return
+      sink(1)
+    })
+    suite('12.guards', [
+      {
+        name: 'no guard',
+        fn() {
+          n0.dispatchEvent(new KeyboardEvent('keydown', RINIT))
+        },
+      },
+      {
+        name: 'if(e.repeat) return',
+        fn() {
+          nR.dispatchEvent(new KeyboardEvent('keydown', RINIT))
+        },
+      },
+      {
+        name: 'if(e.isComposing) return',
+        fn() {
+          nC.dispatchEvent(new KeyboardEvent('keydown', RINIT))
+        },
+      },
+    ])
+  }
+  // ============================== CASE 14: target checks in delegated handler ==============================
+  {
+    const target = buttons[777]
+    function delCase(name, check) {
+      const h = e => sink(check(e))
+      return {
+        name,
+        setup() {
+          container.addEventListener('keydown', h)
+        },
+        fn() {
+          target.dispatchEvent(kev())
+        },
+        cleanup() {
+          container.removeEventListener('keydown', h)
+        },
+      }
+    }
+    suite('14.delegated-target-checks', [
+      delCase("e.target.closest('[data-k]')", e => (e.target.closest('[data-k]') ? 1 : 0)),
+      delCase("e.target.matches('[data-k]')", e => (e.target.matches('[data-k]') ? 1 : 0)),
+      delCase("e.target.tagName === 'BUTTON'", e => (e.target.tagName === 'BUTTON' ? 1 : 0)),
+      delCase('e.composedPath()[0]', e => (e.composedPath()[0] ? 1 : 0)),
+    ])
+  }
+  // ============================== CASE 13: trusted layer helpers ==============================
+  window.__trusted = {
+    mode: 'empty',
+    downs: 0,
+    ups: 0,
+    beforeinputs: 0,
+    inputs: 0,
+    latSum: 0,
+    latN: 0,
+    latMax: 0,
+  }
+  window.__mark = 0
+  window.__trustedTarget = document.createElement('input')
+  document.body.appendChild(window.__trustedTarget)
+  window.__trustedTarget.focus()
+  window.__trustedHandlers = {
+    empty(e) {
+      window.__trusted.downs++
+    },
+    shortcut(e) {
+      window.__trusted.downs++
+      const s =
+        (e.ctrlKey ? 'ctrl+' : '') +
+        (e.shiftKey ? 'shift+' : '') +
+        (e.altKey ? 'alt+' : '') +
+        e.key.toLowerCase()
+      if (s === 'ctrl+shift+k') sink(1)
+    },
+    preventDefault(e) {
+      window.__trusted.downs++
+      e.preventDefault()
+    },
+  }
+  window.__installTrusted = function (mode) {
+    const t = window.__trustedTarget
+    if (window.__curTrusted) t.removeEventListener('keydown', window.__curTrusted)
+    window.__curTrusted = window.__trustedHandlers[mode]
+    t.addEventListener('keydown', window.__curTrusted)
+    window.__trusted.mode = mode
+  }
+  window.__resetTrusted = function () {
+    Object.assign(window.__trusted, {
+      downs: 0,
+      ups: 0,
+      beforeinputs: 0,
+      inputs: 0,
+      latSum: 0,
+      latN: 0,
+      latMax: 0,
+    })
+  }
+  window.__trustedTarget.addEventListener('keyup', () => window.__trusted.ups++)
+  window.__trustedTarget.addEventListener('beforeinput', () => window.__trusted.beforeinputs++)
+  window.__trustedTarget.addEventListener('input', () => window.__trusted.inputs++)
+  window.__trustedTarget.addEventListener(
+    'keydown',
+    () => {
+      if (window.__mark) {
+        const lat = performance.now() - window.__mark
+        window.__trusted.latSum += lat
+        window.__trusted.latN++
+        if (lat > window.__trusted.latMax) window.__trusted.latMax = lat
+        window.__mark = 0
+      }
+    },
+    true
+  ) // capture so it runs before mode handler / preventDefault
+  window.__setMark = function () {
+    window.__mark = performance.now()
+  }
+</script>
