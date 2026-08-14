@@ -37,6 +37,7 @@ import './selector'
 import './stack'
 import './touch'
 import './gesture'
+import './hotkey'
 
 // Get the global mepto object created by mepto.ts
 const Mepto = (window as unknown as Record<string, unknown>).mepto as MeptoStatic

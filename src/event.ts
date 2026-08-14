@@ -227,16 +227,40 @@ declare const mepto: MeptoStatic
     const evt = event as Event & Record<string, unknown>
     if (source || !(evt as Event & { isDefaultPrevented?: () => boolean }).isDefaultPrevented) {
       source || (source = event)
-
-      $.each(eventMethods, (name: string, predicate: string): void => {
-        const src = source as unknown as Record<string, (...args: unknown[]) => unknown>
-        const sourceMethod = src[name]
-        evt[name] = function (this: Record<string, () => boolean>, ...args: unknown[]): unknown {
-          this[predicate] = returnTrue
-          return sourceMethod ? sourceMethod.apply(source, args) : undefined
+      // Perf: inline 3 method wrappers — avoids $.each iteration + closure per dispatch
+      // (key-bench §3.3/§3.5: property reads 1–6% of dispatch; wrapper is stable but
+      // extra function dispatch is measurable at 240k ops/s with CV 1.5–3.6%).
+      const src = source as unknown as Record<string, (...args: unknown[]) => unknown>
+      {
+        const n = 'preventDefault',
+          p = 'isDefaultPrevented',
+          m = src[n]
+        evt[n] = function (this: Record<string, () => boolean>, ...args: unknown[]): unknown {
+          this[p] = returnTrue
+          return m ? m.apply(source, args) : undefined
         }
-        ;(evt as Record<string, () => boolean>)[predicate] = returnFalse
-      })
+        ;(evt as Record<string, () => boolean>)[p] = returnFalse
+      }
+      {
+        const n = 'stopImmediatePropagation',
+          p = 'isImmediatePropagationStopped',
+          m = src[n]
+        evt[n] = function (this: Record<string, () => boolean>, ...args: unknown[]): unknown {
+          this[p] = returnTrue
+          return m ? m.apply(source, args) : undefined
+        }
+        ;(evt as Record<string, () => boolean>)[p] = returnFalse
+      }
+      {
+        const n = 'stopPropagation',
+          p = 'isPropagationStopped',
+          m = src[n]
+        evt[n] = function (this: Record<string, () => boolean>, ...args: unknown[]): unknown {
+          this[p] = returnTrue
+          return m ? m.apply(source, args) : undefined
+        }
+        ;(evt as Record<string, () => boolean>)[p] = returnFalse
+      }
 
       if ((source as Event).defaultPrevented)
         (evt as Event & { isDefaultPrevented?: () => boolean }).isDefaultPrevented = returnTrue
@@ -316,10 +340,27 @@ declare const mepto: MeptoStatic
       if (selector)
         delegator = function (this: Element, ...args: unknown[]) {
           const e = args[0] as Event
-          const match = $(e.target as Element)
-            .closest(selector as string, element)
-            .get(0)
-          if (match && match !== element) {
+          // Perf: native closest + contains check — avoids Mepto $() wrapper + collection alloc
+          // (key-bench §3.2/§3.4: closest≈matches≈tagName within 4%; wrapper is the cost).
+          // Semantics match Mepto closest(selector, element): descendant-only, element-bound,
+          // text-node target fallback via parentElement.
+          let match: Element | null = null
+          const rawTarget = e.target as Node | null
+          if (rawTarget) {
+            const targetEl: Element | null =
+              (rawTarget as Element).closest !== undefined
+                ? (rawTarget as Element)
+                : (rawTarget as Node).parentElement
+            if (targetEl) {
+              const found = targetEl.closest(selector as string)
+              if (found && found !== element) {
+                // Delegated root may be Document; .contains is polymorphic
+                const contains = (element as unknown as { contains(n: Node): boolean }).contains
+                if (contains ? contains.call(element, found) : false) match = found
+              }
+            }
+          }
+          if (match) {
             const evt = $.extend(createProxy(e), {
               // `currentTarget` is the element where the listener is
               // attached (the parent), not the matched descendant.

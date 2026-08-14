@@ -496,6 +496,30 @@ export interface MeptoStatic {
   }
   support: Record<string, boolean>
 
+  // Hotkey (bitmask shortcut helper — key-bench §3.3.2 §6.2)
+  hotkey: {
+    CTRL: number
+    ALT: number
+    SHIFT: number
+    META: number
+    CMD: number
+    encode(e: KeyboardEvent): number
+    parse(binding: string): number
+    shouldIgnore(e: KeyboardEvent): boolean
+    keyToCode(key: string): number
+  }
+  key: {
+    CTRL: number
+    ALT: number
+    SHIFT: number
+    META: number
+    CMD: number
+    encode(e: KeyboardEvent): number
+    parse(binding: string): number
+    shouldIgnore(e: KeyboardEvent): boolean
+    keyToCode(key: string): number
+  }
+
   // Ajax
   ajax(settings: AjaxSettings): XMLHttpRequest
   ajax(url: string, settings?: AjaxSettings): XMLHttpRequest
