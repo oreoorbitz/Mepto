@@ -16,6 +16,96 @@
         "default": "./dist/meptos.umd.cjs"
       }
     },
+    "./core": {
+      "import": {
+        "types": "./dist/src/mepto.d.ts",
+        "default": "./dist/esm/mepto.js"
+      }
+    },
+    "./event": {
+      "import": {
+        "types": "./dist/src/event.d.ts",
+        "default": "./dist/esm/event.js"
+      }
+    },
+    "./ajax": {
+      "import": {
+        "types": "./dist/src/ajax.d.ts",
+        "default": "./dist/esm/ajax.js"
+      }
+    },
+    "./hotkey": {
+      "import": {
+        "types": "./dist/src/hotkey.d.ts",
+        "default": "./dist/esm/hotkey.js"
+      }
+    },
+    "./fx": {
+      "import": {
+        "types": "./dist/src/fx.d.ts",
+        "default": "./dist/esm/fx.js"
+      }
+    },
+    "./fx-methods": {
+      "import": {
+        "types": "./dist/src/fx_methods.d.ts",
+        "default": "./dist/esm/fx_methods.js"
+      }
+    },
+    "./data": {
+      "import": {
+        "types": "./dist/src/data.d.ts",
+        "default": "./dist/esm/data.js"
+      }
+    },
+    "./selector": {
+      "import": {
+        "types": "./dist/src/selector.d.ts",
+        "default": "./dist/esm/selector.js"
+      }
+    },
+    "./callbacks": {
+      "import": {
+        "types": "./dist/src/callbacks.d.ts",
+        "default": "./dist/esm/callbacks.js"
+      }
+    },
+    "./deferred": {
+      "import": {
+        "types": "./dist/src/deferred.d.ts",
+        "default": "./dist/esm/deferred.js"
+      }
+    },
+    "./form": {
+      "import": {
+        "types": "./dist/src/form.d.ts",
+        "default": "./dist/esm/form.js"
+      }
+    },
+    "./detect": {
+      "import": {
+        "types": "./dist/src/detect.d.ts",
+        "default": "./dist/esm/detect.js"
+      }
+    },
+    "./stack": {
+      "import": {
+        "types": "./dist/src/stack.d.ts",
+        "default": "./dist/esm/stack.js"
+      }
+    },
+    "./touch": {
+      "import": {
+        "types": "./dist/src/touch.d.ts",
+        "default": "./dist/esm/touch.js"
+      }
+    },
+    "./gesture": {
+      "import": {
+        "types": "./dist/src/gesture.d.ts",
+        "default": "./dist/esm/gesture.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -27,11 +117,16 @@
     "README.md",
     "LICENSE"
   ],
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/meptos.js",
+    "./dist/meptos.umd.cjs",
+    "./dist/esm/*.js"
+  ],
   "scripts": {
     "dev": "vite",
     "clean": "node -e \"fs.rmSync('dist',{recursive:true,force:true})\"",
-    "build": "vite build",
+    "build": "vite build && npm run build:esm",
+    "build:esm": "node tools/build-esm.mjs",
     "build:watch": "vite build --watch",
     "preview": "vite preview",
     "test": "vitest run",

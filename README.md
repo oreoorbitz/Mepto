@@ -39,13 +39,48 @@ Or `esm.sh` / `jsdelivr` / `unpkg` — pin a version.
 
 ## Usage
 
-### ES module / bundler
+### ES module / bundler (full)
 
 ```ts
 import { $ } from 'meptos'
 
 $('#app').addClass('ready').on('click', 'button', handleClick)
 ```
+
+### Treeshakable ESM (Shopify apps — import only what you need)
+
+The full bundle (`dist/meptos.js`, 87 KB / 24.6 KB gzip) stays for legacy Shopify themes (single `{{ 'mepto.js' | asset_url }}` tag). For Shopify **apps** (Vite/esbuild/Rollup), import granular ESM subpaths — downstream bundler drops the rest (verified with `esbuild --bundle --minify`, Chrome 150 bench context):
+
+```ts
+// App needs only keyboard shortcuts (bitmask hotkey helper — 60 ns vs 186 ns string, Table 3-7)
+import { hotkey } from 'meptos/hotkey'
+const map = new Map([[hotkey.parse('Ctrl+K'), handler]])
+document.addEventListener('keydown', e => {
+  if (hotkey.shouldIgnore(e)) return
+  const h = map.get(hotkey.encode(e))
+  if (h) {
+    h(e)
+    e.preventDefault()
+  }
+})
+
+// App needs only DOM + delegated events (4.1× closest vs manual loop)
+import 'meptos/core' // 61 KB ESM (22.6 KB min / 7.7 KB gzip)
+import 'meptos/event' // +11 KB (core+event 27.2 KB min / 9.5 KB gzip vs full 48 KB min / 18 KB gzip)
+$('#app').on('click', '.btn', handler)
+
+// App needs only core (no Ajax/FX/hotkey)
+import 'meptos/core'
+```
+
+| Entry                                                | Min     | Gzip    | vs full   |
+| ---------------------------------------------------- | ------- | ------- | --------- |
+| `meptos` (full)                                      | 48.0 KB | 18.0 KB | —         |
+| `meptos/core`                                        | 22.6 KB | 7.7 KB  | **-57 %** |
+| `meptos/core` + `meptos/event`                       | 27.2 KB | 9.5 KB  | **-47 %** |
+| `meptos/hotkey` (pure `hotkey` export → core+hotkey) | 25.6 KB | 8.8 KB  | **-51 %** |
+
+Available subpaths: `meptos/core`, `meptos/event`, `meptos/ajax`, `meptos/hotkey`, `meptos/fx`, `meptos/fx-methods`, `meptos/data`, `meptos/selector`, `meptos/callbacks`, `meptos/deferred`, `meptos/form`, `meptos/detect`, `meptos/stack`, `meptos/touch`, `meptos/gesture` — each `dist/esm/*.js` (transpiled, `es2020`, with `import "./mepto.js"` auto-prepended) and treeshaken by the **app's** bundler, not just Mepto's build. Legacy themes keep the single `mepto.js` asset for `layout/theme.liquid`.
 
 ### Browser / `<script>` tag
 
