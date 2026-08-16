@@ -31,13 +31,30 @@
       <li>List item 3 <span class="delete">DELETE</span></li>
       <li>List item 4 <span class="delete">DELETE</span></li>
     </ul>
+    <p style="color: #666; font-size: 0.9rem; margin-bottom: 16px">
+      Swipe an item to reveal DELETE. On desktop without touch, click the item instead. Tap/click
+      DELETE to remove it.
+    </p>
     <script type="module">
       import { $ } from '../src/meptos.ts'
-      $('#items li').on('swipe', function () {
+
+      const showDelete = function () {
         $('.delete').hide()
         $('.delete', this).show()
+      }
+
+      // Touch/pointer swipe (Mepto touch handles touch + pen, not mouse)
+      $('#items li').on('swipe', showDelete)
+
+      // Desktop fallback: click also reveals delete (tap is touch-only)
+      $('#items li').on('click', function (e) {
+        // If swipe already handled (touch), skip duplicate click
+        if ('ontouchstart' in document) return
+        showDelete.call(this, e)
       })
-      $('.delete').on('tap', function () {
+
+      // tap for touch, click for mouse
+      $('.delete').on('tap click', function () {
         $(this).closest('li').remove()
       })
     </script>
