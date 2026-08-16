@@ -80,9 +80,16 @@ $(() => {
 
   measure()
   $window.on('scroll', onScroll)
+  // Resize can fire 100s of times during a drag; coalesce to one rAF like scroll (Kimi §5: batch reads, avoid thrash)
+  let resizeTicking = false
   $window.on('resize', () => {
-    measure()
-    onScroll()
+    if (resizeTicking) return
+    resizeTicking = true
+    requestAnimationFrame(() => {
+      resizeTicking = false
+      measure()
+      onScroll()
+    })
   })
   onScroll()
 })

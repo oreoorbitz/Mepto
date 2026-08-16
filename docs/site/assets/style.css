@@ -42,6 +42,8 @@ body {
   border-right: 1px solid var(--border);
   overflow-y: auto;
   z-index: 100;
+  /* Containment scopes layout invalidation to the sidebar subtree (Kimi §7.2: contain:layout paint avoids whole-document recalc) */
+  contain: layout paint;
 }
 
 .sidebar-inner {
@@ -116,6 +118,7 @@ body {
   margin-left: var(--sidebar-width);
   padding: 40px 48px 80px;
   max-width: calc(960px + var(--sidebar-width));
+  contain: layout paint;
 }
 
 .hero {
@@ -163,6 +166,9 @@ h2.section-heading {
 
 .method {
   margin-bottom: 28px;
+  /* Containment scopes each method's style/layout so toggling one doesn't recalc siblings (Kimi §7.2).
+   * content-visibility:auto skipped: it would make $(target).offset().top estimates (intrinsic-size) inaccurate for the scroll-spy / anchor jumps. */
+  contain: layout paint style;
 }
 
 h3 {
