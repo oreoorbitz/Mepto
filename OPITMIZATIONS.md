@@ -70,12 +70,22 @@ Prefer modify-in-place over destroy/create.
 For large/dynamic lists: Recommend or include virtualization helpers (render visible items only, recycle nodes).
 jQuery migration tip: Your library can automatically clean up better than typical jQuery usage.
 
+Step 4b: Virtualization + Containment (deep dive §6.3, §7.3.1)
+
+- **Budget:** Lighthouse flags ~1,500 DOM nodes, depth >32, or parent >60 children; field median 594, p90 1,716 — heavy 10% already over. Costs are super-linear (double DOM → 4× recalc), 3k+ nodes can push INP >500 ms on mid Android.
+- **Windowing:** `react-window`, `@tanstack/virtual`, `<lit-virtualizer>`, vanilla `Clusterize.js` — render only visible rows + overscan (10–30 nodes vs thousands). Outer div holds total scroll height, inner absolutely positioned at offset.
+- **Containment:** `contain: strict` / `contain: content` on fixed-size self-contained subtrees — Igalia 4 ms → 0.04 ms (100×), Speed Kit field INP −27 to −120 ms, lab 80% rendering reduction. Needs explicit size (otherwise collapses).
+- **Content-visibility:** `content-visibility: auto` + `contain-intrinsic-size` on below-fold sections — skipped layout/paint, stays in DOM/a11y tree; demo 232 ms → 30 ms (7×), Mepto sandbox class+getBoundingClientRect 47.5→5.8 ms (8×). Don't use on hero/LCP, sticky, or dropdown overflow (clips).
+- **API guard:** Mepto `$.batch(parent, nodes)` (DocumentFragment, one mutation vector) + `$.measure`/`$.mutate` (rAF, reads before writes) already covers batching; combine with virtualization for 10k+ lists.
+
 Step 8: Additional High-Impact Patterns
 
 Creation: Favor <template> cloning + appendChild/insertAdjacentElement over many createElement + sets.
-Animations: Prefer CSS transform/opacity (compositor thread) over JS style changes.
+Animations: Prefer CSS `transform`/`opacity` (composite-only, 0 layout/paint, even while main thread busy) over JS `width`/`top`/`margin` (re-runs Style→Layout→Paint). Use `will-change` transient (`$.willChange(el,'transform')` before, `$.willChangeClear(el)` after — Chrome 3× surface budget, persistent `will-change` wastes GPU per layer, hundreds = explosion). For layout→animation, use `$.flip(el, mutate)` (FLIP: First rect, Last rect, Invert `translate`, Play `transform` — moves layout to compositor, single unavoidable forced read).
 Fine-grained updates: Offer paths to update only changed parts (attributes/text) instead of full re-renders.
 Modern option: Evaluate lightweight signals or incremental diffing if it fits your API without adding heavy virtual DOM overhead.
+
+Anti-pattern — Never `el.innerHTML += ...` (370×, O(N²), destroys listeners): `innerHTML+=` serializes the entire subtree to a string (getter), then reparses everything (setter). Measured community: 1,677 ms vs 4.5 ms for 1k appends. Use `el.insertAdjacentHTML('beforeend', html)` to preserve listeners (8.9 ms/10k, 1 mutation record) or single `el.innerHTML = rows.join('')` for full replace (8.4 ms/10k). Lint bans `innerHTML+=`/`outerHTML+=` via `no-restricted-syntax` — see `eslint.config.mjs`. Source: Kimi_Agent_Performance_deep_dive/dom-manipulation-performance.agent.final.md §2.2.1.
 
 Step 9: Decision Process for Library Features & Migration
 For any new API or internal operation:

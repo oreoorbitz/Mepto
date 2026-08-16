@@ -2189,6 +2189,17 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       })
     },
     /**
+     * Fast full-replace for hot loops (deep dive §7.1.2: 0.5 µs vs 1.8 µs for classList add+remove).
+     * Direct `className=` is 3× faster than granular `classList` when replacing the whole value.
+     * Use when you compute the full class string and want to clobber previous — not for token add.
+     * For data-* hot loops, prefer `attr('data-x')` / `getAttribute` (0.5 µs) over `dataset` (1.0 µs, proxy).
+     */
+    setClass(this: FnThis, value: string): MeptoCollection {
+      return this.each(function (this: Element) {
+        if ('className' in this) (this as HTMLElement).className = value
+      })
+    },
+    /**
      * Gets or sets the vertical scroll position of the first element.
      *
      * @param value - Scroll position in pixels (omit to get).
@@ -2562,6 +2573,34 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
       this: FnThis,
       ...args: (string | Element | ArrayLike<Element> | null | undefined)[]
     ): MeptoCollection {
+      // Fast path: single HTML string append/prepend/before/after via insertAdjacentHTML
+      // Preserves existing listeners (vs innerHTML destroy) and is ~2× faster than fragment loop at 10k nodes
+      // (8.9 ms vs 16–19 ms, Kimi deep dive §2.4.1). Falls back to fragment for multi-arg, scripts, or clone case.
+      if (
+        args.length === 1 &&
+        typeof args[0] === 'string' &&
+        this.length === 1 &&
+        !/<script/i.test(args[0] as string)
+      ) {
+        const htmlStr = args[0] as string
+        const targetEl = this[0] as Element
+        // Map operator to insertAdjacentHTML position
+        const posMap: Record<string, InsertPosition> = {
+          append: 'beforeend',
+          prepend: 'afterbegin',
+          before: 'beforebegin',
+          after: 'afterend',
+        }
+        const pos = posMap[operator]
+        if (pos && targetEl && typeof targetEl.insertAdjacentHTML === 'function') {
+          // For 'before'/'after', parent is needed but insertAdjacentHTML handles it on target
+          try {
+            targetEl.insertAdjacentHTML(pos, htmlStr)
+            return this
+          } catch {}
+          // fallback to fragment on parse error
+        }
+      }
       // arguments can be nodes, arrays of nodes, mepto objects and HTML strings
       let argType: string,
         nodes = $.map(args, arg => {
@@ -2808,6 +2847,8 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   }
 
   // 5. $.raf / $.measure / $.mutate — read/write separation (Part I Step 3/4, Rule 30)
+  // Deep dive §5: interleaved write→read = 86.5 s @10k vs batched 19.5 ms (4400×).
+  // Reads (tier-3: offset*, getBoundingClientRect) before writes; contain:layout does NOT fix thrash.
   const readQueue: (() => void)[] = []
   const writeQueue: (() => void)[] = []
   let rafScheduled = false
@@ -2834,6 +2875,40 @@ const mepto: MeptoStatic = (function (): MeptoStatic {
   ;($ as unknown as Record<string, unknown>).mutate = function (cb: () => void): void {
     writeQueue.push(cb)
     scheduleRAF()
+  }
+  // 6. $.willChange — transient promotion (deep dive §6.2.3: last resort, GPU per layer, 3× budget ignored)
+  ;($ as unknown as Record<string, unknown>).willChange = function (
+    el: Element,
+    props: string
+  ): void {
+    ;(el as HTMLElement).style.willChange = props
+  }
+  ;($ as unknown as Record<string, unknown>).willChangeClear = function (el: Element): void {
+    ;(el as HTMLElement).style.willChange = ''
+  }
+  // 7. $.flip — FLIP animation (First, Last, Invert, Play) for layout→composite-only (deep dive §6.2.4)
+  ;($ as unknown as Record<string, unknown>).flip = function (
+    el: HTMLElement,
+    mutate: () => void,
+    opts: { duration?: number; easing?: string } = {}
+  ): void {
+    const first = el.getBoundingClientRect()
+    mutate()
+    const last = el.getBoundingClientRect()
+    const dx = first.left - last.left
+    const dy = first.top - last.top
+    el.style.transform = `translate(${dx}px, ${dy}px)`
+    // Force layout is intentional here (single, unavoidable) — deep dive notes FLIP's one forced read is the cost of moving layout to compositor
+    void el.offsetWidth
+    requestAnimationFrame(() => {
+      el.style.transition = `transform ${opts.duration ?? 200}ms ${opts.easing ?? 'ease'}`
+      el.style.transform = ''
+      const cleanup = () => {
+        el.style.transition = ''
+        el.removeEventListener('transitionend', cleanup)
+      }
+      el.addEventListener('transitionend', cleanup)
+    })
   }
 
   // Export internal API functions in the `$.mepto` namespace

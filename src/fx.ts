@@ -28,6 +28,7 @@ declare const mepto: MeptoStatic
     'animation-duration': '',
     'animation-delay': '',
     'animation-timing-function': '',
+    'will-change': '',
   }
 
   function dasherize(str: string): string {
@@ -161,6 +162,11 @@ declare const mepto: MeptoStatic
         cssValues[transitionDuration] = duration + 's'
         cssValues[transitionDelay] = delay + 's'
         cssValues[transitionTiming] = ease || 'linear'
+        // will-change: promote compositor layer only for duration, removed on end (deep dive §6.2.3)
+        // Chrome caps at 3× surface area; transient via JS avoids persistent memory cost.
+        if (transforms || cssProperties.includes('opacity')) {
+          cssValues['will-change'] = transforms ? 'transform' : cssProperties.join(', ')
+        }
       }
     }
 

@@ -58,6 +58,19 @@ export default tseslint.config(
       'prefer-arrow-callback': 'error',
       'object-shorthand': 'error',
 
+      // DOM perf: innerHTML += re-serializes + reparses entire subtree (370×, O(N²)) — see dom-manip deep dive §2.2.1
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'AssignmentExpression[left.property.name="innerHTML"][operator="+="]',
+          message: 'Do not use `el.innerHTML += ...` — it serializes the entire subtree, reparses everything, destroys listeners and is ~370× slower than append/insertAdjacentHTML. Use `el.insertAdjacentHTML("beforeend", ...)` to preserve listeners or `el.innerHTML = ...` single-assignment for bulk replace. See Kimi_Agent_Performance_deep_dive/dom-manipulation-performance.agent.final.md §2.2.1.',
+        },
+        {
+          selector: 'AssignmentExpression[left.property.name="outerHTML"][operator="+="]',
+          message: 'Do not use `outerHTML +=` — same serialization trap as innerHTML +=.',
+        },
+      ],
+
       // Code style
       eqeqeq: ['error', 'always', { null: 'ignore' }],
       curly: 'off',
