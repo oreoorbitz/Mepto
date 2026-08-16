@@ -116,6 +116,10 @@ function buildRandomTeam(): void {
   const $teamList = $('#team-list').empty()
   const ids = new Set<number>()
   while (ids.size < 6) ids.add(1 + Math.floor(Math.random() * MAX_ID))
+  // 6 async callbacks each append one row — progressive display vs single batched
+  // write (fragment + one html) is a tradeoff at N=6 the per-append cost is
+  // negligible and batching would delay first paint. renderList() above does
+  // use the batched single-html path for the paginated 20-row list (Kimi §2.4).
   ids.forEach(id => {
     $.getJSON(`${API}/pokemon/${id}`, undefined, data => {
       const p = data as Pokemon

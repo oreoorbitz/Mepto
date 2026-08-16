@@ -62,6 +62,8 @@ h1 {
   border-radius: 10px;
   padding: 20px 28px 28px;
   margin-bottom: 24px;
+  /* Containment scopes each carousel's layout to its card (Kimi §7.2) */
+  contain: layout paint;
 }
 .demo h2 {
   font-size: 0.85rem;
@@ -73,6 +75,7 @@ h1 {
 
 .carousel {
   margin: 0 8px;
+  contain: layout paint;
 }
 .slide {
   height: 140px;

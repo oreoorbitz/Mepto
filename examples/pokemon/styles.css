@@ -103,6 +103,7 @@ button:disabled {
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 10px;
+  contain: layout paint;
 }
 
 #card-sprite {
@@ -157,6 +158,7 @@ section h2 {
   list-style: none;
   margin: 0;
   padding: 0;
+  contain: layout paint;
 }
 
 #pokemon-list .list-item {

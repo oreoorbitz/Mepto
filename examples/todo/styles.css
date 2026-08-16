@@ -40,6 +40,8 @@ button {
   border: 1px solid #e6e6e6;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  /* Containment scopes TodoMVC list renders to the app subtree (Kimi §7.2) */
+  contain: layout paint;
 }
 
 #header h1 {
@@ -122,6 +124,7 @@ button {
   margin: 0;
   padding: 0;
   list-style: none;
+  contain: layout paint;
 }
 
 #todo-list li {
