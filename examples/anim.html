@@ -3,27 +3,291 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Mepto — anim demo</title>
+    <title>Mepto — Animation Gamut</title>
     <style>
-      body {
-        font-family: system-ui, sans-serif;
-        padding: 40px;
+      :root {
+        --bg: #f5f5f5;
+        --card: #fff;
+        --text: #222;
+        --muted: #666;
+        --border: #ddd;
+        --accent: #1a73e8;
       }
-      #box {
-        width: 100px;
-        height: 100px;
-        border: 1px solid #000;
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.5;
+      }
+      h1 {
+        margin: 0 0 6px;
+        font-size: 1.4rem;
+      }
+      .lead {
+        color: var(--muted);
+        margin: 0 0 20px;
+        max-width: 720px;
+      }
+      .lead code {
+        background: #e8e8e8;
+        padding: 1px 5px;
+        border-radius: 3px;
+        font-size: 0.9em;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        max-width: 960px;
+      }
+      .demo {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 16px;
+        contain: layout paint;
+      }
+      .demo h3 {
+        margin: 0 0 4px;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: var(--muted);
+      }
+      .demo p {
+        margin: 0 0 10px;
+        font-size: 0.8rem;
+        color: var(--muted);
+        min-height: 2.4em;
+      }
+      .stage {
+        height: 110px;
         display: grid;
         place-items: center;
+        background: #fafafa;
+        border: 1px dashed var(--border);
+        border-radius: 8px;
+        margin-bottom: 10px;
+        overflow: hidden;
+      }
+      .box {
+        width: 80px;
+        height: 80px;
+        background: #1a73e8;
+        color: #fff;
+        display: grid;
+        place-items: center;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 0.8rem;
+      }
+      .box.alt {
+        background: #e8710a;
+      }
+      .demo button {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--card);
+        font: inherit;
+        font-size: 0.85rem;
+        cursor: pointer;
+      }
+      .demo button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+      .demo button + button {
+        margin-top: 6px;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-40px);
+        }
+      }
+      .hint {
+        max-width: 960px;
+        margin: 16px 0;
+        padding: 12px;
+        background: #fffbe6;
+        border: 1px solid #f0d86e;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        color: #5a4a00;
       }
     </style>
   </head>
   <body>
-    <div id="box">HELLO WORLD</div>
+    <h1>Mepto Animations — Full Gamut</h1>
+    <p class="lead">
+      <code>animate()</code> maps to compositor-only <code>transform</code>/<code>opacity</code> (no
+      layout) when possible, and to layout/paint for everything else. Green tags are cheap, orange
+      are expensive — inspect in DevTools.
+    </p>
+
+    <div class="grid">
+      <div class="demo">
+        <h3>1 · rotate + opacity (composite)</h3>
+        <p>Original demo — stays on compositor, even while main thread busy.</p>
+        <div class="stage"><div class="box" id="box-rotate">720°</div></div>
+        <button id="btn-rotate">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>2 · translateX (composite)</h3>
+        <p>Prefer <code>translateX</code> over <code>left</code> — same visual, no layout.</p>
+        <div class="stage"><div class="box" id="box-translate">→</div></div>
+        <button id="btn-translate">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>3 · scale (composite)</h3>
+        <p><code>scale</code> + <code>opacity</code> — both composite.</p>
+        <div class="stage"><div class="box" id="box-scale">scale</div></div>
+        <button id="btn-scale">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>4 · skew / matrix (composite)</h3>
+        <p><code>skewX</code> is still <code>transform</code> — cheap.</p>
+        <div class="stage"><div class="box" id="box-skew">skew</div></div>
+        <button id="btn-skew">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>5 · width (layout) — expensive!</h3>
+        <p><code>width</code> re-runs Style → Layout → Paint. Use transform where you can.</p>
+        <div class="stage"><div class="box" id="box-width">width</div></div>
+        <button id="btn-width">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>6 · backgroundColor (paint)</h3>
+        <p>Paint-only — no layout, but still re-rasters.</p>
+        <div class="stage"><div class="box" id="box-color">color</div></div>
+        <button id="btn-color">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>7 · keyframe string</h3>
+        <p><code>animate('bounce', 1000)</code> → <code>animation-name</code>.</p>
+        <div class="stage"><div class="box" id="box-keyframe">bounce</div></div>
+        <button id="btn-keyframe">Run</button>
+      </div>
+
+      <div class="demo">
+        <h3>8 · fadeIn / fadeOut / toggle</h3>
+        <p>
+          <code>fx_methods</code> — <code>fadeOut</code> → <code>fadeIn</code>,
+          <code>toggle</code> branch.
+        </p>
+        <div class="stage"><div class="box" id="box-fade">fade</div></div>
+        <button id="btn-fade-out">fadeOut</button>
+        <button id="btn-fade-in">fadeIn</button>
+      </div>
+
+      <div class="demo">
+        <h3>9 · delay + easing + callback</h3>
+        <p><code>{ duration, easing, delay, complete }</code> object form.</p>
+        <div class="stage"><div class="box alt" id="box-cb">cb</div></div>
+        <button id="btn-cb">Run 800ms ease-out + 200ms delay</button>
+        <div
+          id="cb-log"
+          style="font-size: 0.75rem; color: #666; margin-top: 6px; min-height: 1em"
+        ></div>
+      </div>
+    </div>
+
+    <div class="hint">
+      Tip: open DevTools → Rendering → Paint flashing / Layer borders. The first four demos show no
+      paint flash (composited), the width/color demos flash. That’s Kimi §1:
+      <code>transform</code>/<code>opacity</code>
+      skip to the compositor.
+    </div>
+
     <script type="module">
       import { $ } from '../src/meptos.ts'
-      // Mepto animate duration is in ms (Zepto legacy used seconds, so 2s => 2000ms)
-      $('#box').animate({ rotate: '720deg', opacity: 0.5 }, 2000, 'ease-out')
+
+      // 1 — rotate (original)
+      $('#btn-rotate').on('click', () => {
+        $('#box-rotate').animate({ rotate: '720deg', opacity: 0.5 }, 2000, 'ease-out', function () {
+          setTimeout(() => {
+            $(this).animate({ rotate: '0deg', opacity: 1 }, 400)
+          }, 400)
+        })
+      })
+
+      // 2 — translateX (composite, not left)
+      $('#btn-translate').on('click', () => {
+        $('#box-translate').animate({ translateX: '80px' }, 500, 'ease-out', function () {
+          setTimeout(() => $(this).animate({ translateX: '0px' }, 500), 300)
+        })
+      })
+
+      // 3 — scale (composite)
+      $('#btn-scale').on('click', () => {
+        $('#box-scale').animate({ scale: '1.4', opacity: 0.8 }, 400, 'ease-in-out', function () {
+          setTimeout(() => $(this).animate({ scale: '1', opacity: 1 }, 400), 300)
+        })
+      })
+
+      // 4 — skew
+      $('#btn-skew').on('click', () => {
+        $('#box-skew').animate({ skewX: '20deg' }, 400, () => {
+          setTimeout(() => $('#box-skew').animate({ skewX: '0deg' }, 400), 300)
+        })
+      })
+
+      // 5 — width (layout — expensive, demo only)
+      $('#btn-width').on('click', () => {
+        $('#box-width').animate({ width: '140px' }, 500, () => {
+          setTimeout(() => $('#box-width').animate({ width: '80px' }, 500), 400)
+        })
+      })
+
+      // 6 — backgroundColor (paint)
+      $('#btn-color').on('click', () => {
+        $('#box-color').animate({ backgroundColor: '#e80' }, 600, () => {
+          setTimeout(() => $('#box-color').animate({ backgroundColor: '#1a73e8' }, 600), 400)
+        })
+      })
+
+      // 7 — keyframe string form
+      $('#btn-keyframe').on('click', () => {
+        $('#box-keyframe').animate('bounce', 1000)
+      })
+
+      // 8 — fx_methods
+      $('#btn-fade-out').on('click', () => $('#box-fade').fadeOut(400))
+      $('#btn-fade-in').on('click', () => $('#box-fade').fadeIn(400))
+
+      // 9 — object form with delay + callback
+      $('#btn-cb').on('click', () => {
+        $('#cb-log').text('')
+        $('#box-cb').animate(
+          { translateY: '20px' },
+          {
+            duration: 800,
+            easing: 'ease-out',
+            delay: 200,
+            complete: () => $('#cb-log').text('complete ✓'),
+          }
+        )
+        setTimeout(() => $('#box-cb').animate({ translateY: '0px' }, 400), 1500)
+      })
     </script>
   </body>
 </html>
