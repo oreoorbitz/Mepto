@@ -1,18 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Load jQuery if mepto is not supported</title>
-</head>
-<body>
-  <h1>Load jQuery if mepto is not supported</h1>
-</body>
-<script>document.write('<script src='+('__proto__' in {} ? '../dist/mepto' : 'https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery')+'.js><\/script>')</script>
-<script>
-  $('body').append('<p>Hello from '+('mepto' in window ? 'mepto' : 'jQuery')+'!</p>')
-
-  $('script').each(function(index,script){
-    if (script.src)
-      $('<p>&lt;script src="'+script.src+'"&gt;</p>').appendTo('body')
-  })
-</script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Load fallback if Mepto not supported</title>
+  </head>
+  <body>
+    <h1>Mepto with fallback</h1>
+    <p>
+      Legacy Zepto example checked <code>'__proto__' in {}</code> to decide between Zepto and jQuery
+      1.7. Mepto targets evergreen browsers only — that check is obsolete.
+    </p>
+    <script type="module">
+      import { $ } from '../src/meptos.ts'
+      $('body').append('<p>Hello from Mepto ' + ($.fn ? 'ready' : 'missing') + '!</p>')
+      $('script').each(function (_i, script) {
+        if ((script as HTMLScriptElement).src)
+          $('<p>&lt;script src="' + (script as HTMLScriptElement).src + '"&gt;</p>').appendTo('body')
+      })
+    </script>
+  </body>
 </html>

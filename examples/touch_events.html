@@ -1,30 +1,45 @@
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
-
-<script src="../src/mepto.js"></script>
-<script src="../src/event.js"></script>
-<script src="../src/touch.js"></script>
-
-<style>
-  .delete {
-    display: none;
-    color: red;
-  }
-</style>
-
-<ul id=items>
-  <li>List item 1 <span class=delete>DELETE</span></li>
-  <li>List item 2 <span class=delete>DELETE</span></li>
-  <li>List item 3 <span class=delete>DELETE</span></li>
-  <li>List item 4 <span class=delete>DELETE</span></li>
-</ul>
-
-<script>
-$('#items li').swipe(function(){
-  $('.delete').hide()
-  $('.delete', this).show()
-})
-
-$('.delete').tap(function(){
-  $(this).parent('li').remove()
-})
-</script>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"
+    />
+    <title>Mepto — touch events demo</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        padding: 24px;
+      }
+      .delete {
+        display: none;
+        color: red;
+        margin-left: 8px;
+        cursor: pointer;
+      }
+      #items li {
+        padding: 8px 0;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <ul id="items">
+      <li>List item 1 <span class="delete">DELETE</span></li>
+      <li>List item 2 <span class="delete">DELETE</span></li>
+      <li>List item 3 <span class="delete">DELETE</span></li>
+      <li>List item 4 <span class="delete">DELETE</span></li>
+    </ul>
+    <script type="module">
+      import { $ } from '../src/meptos.ts'
+      $('#items li').on('swipe', function () {
+        $('.delete').hide()
+        $('.delete', this).show()
+      })
+      $('.delete').on('tap', function () {
+        $(this).closest('li').remove()
+      })
+    </script>
+  </body>
+</html>
