@@ -77,6 +77,20 @@ h1 {
   margin: 0 8px;
   contain: layout paint;
 }
+.hint {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+#carousel-sync-nav .slide {
+  height: 80px;
+  font-size: 1.2rem;
+}
+#carousel-sync-nav .mlick-current span {
+  outline: 2px solid var(--accent);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
 .slide {
   height: 140px;
   border-radius: 8px;

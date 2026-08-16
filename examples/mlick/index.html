@@ -90,6 +90,150 @@
         </div>
         <p id="api-status">current slide: <span id="api-current">0</span></p>
       </section>
+
+      <section id="section-responsive" class="demo">
+        <h2>Responsive — 3 → 2 → 1 at breakpoints</h2>
+        <div id="carousel-responsive" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+          <div class="slide"><span>6</span></div>
+        </div>
+        <p class="hint">Resize the window — dots/arrows update when &lt; 768 / &lt; 480.</p>
+      </section>
+
+      <section id="section-variable" class="demo">
+        <h2>Variable width</h2>
+        <div id="carousel-variable" class="carousel">
+          <div class="slide" style="width: 150px"><span>150px</span></div>
+          <div class="slide" style="width: 250px"><span>250px</span></div>
+          <div class="slide" style="width: 120px"><span>120px</span></div>
+          <div class="slide" style="width: 300px"><span>300px</span></div>
+          <div class="slide" style="width: 180px"><span>180px</span></div>
+        </div>
+      </section>
+
+      <section id="section-adaptive" class="demo">
+        <h2>Adaptive height</h2>
+        <div id="carousel-adaptive" class="carousel">
+          <div class="slide" style="height: 120px"><span>120px</span></div>
+          <div class="slide" style="height: 180px"><span>180px</span></div>
+          <div class="slide" style="height: 100px"><span>100px</span></div>
+        </div>
+      </section>
+
+      <section id="section-center" class="demo">
+        <h2>Center mode</h2>
+        <div id="carousel-center" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+          <div class="slide"><span>6</span></div>
+        </div>
+      </section>
+
+      <section id="section-lazy" class="demo">
+        <h2>Lazy loading — ondemand</h2>
+        <div id="carousel-lazy" class="carousel">
+          <div class="slide">
+            <img
+              data-lazy="https://picsum.photos/seed/mlick1/300/140"
+              alt="1"
+              width="300"
+              height="140"
+            />
+          </div>
+          <div class="slide">
+            <img
+              data-lazy="https://picsum.photos/seed/mlick2/300/140"
+              alt="2"
+              width="300"
+              height="140"
+            />
+          </div>
+          <div class="slide">
+            <img
+              data-lazy="https://picsum.photos/seed/mlick3/300/140"
+              alt="3"
+              width="300"
+              height="140"
+            />
+          </div>
+          <div class="slide">
+            <img
+              data-lazy="https://picsum.photos/seed/mlick4/300/140"
+              alt="4"
+              width="300"
+              height="140"
+            />
+          </div>
+        </div>
+      </section>
+
+      <section id="section-filter" class="demo">
+        <h2>Filtering</h2>
+        <div id="carousel-filter" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+          <div class="slide"><span>6</span></div>
+        </div>
+        <div id="filter-buttons" style="margin-top: 12px; display: flex; gap: 8px">
+          <button id="filter-even" type="button">Filter :even</button>
+          <button id="filter-unfilter" type="button">Unfilter</button>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--muted); margin: 8px 0 0">
+          <code>mlickFilter(':even')</code> / <code>mlickUnfilter</code>
+        </p>
+      </section>
+
+      <section id="section-sync" class="demo">
+        <h2>Slider syncing — asNavFor</h2>
+        <div id="carousel-sync-main" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+        </div>
+        <div id="carousel-sync-nav" class="carousel" style="margin-top: 12px">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+        </div>
+      </section>
+
+      <section id="section-rtl" class="demo" dir="rtl">
+        <h2>Right to left — rtl: true</h2>
+        <div id="carousel-rtl" class="carousel">
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+          <div class="slide"><span>5</span></div>
+        </div>
+      </section>
+
+      <section id="section-dataattr" class="demo">
+        <h2>Data-attribute settings</h2>
+        <div id="carousel-dataattr" class="carousel" data-mlick='{"dots": true, "slidesToShow": 2}'>
+          <div class="slide"><span>1</span></div>
+          <div class="slide"><span>2</span></div>
+          <div class="slide"><span>3</span></div>
+          <div class="slide"><span>4</span></div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--muted)">
+          No JS options — reads <code>data-mlick</code> JSON + <code>mlick()</code> with no args.
+        </p>
+      </section>
     </main>
     <script type="module" src="./app.ts"></script>
   </body>

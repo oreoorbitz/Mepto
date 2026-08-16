@@ -30,6 +30,52 @@ mlick('#carousel-autoplay').mlick({ autoplay: true, autoplaySpeed: 1500, dots: t
 
 mlick('#carousel-api').mlick({ dots: true })
 
+// Single slick feature parities — one carousel per Slick demo bucket
+mlick('#carousel-responsive').mlick({
+  dots: true,
+  slidesToShow: 3,
+  responsive: [
+    { breakpoint: 768, settings: { slidesToShow: 2 } },
+    { breakpoint: 480, settings: { slidesToShow: 1 } },
+  ],
+})
+
+mlick('#carousel-variable').mlick({ dots: true, variableWidth: true })
+
+mlick('#carousel-adaptive').mlick({ dots: true, adaptiveHeight: true })
+
+mlick('#carousel-center').mlick({
+  dots: true,
+  centerMode: true,
+  centerPadding: '60px',
+  slidesToShow: 3,
+})
+
+mlick('#carousel-lazy').mlick({ dots: true, lazyLoad: 'ondemand' })
+
+mlick('#carousel-filter').mlick({ dots: true })
+
+mlick('#carousel-sync-main').mlick({
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  arrows: false,
+  fade: true,
+  asNavFor: '#carousel-sync-nav',
+})
+mlick('#carousel-sync-nav').mlick({
+  slidesToShow: 3,
+  slidesToScroll: 1,
+  asNavFor: '#carousel-sync-main',
+  dots: true,
+  centerMode: true,
+  focusOnSelect: true,
+})
+
+mlick('#carousel-rtl').mlick({ dots: true, rtl: true })
+
+// data-attribute demo: no JS options — reads data-mlick JSON
+mlick('#carousel-dataattr').mlick()
+
 // ---------- event log --------------------------------------------------------
 
 const $log = $('#event-log')
@@ -72,3 +118,8 @@ $('#api-remove').on('click', () => {
 })
 $('#api-unslick').on('click', () => mlick('#carousel-api').mlick('unmlick'))
 $('#api-init').on('click', () => mlick('#carousel-api').mlick({ dots: true }))
+
+// ---------- slick parity: filter / destroy helpers -----------------------------
+
+$('#filter-even').on('click', () => mlick('#carousel-filter').mlick('mlickFilter', ':even'))
+$('#filter-unfilter').on('click', () => mlick('#carousel-filter').mlick('mlickUnfilter'))
