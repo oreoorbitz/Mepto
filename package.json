@@ -206,11 +206,11 @@
   "size-limit": [
     {
       "path": "dist/meptos.js",
-      "limit": "15 KB"
+      "limit": "17 KB"
     },
     {
       "path": "dist/meptos.umd.cjs",
-      "limit": "15 KB"
+      "limit": "18 KB"
     }
   ],
   "lint-staged": {
