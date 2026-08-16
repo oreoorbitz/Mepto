@@ -106,6 +106,7 @@ import $ from '../src/meptos'
         touchObject: {},
         transformsEnabled: false,
         unmlicked: false,
+        willChangeTimer: null,
       }
 
       $.extend(_, _.initials)
@@ -1913,6 +1914,18 @@ import $ from '../src/meptos'
     if (_.transformsEnabled === false) {
       _.$slideTrack.styles.set(positionProps)
     } else {
+      // perf: transient will-change for the slide track (composite-only anim, §6.2.3).
+      // Promotion is per-layer GPU; persistent would exceed Chrome's 3× surface budget.
+      // Mepto's $.willChange helper sets will-change for duration then clears.
+      if ($.willChange) {
+        try {
+          $.willChange(_.$slideTrack[0], 'transform')
+          clearTimeout(_.willChangeTimer)
+          _.willChangeTimer = setTimeout(() => {
+            if ($.willChangeClear) $.willChangeClear(_.$slideTrack[0])
+          }, _.options.speed + 100)
+        } catch (_) {}
+      }
       positionProps = {}
       if (_.cssTransitions === false) {
         positionProps[_.animType] = `translate(${x}, ${y})`
@@ -1947,6 +1960,19 @@ import $ from '../src/meptos'
     _.listWidth = _.$list.width()
     _.listHeight = _.$list.height()
 
+    // perf: hoist Tier3 reads (outerWidth/outerHeight) before any track-size writes
+    // to keep one sync layout. The offset and vertical height would otherwise FSL
+    // after _.$slideTrack.width/height dirties layout (deep dive §3.2.2).
+    let offset = 0
+    let verticalOuter = 0
+    if (_.options.variableWidth === false) {
+      offset = firstSlide.outerWidth(true) - firstSlide.width()
+    }
+    // vertical track height also reads outerHeight — batch with the same layout
+    if (_.options.vertical !== false && _.options.variableWidth === false) {
+      verticalOuter = firstSlide.outerHeight(true)
+    }
+
     if (_.options.vertical === false && _.options.variableWidth === false) {
       _.slideWidth = Math.ceil(_.listWidth / _.options.slidesToShow)
       _.$slideTrack.width(Math.ceil(_.slideWidth * trackSlides.length))
@@ -1954,13 +1980,10 @@ import $ from '../src/meptos'
       _.$slideTrack.width(5000 * _.slideCount)
     } else {
       _.slideWidth = Math.ceil(_.listWidth)
-      _.$slideTrack.height(Math.ceil(firstSlide.outerHeight(true) * trackSlides.length))
+      _.$slideTrack.height(Math.ceil(verticalOuter * trackSlides.length))
     }
 
-    // perf: the margin offset is only consumed when variableWidth is false, so
-    // only pay the two layout reads (outerWidth + width) in that branch.
     if (_.options.variableWidth === false) {
-      const offset = firstSlide.outerWidth(true) - firstSlide.width()
       trackSlides.width(_.slideWidth - offset)
     }
   }
@@ -2085,10 +2108,28 @@ import $ from '../src/meptos'
 
     _.setDimensions()
 
-    _.setHeight()
+    // perf: batch Tier3 reads after setDimensions writes before any further writes
+    // — setDimensions dirties layout, so coalesce setHeight's outerHeight and
+    // getLeft's reads into one sync layout instead of 2-3 (deep dive §3.2).
+    let targetHeight = null
+    if (
+      _.options.slidesToShow === 1 &&
+      _.options.adaptiveHeight === true &&
+      _.options.vertical === false
+    ) {
+      targetHeight = _.$slides.eq(_.currentSlide).outerHeight(true)
+    }
+    let targetLeft = null
+    if (_.options.fade === false) {
+      targetLeft = _.getLeft(_.currentSlide)
+    }
+
+    if (targetHeight !== null) {
+      _.$list.styles.set('height', `${targetHeight}px`)
+    }
 
     if (_.options.fade === false) {
-      _.setCSS(_.getLeft(_.currentSlide))
+      _.setCSS(targetLeft)
     } else {
       _.setFade()
     }

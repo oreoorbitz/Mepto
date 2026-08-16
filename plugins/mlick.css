@@ -22,6 +22,9 @@
   overflow: hidden;
   margin: 0;
   padding: 0;
+  /* Containment scopes style/layout invalidation to the carousel subtree
+   * (deep dive §7.2: contain:layout paint avoids whole-document recalc) */
+  contain: layout paint;
 }
 .mlick-list:focus {
   outline: none;
